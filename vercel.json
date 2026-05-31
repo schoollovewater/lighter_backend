@@ -8,8 +8,8 @@
   ],
   "routes": [
     {
-      "src": "/socket.io/(.*)",
-      "dest": "server.js?path=/socket.io/$1"
+      "src": "/socket.io",
+      "dest": "server.js"
     },
     {
       "handle": "filesystem"
