@@ -9,7 +9,7 @@
   "routes": [
     {
       "src": "/socket.io/(.*)",
-      "dest": "server.js"
+      "dest": "server.js?path=/socket.io/$1"
     },
     {
       "handle": "filesystem"
