@@ -8,15 +8,16 @@
   ],
   "routes": [
     {
-      "src": "/socket.io",
+      "src": "/socket.io/(.*)",
       "dest": "server.js"
     },
     {
-      "handle": "filesystem"
+      "src": "/public/(.*)",
+      "dest": "public/$1"
     },
     {
       "src": "/(.*)",
-      "dest": "public/$1"
+      "dest": "server.js"
     }
   ]
 }
