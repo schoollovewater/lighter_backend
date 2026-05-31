@@ -31,6 +31,14 @@ io.on('connection', (socket) => {
     });
 });
 
+// ==========================================
+// 🚀 DÁN ĐOẠN CODE ĐỊNH TUYẾN MỚI VÀO NGAY ĐÂY:
+const path = require('path');
+app.get('/', (req, res) => {
+    res.sendFile(path.join(__dirname, 'public', 'index.html'));
+});
+// ==========================================
+
 // Cấu hình cổng chạy Server (Tương thích hoàn toàn với nền tảng Vercel/Render)
 const PORT = process.env.PORT || 5000; 
 server.listen(PORT, () => {
