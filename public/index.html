@@ -8,41 +8,28 @@
   <script src="https://cdn.tailwindcss.com"></script>
   <!-- Lucide Icons -->
   <script src="https://unpkg.com/lucide@latest"></script>
+  <!-- 🚀 Socket.io Client -->
   <script src="https://cdn.socket.io/4.7.5/socket.io.min.js"></script>
+  
   <style>
     @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Space+Grotesk:wght@400;500;600;700&display=swap');
-    body {
-      font-family: 'Plus Jakarta Sans', sans-serif;
-    }
-    .heading-font {
-      font-family: 'Space Grotesk', sans-serif;
-    }
-    /* Tùy chỉnh thanh cuộn đẹp mắt */
-    ::-webkit-scrollbar {
-      width: 6px;
-      height: 6px;
-    }
-    ::-webkit-scrollbar-track {
-      background: rgba(255, 255, 255, 0.02);
-    }
-    ::-webkit-scrollbar-thumb {
-      background: rgba(244, 63, 94, 0.3);
-      border-radius: 999px;
-    }
-    ::-webkit-scrollbar-thumb:hover {
-      background: rgba(244, 63, 94, 0.6);
-    }
+    body { font-family: 'Plus Jakarta Sans', sans-serif; }
+    .heading-font { font-family: 'Space Grotesk', sans-serif; }
+    ::-webkit-scrollbar { width: 6px; height: 6px; }
+    ::-webkit-scrollbar-track { background: rgba(255, 255, 255, 0.02); }
+    ::-webkit-scrollbar-thumb { background: rgba(244, 63, 94, 0.3); border-radius: 999px; }
+    ::-webkit-scrollbar-thumb:hover { background: rgba(244, 63, 94, 0.6); }
   </style>
 </head>
 <body class="bg-gradient-to-br from-slate-950 via-indigo-950 to-rose-950 text-slate-100 min-h-screen flex flex-col selection:bg-rose-500 selection:text-white">
 
-  <!-- --- TOAST NOTIFICATION --- -->
+  <!-- TOAST NOTIFICATION -->
   <div id="toast" class="fixed top-5 right-5 z-50 transform translate-y-[-150%] transition-transform duration-300 ease-out bg-slate-900/90 backdrop-blur-md border border-rose-500/30 p-4 rounded-2xl shadow-2xl flex items-center space-x-3 max-w-sm">
     <div id="toast-icon" class="text-rose-400">✨</div>
     <p id="toast-text" class="text-sm font-medium text-slate-200">Thông báo</p>
   </div>
 
-  <!-- --- HEADER CHÍNH --- -->
+  <!-- HEADER CHÍNH -->
   <header class="border-b border-white/10 bg-black/40 backdrop-blur-md px-6 py-4 sticky top-0 z-40">
     <div class="max-w-7xl mx-auto flex flex-col md:flex-row md:items-center md:justify-between gap-4">
       <div>
@@ -53,31 +40,28 @@
           </h1>
         </div>
         <p class="text-xs text-rose-300/80 mt-1 flex items-center gap-1 font-medium">
-          <i data-lucide="heart" class="w-3.5 h-3.5 fill-rose-400 text-rose-400 inline"></i> Bản nâng cấp 13 vai trò tối ưu hóa bởi Node.js Specialist
+          <i data-lucide="radio" class="w-3.5 h-3.5 fill-rose-400 text-rose-400 inline animate-pulse"></i> Trạng thái: <span id="connection-status">Đang kết nối Server...</span>
         </p>
       </div>
-
       <!-- Navigation Tabs -->
       <div class="flex items-center gap-2">
         <button onclick="switchTab('workspace')" id="tab-btn-workspace" class="px-4 py-2 rounded-xl text-xs font-bold transition flex items-center gap-1.5 bg-white/5 text-slate-400 hover:text-slate-100">
-          <i data-lucide="briefcase" class="w-3.5 h-3.5"></i>
-          Văn Phòng Thảo Luận
+          <i data-lucide="briefcase" class="w-3.5 h-3.5"></i> Văn Phòng Thảo Luận
         </button>
         <button onclick="switchTab('arena')" id="tab-btn-arena" class="px-4 py-2 rounded-xl text-xs font-bold transition flex items-center gap-1.5 bg-rose-500 text-white shadow-lg shadow-rose-500/20">
-          <i data-lucide="swords" class="w-3.5 h-3.5"></i>
-          Đấu Trường Ma Sói
+          <i data-lucide="swords" class="w-3.5 h-3.5"></i> Đấu Trường Ma Sói
         </button>
       </div>
     </div>
   </header>
 
-  <!-- --- CONTAINER CHÍNH --- -->
+  <!-- CONTAINER CHÍNH -->
   <main class="flex-1 max-w-7xl w-full mx-auto p-4 md:p-6">
     
     <!-- ==================== TAB 1: VĂN PHÒNG THẢO LUẬN ==================== -->
     <div id="tab-content-workspace" class="hidden grid grid-cols-1 lg:grid-cols-12 gap-6">
       
-      <!-- Cột trái: Quản lý thành viên & Cài đặt thông tin -->
+      <!-- Cột trái: Quản lý thành viên -->
       <div class="lg:col-span-4 flex flex-col space-y-4">
         <div class="bg-slate-900/60 border border-white/10 rounded-3xl p-5 shadow-xl space-y-4">
           <div class="flex items-center justify-between border-b border-white/10 pb-3">
@@ -88,14 +72,9 @@
               <i data-lucide="log-out" class="w-3 h-3"></i> Đăng xuất
             </button>
           </div>
-
-          <!-- Grid hiển thị 8 nhân vật + Admin -->
-          <div id="members-list" class="grid grid-cols-1 gap-2.5">
-            <!-- Render động bằng JS -->
-          </div>
+          <div id="members-list" class="grid grid-cols-1 gap-2.5"></div>
         </div>
 
-        <!-- Khung cài đặt tài khoản khi đăng nhập -->
         <div id="account-settings-card" class="hidden bg-slate-900/60 border border-indigo-500/30 rounded-3xl p-5 shadow-xl space-y-3.5">
           <div class="flex items-center space-x-2 border-b border-indigo-500/20 pb-2">
             <i data-lucide="settings" class="text-indigo-400 w-4 h-4"></i>
@@ -110,51 +89,41 @@
               <label class="text-[10px] text-slate-400 block mb-1">Mật Khẩu Mới:</label>
               <input type="password" id="settings-password" class="w-full bg-black/40 border border-white/10 rounded-xl px-3 py-2 text-xs focus:outline-none focus:border-indigo-400">
             </div>
-            <button onclick="saveAccountSettings()" class="w-full py-2 bg-indigo-600 hover:bg-indigo-500 text-white rounded-xl text-xs font-bold transition">
-              Cập nhật thông tin
-            </button>
+            <button onclick="saveAccountSettings()" class="w-full py-2 bg-indigo-600 hover:bg-indigo-500 text-white rounded-xl text-xs font-bold transition">Cập nhật thông tin</button>
           </div>
         </div>
       </div>
 
       <!-- Cột phải: Chat & Đề xuất của văn phòng -->
       <div class="lg:col-span-8 flex flex-col space-y-6">
-        <!-- Trạng thái chào mừng người dùng -->
         <div id="welcome-banner" class="bg-slate-900/40 border border-white/5 rounded-3xl p-8 flex flex-col items-center justify-center text-center space-y-4 shadow-2xl min-h-[350px]">
           <div class="w-16 h-16 rounded-full bg-rose-500/10 flex items-center justify-center border border-rose-500/20 animate-bounce">
             <i data-lucide="lock" class="w-8 h-8 text-rose-400"></i>
           </div>
           <h2 class="text-lg font-bold text-rose-200">Trang Web Bảo Mật Nhập Liệu</h2>
           <p class="text-xs text-slate-400 max-w-sm leading-relaxed">
-            Nhấp chọn một thành viên ở cột bên trái, nhập mã bảo mật mặc định (tên viết liền, viết thường không dấu) để mở khóa hệ thống làm việc và Chat!
+            Nhấp chọn một thành viên ở cột bên trái, nhập mã bảo mật mặc định để mở khóa hệ thống Chat Real-time!
           </p>
         </div>
 
-        <!-- Không gian thảo luận văn phòng khi đã đăng nhập -->
         <div id="office-workspace" class="hidden flex flex-col space-y-6">
-          <div id="active-user-header" class="p-4 rounded-2xl bg-gradient-to-r from-rose-500 to-indigo-600 text-white flex items-center justify-between">
-            <!-- Sẽ render động -->
-          </div>
+          <div id="active-user-header" class="p-4 rounded-2xl bg-gradient-to-r from-rose-500 to-indigo-600 text-white flex items-center justify-between"></div>
 
-          <!-- Đề xuất chủ đề mới -->
           <div id="propose-topic-section" class="bg-slate-900/60 border border-white/10 rounded-2xl p-5 shadow-md">
             <h3 class="text-xs font-bold text-rose-200 mb-2 flex items-center gap-1">
               <i data-lucide="sparkles" class="w-3.5 h-3.5"></i> Đề xuất chủ đề thảo luận mới
             </h3>
             <form onsubmit="proposeTopic(event)" class="flex gap-2">
-              <input type="text" id="propose-topic-input" placeholder="Ví dụ: Bữa trưa văn phòng 501 ăn gì hôm nay..." class="flex-1 bg-black/40 border border-white/10 rounded-xl px-4 py-2 text-xs focus:outline-none focus:border-rose-400">
+              <input type="text" id="propose-topic-input" placeholder="Ví dụ: Bữa trưa văn phòng 501 ăn gì..." class="flex-1 bg-black/40 border border-white/10 rounded-xl px-4 py-2 text-xs focus:outline-none focus:border-rose-400">
               <button type="submit" class="bg-rose-600 hover:bg-rose-500 text-white font-bold px-4 py-2 rounded-xl text-xs transition">Gửi đề xuất</button>
             </form>
           </div>
 
-          <!-- Bảng duyệt chủ đề của ADMIN -->
           <div id="admin-approval-section" class="hidden bg-slate-900/80 border border-indigo-500/30 rounded-2xl p-5 shadow-lg space-y-3">
             <h3 class="text-xs font-bold text-indigo-300 flex items-center gap-1">
               <i data-lucide="shield-alert" class="w-4 h-4"></i> Admin Panel: Phê Duyệt Đề Xuất Chủ Đề
             </h3>
-            <div id="pending-topics-list" class="space-y-2 max-h-[150px] overflow-y-auto">
-              <!-- Render pending topics -->
-            </div>
+            <div id="pending-topics-list" class="space-y-2 max-h-[150px] overflow-y-auto"></div>
           </div>
 
           <!-- Phòng chat chủ đề chính -->
@@ -168,11 +137,8 @@
             </div>
 
             <!-- Khung cuộn chat -->
-            <div id="office-chat-box" class="p-5 space-y-3.5 max-h-[300px] min-h-[250px] overflow-y-auto">
-              <!-- Render tin nhắn -->
-            </div>
+            <div id="office-chat-box" class="p-5 space-y-3.5 max-h-[300px] min-h-[250px] overflow-y-auto"></div>
 
-            <!-- Thanh nhập tin nhắn -->
             <div class="p-3 bg-black/20 border-t border-white/10">
               <form onsubmit="sendOfficeMessage(event)" class="flex gap-2">
                 <input type="text" id="office-chat-input" placeholder="Gõ tin nhắn của bạn..." class="flex-1 bg-black/40 border border-white/10 rounded-xl px-4 py-2.5 text-xs focus:outline-none focus:border-rose-400">
@@ -188,138 +154,30 @@
 
     <!-- ==================== TAB 2: ĐẤU TRƯỜNG MA SÓI ==================== -->
     <div id="tab-content-arena" class="grid grid-cols-1 lg:grid-cols-12 gap-6">
-      
-      <!-- PHÒNG CHỜ & CONFIG TRƯỚC TRẬN -->
-      <div id="werewolf-setup-screen" class="lg:col-span-12 bg-slate-900/60 border border-white/10 rounded-3xl p-6 md:p-8 space-y-6 shadow-2xl">
-        <div class="text-center space-y-2">
-          <h2 class="text-2xl font-extrabold text-rose-300 heading-font">Thiết Lập Vòng Đấu Lighter Arena</h2>
-          <p class="text-xs text-slate-400">Cấu hình vai trò tự do, linh hoạt. Hệ thống tự động chia bài & chạy Bot kiểm thử tuyệt đối.</p>
+        <!-- DO PHẦN GAME MA SÓI BẠN CHƯA YÊU CẦU LÀM REALTIME NÊN MÌNH GIỮ NGUYÊN GIAO DIỆN CŨ Ở ĐÂY ĐỂ TRÁNH LỖI NHÉ -->
+        <div id="werewolf-setup-screen" class="lg:col-span-12 bg-slate-900/60 border border-white/10 rounded-3xl p-6 md:p-8 space-y-6 shadow-2xl">
+            <div class="text-center space-y-2">
+                <h2 class="text-2xl font-extrabold text-rose-300 heading-font">Thiết Lập Vòng Đấu Lighter Arena</h2>
+                <p class="text-xs text-slate-400">Game đang chạy chế độ Bot Offline.</p>
+            </div>
+            <div class="bg-black/30 border border-white/5 p-5 rounded-2xl text-center text-slate-300">
+                Chế độ chơi game Ma Sói Online sẽ được cập nhật trong phiên bản sau...
+            </div>
         </div>
-
-        <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 pt-4">
-          <!-- Bảng phân bổ vai trò -->
-          <div class="bg-black/30 border border-white/5 p-5 rounded-2xl space-y-4">
-            <h3 class="text-sm font-bold text-rose-200 border-b border-white/5 pb-2 flex items-center gap-2">
-              <i data-lucide="sliders" class="w-4 h-4 text-rose-400"></i> Cấu hình Selected Roles
-            </h3>
-            
-            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4" id="role-config-sliders">
-              <!-- Render các Sliders điều chỉnh vai trò -->
-            </div>
-
-            <div class="pt-2 flex items-center justify-between text-xs font-bold text-slate-300">
-              <span>Tổng số bài phát: <span id="total-assigned-roles" class="text-yellow-400">0</span></span>
-              <span>Yêu cầu cần bằng: <span id="required-players-count" class="text-yellow-400">8</span></span>
-            </div>
-          </div>
-
-          <!-- Danh sách người tham dự phòng chờ -->
-          <div class="bg-black/30 border border-white/5 p-5 rounded-2xl flex flex-col justify-between space-y-4">
-            <div>
-              <h3 class="text-sm font-bold text-rose-200 border-b border-white/5 pb-2 flex items-center justify-between">
-                <span class="flex items-center gap-2"><i data-lucide="users" class="w-4 h-4 text-rose-400"></i> Bàn chơi hiện tại</span>
-                <span id="arena-players-counter" class="text-xs text-slate-400">0/8 người</span>
-              </h3>
-              <div id="arena-lobby-players" class="grid grid-cols-2 gap-2.5 pt-3">
-                <!-- Render danh sách player đã vào phòng chờ -->
-              </div>
-            </div>
-
-            <!-- Bộ nút hành động -->
-            <div class="flex flex-col sm:flex-row gap-2 pt-4">
-              <button onclick="fillLobbyWithBots()" class="flex-1 py-3 bg-indigo-600/20 hover:bg-indigo-600/40 text-indigo-300 rounded-xl text-xs font-bold border border-indigo-500/30 transition">
-                Mời Bot Cho Đủ 8 Người
-              </button>
-              <button onclick="startWerewolfGame()" class="flex-1 py-3 bg-gradient-to-r from-rose-600 to-pink-600 hover:from-rose-500 hover:to-pink-500 text-white rounded-xl text-xs font-bold transition shadow-lg shadow-rose-500/20">
-                BẮT ĐẦU VÒNG ĐẤU 🐺
-              </button>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <!-- ĐẤU TRƯỜNG KHI TRẬN ĐẤU ĐANG DIỄN RA -->
-      <div id="werewolf-gameplay-screen" class="hidden lg:col-span-12 grid grid-cols-1 lg:grid-cols-12 gap-6">
-        
-        <!-- Cột Trái (4 Cột): Trạng thái phe ta & Nhật ký Arena -->
-        <div class="lg:col-span-4 space-y-6">
-          <!-- Thông tin vai trò cá nhân -->
-          <div id="my-identity-card" class="bg-gradient-to-br from-indigo-950 to-rose-950 border border-white/10 rounded-2xl p-5 shadow-lg relative overflow-hidden">
-            <div class="absolute -right-8 -bottom-8 text-slate-900/10 text-9xl font-extrabold select-none">🐺</div>
-            <h3 class="text-xs font-bold text-slate-400 uppercase">Vai trò của bạn</h3>
-            <div id="my-role-display" class="flex items-center space-x-3.5 mt-3">
-              <!-- Render động -->
-            </div>
-          </div>
-
-          <!-- Nhật ký sự kiện đấu trường -->
-          <div class="bg-slate-900/60 border border-white/10 rounded-2xl p-5 flex flex-col h-[280px]">
-            <h3 class="text-xs font-bold text-rose-200 border-b border-white/5 pb-2 flex items-center gap-1.5">
-              <i data-lucide="scroll" class="w-4 h-4 text-rose-400"></i> Nhật Ký Vòng Đấu
-            </h3>
-            <div id="game-event-logs" class="flex-1 overflow-y-auto space-y-2 pt-2.5 text-xs text-slate-300">
-              <!-- Render event logs -->
-            </div>
-          </div>
-        </div>
-
-        <!-- Cột Giữa (5 Cột): Bảng điều khiển hành động Đêm/Ngày -->
-        <div class="lg:col-span-5 bg-slate-900/60 border border-white/10 rounded-3xl p-5 shadow-xl flex flex-col justify-between min-h-[450px]">
-          <div>
-            <!-- Trạng thái giai đoạn -->
-            <div class="border-b border-white/10 pb-3 flex items-center justify-between">
-              <div>
-                <span id="game-day-badge" class="bg-rose-500/20 text-rose-300 text-[10px] font-bold px-2 py-0.5 rounded-full uppercase">Đang tải...</span>
-                <h3 id="game-phase-title" class="text-sm font-extrabold text-slate-100 mt-1 heading-font">Tiến trình đêm...</h3>
-              </div>
-              <!-- Nút hỗ trợ test nhanh -->
-              <button onclick="skipPhase()" class="px-2.5 py-1 bg-yellow-500/10 hover:bg-yellow-500/20 text-yellow-300 rounded-lg text-[10px] font-bold border border-yellow-500/20 transition">
-                Tua Nhanh Lượt (Test)
-              </button>
-            </div>
-
-            <!-- Giao diện hành động tương tác chính -->
-            <div id="game-action-interface" class="py-6 space-y-4">
-              <!-- Render các lựa chọn, thông tin hướng dẫn theo vai trò, hộp chat bầy sói -->
-            </div>
-          </div>
-
-          <!-- Bộ nút kết thúc lượt hành động -->
-          <div id="night-action-confirm-area" class="border-t border-white/5 pt-4">
-            <button id="end-night-turn-btn" onclick="confirmNightAction()" class="w-full py-3 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl text-xs font-bold transition shadow-lg shadow-emerald-500/20 disabled:opacity-50 disabled:cursor-not-allowed">
-              Xác Nhận & Kết Thúc Lượt Đêm
-            </button>
-          </div>
-        </div>
-
-        <!-- Cột Phải (3 Cột): Danh sách người sống sót / Chết -->
-        <div class="lg:col-span-3 bg-slate-900/60 border border-white/10 rounded-2xl p-5 shadow-md flex flex-col h-[450px]">
-          <h3 class="text-xs font-bold text-rose-200 border-b border-white/5 pb-2 flex items-center gap-1.5">
-            <i data-lucide="skull" class="w-4 h-4 text-rose-400"></i> Danh Sách Đấu Trường
-          </h3>
-          <div id="gameplay-players-list" class="flex-1 overflow-y-auto space-y-2 pt-2.5">
-            <!-- Render danh sách player sống chết kèm vai trò (nếu chết hoặc là admin) -->
-          </div>
-        </div>
-
-      </div>
-
     </div>
 
   </main>
 
-  <!-- --- MODAL ĐĂNG NHẬP THÀNH VIÊN --- -->
+  <!-- MODAL ĐĂNG NHẬP -->
   <div id="login-modal" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm">
     <div class="bg-slate-900 border border-white/15 rounded-3xl p-6 max-w-sm w-full shadow-2xl relative space-y-4">
       <div class="text-center">
         <div id="login-avatar" class="w-16 h-16 rounded-full bg-rose-500/10 mx-auto flex items-center justify-center text-4xl mb-2">👤</div>
         <h3 id="login-name" class="text-base font-bold text-slate-100">Xác thực tài khoản</h3>
-        <p id="login-title" class="text-[10px] text-slate-400 mt-1">Vui lòng điền mã mật mật khẩu</p>
+        <p id="login-title" class="text-[10px] text-slate-400 mt-1">Vui lòng điền mã mật khẩu</p>
       </div>
-
       <form onsubmit="submitLogin(event)" class="space-y-3">
         <div>
-          <label class="text-[10px] font-bold text-slate-400 block mb-1">Mật khẩu:</label>
           <input type="password" id="login-password-input" class="w-full bg-black/40 border border-white/10 rounded-xl px-4 py-2 text-center text-sm font-mono tracking-widest focus:outline-none focus:border-rose-400" required>
         </div>
         <p id="login-error-msg" class="hidden text-[10px] text-rose-400 bg-rose-500/10 p-2 rounded-lg border border-rose-500/20 text-center"></p>
@@ -331,29 +189,26 @@
     </div>
   </div>
 
-  <!-- --- FOOTER --- -->
   <footer class="border-t border-white/5 bg-black/20 py-4 text-center text-[10px] text-slate-500 mt-6">
     <p>© 2026 Room 501 Production - Thiết kế phục vụ nhóm Lighter.</p>
   </footer>
 
   <!-- ==================== JAVASCRIPT GAME STATE ENGINE ==================== -->
   <script>
-    // --- THƯ MỤC HÌNH ẢNH & CHI TIẾT CỦA 13 VAI TRÒ HOÀN CHỈNH ---
-    const ROLE_DETAILS = {
-      VILLAGER: { name: 'Dân Thường', emoji: '🧑🌾', faction: 'VILLAGE', desc: 'Ngủ sâu ban đêm, tỉnh táo thảo luận treo cổ Sói ban ngày.' },
-      WEREWOLF: { name: 'Sói Thường', emoji: '🐺', faction: 'WEREWOLF', desc: 'Thức dậy ban đêm cùng bầy Sói để bỏ phiếu sát hại 1 người.' },
-      TRAITOR: { name: 'Kẻ Phản Bội', emoji: '🎭', faction: 'WEREWOLF', desc: 'Phe Sói. Thức dậy cùng Sói. Tiên tri soi ra Phe Dân. Quản gấu phát hiện ra Sói.' },
-      CURSED_ONE: { name: 'Sói Nguyền', emoji: '🌙', faction: 'VILLAGE', desc: 'Đầu trận là Dân. Nếu bị Sói cắn và không được cứu -> hóa thành Sói từ đêm sau.' },
-      ALPHA_WOLF: { name: 'Sói Đầu Đàn', emoji: '👑', faction: 'WEREWOLF', desc: 'Phe Sói. Nếu bầy Sói chỉ còn duy nhất bạn còn sống, được quyền cắn 2 người/đêm.' },
-      BEAR_TAMER: { name: 'Quản Gấu', emoji: '🐻', faction: 'VILLAGE', desc: 'Đêm thức dậy, hệ thống quét 2 người sống bên cạnh. Có Sói -> Gấu "GẦM", ngược lại "IM LẶNG".' },
-      DETECTIVE: { name: 'Thám Tử', emoji: '🔍', faction: 'VILLAGE', desc: 'Mỗi đêm chọn kiểm tra 2 người chơi xem họ có cùng chung phe hay không.' },
-      CUPID: { name: 'Thần Tình Yêu', emoji: '🏹', faction: 'VILLAGE', desc: 'Đêm 1 ghép đôi liên kết sinh mệnh cho 2 người. Một người chết, người kia chết chùm.' },
-      DOPPELGANGER: { name: 'Nhân Bản', emoji: '👥', faction: 'VILLAGE', desc: 'Đêm 1 chọn 1 người. Khi người đó chết, bạn tiếp quản chức năng & phe của họ.' },
-      IDIOT: { name: 'Thằng Ngốc', emoji: '🤡', faction: 'THIRD_PARTY', desc: 'Không làm gì ban đêm. Ban ngày nếu bị bỏ phiếu treo cổ -> Bạn chiến thắng độc lập ngay lập tức.' },
-      WITCH: { name: 'Phù Thủy', emoji: '🧪', faction: 'VILLAGE', desc: 'Sở hữu 1 bình thuốc cứu sống nạn nhân của Sói, và 1 bình thuốc độc giết người.' },
-      BODYGUARD: { name: 'Bảo Vệ', emoji: '🛡️', faction: 'VILLAGE', desc: 'Mỗi đêm bảo vệ 1 người không bị Sói cắn. Không bảo vệ một người 2 đêm liên tiếp.' },
-      HUNTER: { name: 'Thợ Săn', emoji: '🏹', faction: 'VILLAGE', desc: 'Nếu bị chết vào ban đêm hoặc bị treo cổ ban ngày, được quyền bắn chết 1 người khác ngay lập tức.' }
-    };
+    // 🚀 KHỞI TẠO SOCKET KẾT NỐI SERVER
+    const socket = io({
+        transports: ["websocket", "polling"]
+    });
+
+    socket.on("connect", () => {
+        document.getElementById('connection-status').innerText = 'Đã kết nối Online 🟢';
+        document.getElementById('connection-status').className = 'text-emerald-400';
+    });
+
+    socket.on("disconnect", () => {
+        document.getElementById('connection-status').innerText = 'Mất kết nối 🔴';
+        document.getElementById('connection-status').className = 'text-rose-400';
+    });
 
     // --- DANH SÁCH 8 THÀNH VIÊN ---
     const INITIAL_CHARACTERS = {
@@ -368,103 +223,70 @@
       admin: { id: 'admin', name: 'Admin (Phòng 501)', title: 'Ban Quản Trị Hệ Thống', avatar: '👑', code: 'admin' }
     };
 
-    // --- CORE GAME STATES ---
     let characters = { ...INITIAL_CHARACTERS };
-    let currentUserId = null; // null nếu chưa đăng nhập
-
-    // Khởi tạo State chủ đề & Chat của Văn Phòng
+    let currentUserId = null;
     let officeTopics = [];
     let officeMessages = [];
 
-    // Khởi tạo State Ma Sói (Có đầy đủ 13 vai trò trong config)
-    let gameState = {
-      status: 'WAITING', // WAITING, IN_GAME, OVER
-      phase: 'PRE_GAME', // NIGHT_TURN, DAY_ANNOUNCE, DAY_DISCUSS, DAY_VOTE, HANGING_DEFEND, HANGING_VOTE, HUNTER_REVENGE
-      day: 1,
-      players: [], // Chứa thông tin 8 players: id, name, role, originalRole, isAlive, isBot, lastProtectedId, linkedLoverId, votesRec, revengeTriggered
-      selectedRoles: {
-        VILLAGER: 1,
-        WEREWOLF: 1,
-        TRAITOR: 1,
-        CURSED_ONE: 1,
-        BEAR_TAMER: 1,
-        DETECTIVE: 1,
-        CUPID: 1,
-        HUNTER: 1
-      },
-      currentNightTurnIndex: 0,
-      nightActiveRoles: [], // Danh sách các vai trò cần thức đêm nay
-      nightActions: {
-        wolfVotes: {},       // targetId -> votes
-        protectedId: null,
-        witchHealUsed: false,
-        witchPoisonTarget: null,
-        detectiveTargets: [],
-        cupidTargets: [],
-        doppelgangerTarget: null
-      },
-      logs: [],
-      deadTonight: [],
-      selectedVoteId: null,
-      trialTargetId: null, // Người lên giàn bào chữa
-      hunterRevengeSourceId: null // ID thợ săn đang kích hoạt phục hận
-    };
+    // --- HỆ THỐNG LẮNG NGHE SOCKET TỪ SERVER (REAL-TIME) ---
 
-    // Tự động khôi phục dữ liệu từ bộ nhớ đệm
+    // 1. Nhận tin nhắn chat mới từ bất kỳ ai
+    socket.on('receive_chat_message', (msgData) => {
+        officeMessages.push(msgData);
+        // Lưu lại bộ nhớ tạm để F5 không bị mất
+        localStorage.setItem('lighter_office_msgs', JSON.stringify(officeMessages));
+        renderOfficeMessages();
+    });
+
+    // 2. Nhận thông báo có người vừa đề xuất chủ đề mới
+    socket.on('receive_new_topic', (topicData) => {
+        officeTopics.push(topicData);
+        localStorage.setItem('lighter_office_topics', JSON.stringify(officeTopics));
+        renderOfficeWorkspace();
+    });
+
+    // 3. Nhận thông báo Admin vừa Duyệt/Đổi chủ đề
+    socket.on('topic_approved', (topicId) => {
+        officeTopics.forEach(t => {
+            if (t.status === 'active') t.status = 'archived';
+            if (t.id === topicId) t.status = 'active';
+        });
+        localStorage.setItem('lighter_office_topics', JSON.stringify(officeTopics));
+        renderOfficeWorkspace();
+    });
+
+    // --- CÁC HÀM KHỞI TẠO ---
     function init() {
-      // 1. Tải thành viên tùy chỉnh
       const savedChars = localStorage.getItem('lighter_custom_chars');
-      if (savedChars) {
-        characters = JSON.parse(savedChars);
-      }
+      if (savedChars) characters = JSON.parse(savedChars);
 
-      // 2. Tải chủ đề thảo luận
       const savedTopics = localStorage.getItem('lighter_office_topics');
       if (savedTopics) {
         officeTopics = JSON.parse(savedTopics);
       } else {
         officeTopics = [
-          { id: 't1', title: 'Kế hoạch cắm trại Lighter cuối tuần này! 🥳', creator: 'admin', status: 'active', createdAt: Date.now() - 100000 },
-          { id: 't2', title: 'Thảo luận: Trưa nay cả nhóm ăn gì?', creator: 'bangbang', status: 'pending', createdAt: Date.now() - 50000 }
+          { id: 't1', title: 'Kế hoạch cắm trại Lighter cuối tuần này! 🥳', creator: 'admin', status: 'active', createdAt: Date.now() - 100000 }
         ];
         localStorage.setItem('lighter_office_topics', JSON.stringify(officeTopics));
       }
 
-      // 3. Tải tin nhắn chat văn phòng
       const savedMsgs = localStorage.getItem('lighter_office_msgs');
       if (savedMsgs) {
         officeMessages = JSON.parse(savedMsgs);
-      } else {
-        officeMessages = [
-          { id: 'm1', topicId: 't1', sender: 'admin', text: 'Chào mừng các thành viên đến với không gian làm việc số!', createdAt: Date.now() - 90000 },
-          { id: 'm2', topicId: 't1', sender: 'bangbang', text: 'Em muốn đi picnic ngắm biển Cửa Lò ạ 🌊', createdAt: Date.now() - 80000 }
-        ];
-        localStorage.setItem('lighter_office_msgs', JSON.stringify(officeMessages));
       }
 
-      // Khởi tạo giao diện
       renderMembersList();
-      renderSliders();
-      updateLobbyUI();
       lucide.createIcons();
     }
 
-    // --- THÔNG BÁO TOAST ---
     function showToast(text, type = 'info') {
       const toast = document.getElementById('toast');
-      const toastText = document.getElementById('toast-text');
-      const toastIcon = document.getElementById('toast-icon');
-
-      toastText.innerText = text;
-      toastIcon.innerText = type === 'success' ? '✅' : type === 'error' ? '❌' : 'ℹ️';
-      
+      document.getElementById('toast-text').innerText = text;
+      document.getElementById('toast-icon').innerText = type === 'success' ? '✅' : type === 'error' ? '❌' : 'ℹ️';
       toast.classList.remove('translate-y-[-150%]');
-      setTimeout(() => {
-        toast.classList.add('translate-y-[-150%]');
-      }, 3000);
+      setTimeout(() => toast.classList.add('translate-y-[-150%]'), 3000);
     }
 
-    // --- CHUYỂN TẢI TABS ---
     function switchTab(tab) {
       const btnWorkspace = document.getElementById('tab-btn-workspace');
       const btnArena = document.getElementById('tab-btn-arena');
@@ -484,26 +306,20 @@
       }
     }
 
-    // --- PHẦN 1: LOGIN & WORKSPACE MANAGER ---
+    // --- LOGIN LOGIC ---
     function renderMembersList() {
       const listEl = document.getElementById('members-list');
       listEl.innerHTML = '';
-
       Object.values(characters).forEach(char => {
         const isMe = currentUserId === char.id;
         const card = document.createElement('div');
         card.onclick = () => openLoginModal(char.id);
         card.className = `group cursor-pointer p-3 rounded-2xl border transition-all duration-300 flex items-center justify-between ${
-          isMe 
-            ? 'bg-gradient-to-r from-rose-500/10 to-indigo-500/10 border-rose-500 shadow-md shadow-rose-500/5' 
-            : 'bg-white/5 border-white/5 hover:bg-white/10'
+          isMe ? 'bg-gradient-to-r from-rose-500/10 to-indigo-500/10 border-rose-500 shadow-md shadow-rose-500/5' : 'bg-white/5 border-white/5 hover:bg-white/10'
         }`;
-
         card.innerHTML = `
           <div class="flex items-center space-x-3">
-            <div class="w-10 h-10 rounded-full bg-slate-800 flex items-center justify-center text-xl transform group-hover:scale-105 transition">
-              ${char.avatar}
-            </div>
+            <div class="w-10 h-10 rounded-full bg-slate-800 flex items-center justify-center text-xl transform group-hover:scale-105 transition">${char.avatar}</div>
             <div>
               <h4 class="text-xs font-bold text-slate-200">${char.name}</h4>
               <p class="text-[10px] text-slate-400">${char.title}</p>
@@ -520,7 +336,7 @@
 
     let pendingLoginId = null;
     function openLoginModal(charId) {
-      if (currentUserId === charId) return; // Đã đăng nhập rồi
+      if (currentUserId === charId) return;
       pendingLoginId = charId;
       const char = characters[charId];
       document.getElementById('login-avatar').innerText = char.avatar;
@@ -546,12 +362,9 @@
         closeLoginModal();
         showToast(`Đăng nhập thành công với vai trò ${targetChar.name}!`, 'success');
         
-        // Cập nhật Workspace UI
         document.getElementById('welcome-banner').classList.add('hidden');
         document.getElementById('office-workspace').classList.remove('hidden');
         document.getElementById('logout-btn').classList.remove('hidden');
-        
-        // Hiện cấu hình đổi tên nếu có đăng nhập
         document.getElementById('account-settings-card').classList.remove('hidden');
         document.getElementById('settings-display-name').value = targetChar.name;
         document.getElementById('settings-password').value = targetChar.code;
@@ -559,11 +372,9 @@
         renderMembersList();
         renderActiveUserHeader();
         renderOfficeWorkspace();
-        updateLobbyUI();
-        updateGameplayUI();
       } else {
         const err = document.getElementById('login-error-msg');
-        err.innerText = "Mật khẩu chưa chính xác! (Mặc định: tên viết liền không dấu, chữ thường)";
+        err.innerText = "Mật khẩu chưa chính xác! (Mặc định: tên viết liền không dấu)";
         err.classList.remove('hidden');
       }
     }
@@ -575,7 +386,6 @@
       document.getElementById('logout-btn').classList.add('hidden');
       document.getElementById('account-settings-card').classList.add('hidden');
       renderMembersList();
-      updateLobbyUI();
       showToast("Đã đăng xuất tài khoản.", "info");
     }
 
@@ -583,24 +393,16 @@
       if (!currentUserId) return;
       const newName = document.getElementById('settings-display-name').value.trim();
       const newPass = document.getElementById('settings-password').value.trim();
-
-      if (!newName || !newPass) {
-        showToast("Tên hiển thị và mật khẩu không được trống!", "error");
-        return;
-      }
-
+      if (!newName || !newPass) return;
       characters[currentUserId].name = newName;
       characters[currentUserId].code = newPass;
-
       localStorage.setItem('lighter_custom_chars', JSON.stringify(characters));
       showToast("Đã lưu cài đặt tài khoản bảo mật mới!", "success");
       renderMembersList();
       renderActiveUserHeader();
-      updateLobbyUI();
-      updateGameplayUI();
     }
 
-    // --- PHẦN 2: OFFICE WORKSPACE LOGIC ---
+    // --- THẢO LUẬN & CHAT LOGIC ---
     function renderActiveUserHeader() {
       const header = document.getElementById('active-user-header');
       const char = characters[currentUserId];
@@ -619,7 +421,6 @@
     }
 
     function renderOfficeWorkspace() {
-      // 1. Phê duyệt Admin Panel
       const adminSection = document.getElementById('admin-approval-section');
       if (currentUserId === 'admin') {
         adminSection.classList.remove('hidden');
@@ -628,7 +429,6 @@
         adminSection.classList.add('hidden');
       }
 
-      // 2. Chủ đề hiện tại
       const activeTopic = officeTopics.find(t => t.status === 'active');
       const topicTitleEl = document.getElementById('current-active-topic');
       if (activeTopic) {
@@ -636,8 +436,6 @@
       } else {
         topicTitleEl.innerText = "Chưa có chủ đề chính thức nào được kích hoạt.";
       }
-
-      // 3. Tin nhắn
       renderOfficeMessages();
     }
 
@@ -645,12 +443,10 @@
       const listEl = document.getElementById('pending-topics-list');
       listEl.innerHTML = '';
       const pendings = officeTopics.filter(t => t.status === 'pending');
-
       if (pendings.length === 0) {
         listEl.innerHTML = `<p class="text-[10px] text-slate-400 italic">Không có đề xuất chủ đề nào mới.</p>`;
         return;
       }
-
       pendings.forEach(topic => {
         const div = document.createElement('div');
         div.className = "bg-white/5 border border-white/5 p-2 rounded-xl flex items-center justify-between gap-3";
@@ -661,14 +457,13 @@
           </div>
           <div class="flex gap-1.5">
             <button onclick="approveTopic('${topic.id}')" class="px-2 py-1 bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg text-[9px] font-bold transition">Duyệt</button>
-            <button onclick="deleteTopic('${topic.id}')" class="px-2 py-1 bg-rose-600/20 hover:bg-rose-600 text-rose-300 hover:text-white rounded-lg text-[9px] transition"><i data-lucide="trash-2" class="w-3 h-3"></i></button>
           </div>
         `;
         listEl.appendChild(div);
       });
-      lucide.createIcons();
     }
 
+    // 🚀 BẮN DỮ LIỆU CHỦ ĐỀ MỚI QUA SOCKET
     function proposeTopic(e) {
       e.preventDefault();
       const input = document.getElementById('propose-topic-input');
@@ -683,46 +478,31 @@
         createdAt: Date.now()
       };
 
-      if (newTopic.status === 'active') {
-        // Hủy các active khác
-        officeTopics.forEach(t => { if(t.status === 'active') t.status = 'archived'; });
+      if (currentUserId === 'admin') {
+          // Gửi tín hiệu Admin tự tạo chủ đề
+          socket.emit('approve_topic', newTopic.id); 
       }
-
-      officeTopics.push(newTopic);
-      localStorage.setItem('lighter_office_topics', JSON.stringify(officeTopics));
+      // Gửi tín hiệu báo cho mọi người có đề xuất mới
+      socket.emit('propose_topic', newTopic); 
+      
       input.value = '';
-
-      showToast(currentUserId === 'admin' ? "Kích hoạt chủ đề thảo luận mới!" : "Gửi đề xuất thành công. Chờ Admin phê duyệt!", "success");
-      renderOfficeWorkspace();
+      showToast(currentUserId === 'admin' ? "Đã mở chủ đề mới!" : "Gửi đề xuất thành công. Chờ Admin duyệt!", "success");
     }
 
+    // 🚀 BẮN TÍN HIỆU ADMIN DUYỆT CHỦ ĐỀ QUA SOCKET
     function approveTopic(topicId) {
-      officeTopics.forEach(t => {
-        if (t.status === 'active') t.status = 'archived';
-        if (t.id === topicId) t.status = 'active';
-      });
-      localStorage.setItem('lighter_office_topics', JSON.stringify(officeTopics));
-      showToast("Đã chuyển giao chủ đề hoạt động!", "success");
-      renderOfficeWorkspace();
-    }
-
-    function deleteTopic(topicId) {
-      officeTopics = officeTopics.filter(t => t.id !== topicId);
-      localStorage.setItem('lighter_office_topics', JSON.stringify(officeTopics));
-      showToast("Đã loại bỏ chủ đề đề xuất", "info");
-      renderOfficeWorkspace();
+      socket.emit('approve_topic', topicId);
+      showToast("Đã duyệt chuyển giao chủ đề!", "success");
     }
 
     function renderOfficeMessages() {
       const box = document.getElementById('office-chat-box');
       box.innerHTML = '';
       const activeTopic = officeTopics.find(t => t.status === 'active');
-
       if (!activeTopic) {
         box.innerHTML = `<p class="text-xs text-slate-500 italic text-center py-8">Vui lòng chờ Admin kích hoạt chủ đề để nhắn tin.</p>`;
         return;
       }
-
       const activeMsgs = officeMessages.filter(m => m.topicId === activeTopic.id);
       activeMsgs.forEach(msg => {
         const sender = characters[msg.sender] || { name: 'Người lạ', avatar: '👤' };
@@ -743,6 +523,7 @@
       box.scrollTop = box.scrollHeight;
     }
 
+    // 🚀 BẮN TIN NHẮN CHAT QUA SOCKET LÊN SERVER
     function sendOfficeMessage(e) {
       e.preventDefault();
       const input = document.getElementById('office-chat-input');
@@ -751,1273 +532,21 @@
       if (!txt || !activeTopic) return;
 
       const newMsg = {
-        id: 'msg_' + Date.now(),
+        id: 'msg_' + Date.now() + '_' + Math.random().toString(36).substring(7),
         topicId: activeTopic.id,
         sender: currentUserId,
         text: txt,
         createdAt: Date.now()
       };
 
-      officeMessages.push(newMsg);
-      localStorage.setItem('lighter_office_msgs', JSON.stringify(officeMessages));
+      // Gửi tín hiệu tin nhắn lên mây (Server sẽ phát lại cho tất cả)
+      socket.emit('send_chat_message', newMsg);
       input.value = '';
-      renderOfficeMessages();
     }
 
-
-    // ==================== PHẦN 3: ĐẤU TRƯỜNG MA SÓI CORE LOGIC ====================
-    // Khởi tạo Sliders chỉnh sửa vai trò (Mặc định chứa sẵn cả 13 vai trò)
-    function renderSliders() {
-      const container = document.getElementById('role-config-sliders');
-      container.innerHTML = '';
-
-      // Thiết lập đầy đủ cấu trúc nếu chưa có
-      const defaultSliders = {
-        VILLAGER: 1,
-        WEREWOLF: 1,
-        TRAITOR: 1,
-        CURSED_ONE: 1,
-        BEAR_TAMER: 1,
-        DETECTIVE: 1,
-        CUPID: 1,
-        WITCH: 1,
-        BODYGUARD: 1,
-        HUNTER: 0,
-        ALPHA_WOLF: 0,
-        DOPPELGANGER: 0,
-        IDIOT: 0
-      };
-
-      Object.keys(defaultSliders).forEach(k => {
-        if (gameState.selectedRoles[k] === undefined) {
-          gameState.selectedRoles[k] = defaultSliders[k];
-        }
-      });
-
-      Object.keys(gameState.selectedRoles).forEach(roleKey => {
-        const role = ROLE_DETAILS[roleKey];
-        if (!role) return;
-        const count = gameState.selectedRoles[roleKey];
-
-        const div = document.createElement('div');
-        div.className = "bg-white/5 p-3 rounded-xl flex items-center justify-between border border-white/5";
-        div.innerHTML = `
-          <div class="flex items-center space-x-2">
-            <span class="text-xl">${role.emoji}</span>
-            <div>
-              <h4 class="text-xs font-bold text-slate-200">${role.name}</h4>
-              <p class="text-[9px] text-slate-400 line-clamp-1">${role.desc}</p>
-            </div>
-          </div>
-          <div class="flex items-center space-x-2">
-            <button onclick="adjustRoleCount('${roleKey}', -1)" class="w-6 h-6 rounded bg-slate-800 hover:bg-slate-700 text-slate-100 text-xs font-bold transition flex items-center justify-center">-</button>
-            <span id="counter-${roleKey}" class="text-xs font-mono font-bold w-4 text-center text-yellow-400">${count}</span>
-            <button onclick="adjustRoleCount('${roleKey}', 1)" class="w-6 h-6 rounded bg-slate-800 hover:bg-slate-700 text-slate-100 text-xs font-bold transition flex items-center justify-center">+</button>
-          </div>
-        `;
-        container.appendChild(div);
-      });
-      updateSumUI();
-    }
-
-    function adjustRoleCount(roleKey, delta) {
-      if (gameState.status !== 'WAITING') return;
-      const current = gameState.selectedRoles[roleKey] || 0;
-      const newVal = Math.max(0, current + delta);
-      gameState.selectedRoles[roleKey] = newVal;
-      
-      document.getElementById(`counter-${roleKey}`).innerText = newVal;
-      updateSumUI();
-    }
-
-    function updateSumUI() {
-      const total = Object.values(gameState.selectedRoles).reduce((a, b) => a + b, 0);
-      document.getElementById('total-assigned-roles').innerText = total;
-
-      const activePlayers = getActivePlayersForLobby();
-      document.getElementById('required-players-count').innerText = activePlayers.length;
-    }
-
-    // Lấy danh sách thành viên hợp lệ (không bao gồm admin)
-    function getActivePlayersForLobby() {
-      return Object.values(characters).filter(c => c.id !== 'admin');
-    }
-
-    // Render danh sách trong phòng chờ trước trận đấu
-    function updateLobbyUI() {
-      const activePlayers = getActivePlayersForLobby();
-      const countEl = document.getElementById('arena-players-counter');
-      countEl.innerText = `${activePlayers.length}/8 người`;
-
-      const lobbyList = document.getElementById('arena-lobby-players');
-      lobbyList.innerHTML = '';
-
-      activePlayers.forEach(char => {
-        const isBot = gameState.players.find(p => p.id === char.id)?.isBot;
-        const isMe = char.id === currentUserId;
-        const div = document.createElement('div');
-        div.className = `p-3 rounded-xl border flex items-center justify-between ${
-          isMe ? 'bg-gradient-to-r from-rose-500/10 to-indigo-500/10 border-rose-500' : 'bg-white/5 border-white/5'
-        }`;
-        div.innerHTML = `
-          <div class="flex items-center space-x-2">
-            <span class="text-lg">${char.avatar}</span>
-            <span class="text-xs font-semibold text-slate-200">${char.name}</span>
-          </div>
-          <span class="text-[9px] px-1.5 py-0.5 rounded ${isBot ? 'bg-indigo-600/20 text-indigo-300' : 'bg-emerald-600/20 text-emerald-300'}">
-            ${isBot ? 'BOT' : 'HUMAN'}
-          </span>
-        `;
-        lobbyList.appendChild(div);
-      });
-      updateSumUI();
-    }
-
-    function fillLobbyWithBots() {
-      const activePlayers = getActivePlayersForLobby();
-      gameState.players = activePlayers.map(p => ({
-        id: p.id,
-        name: p.name,
-        role: null,
-        originalRole: null,
-        isAlive: true,
-        isBot: p.id !== currentUserId, // Bot ngoại trừ tài khoản của mình
-        lastProtectedId: null,
-        linkedLoverId: null,
-        revengeTriggered: false
-      }));
-      showToast("Đã triệu hồi BOT cho bàn chơi!", "success");
-      updateLobbyUI();
-    }
-
-    // BẮT ĐẦU TRẬN ĐẤU (CHIA VAI TRÒ & SHUFFLE)
-    function startWerewolfGame() {
-      const activePlayers = getActivePlayersForLobby();
-      const totalSelectedRoles = Object.values(gameState.selectedRoles).reduce((a, b) => a + b, 0);
-
-      if (totalSelectedRoles !== activePlayers.length) {
-        showToast(`Cấu hình vai trò (${totalSelectedRoles}) không khớp với số người trong phòng (${activePlayers.length})!`, "error");
-        return;
-      }
-
-      // Trải phẳng vai trò
-      let rolePool = [];
-      Object.entries(gameState.selectedRoles).forEach(([roleKey, count]) => {
-        for (let i = 0; i < count; i++) {
-          rolePool.push(roleKey);
-        }
-      });
-
-      // Fisher-Yates Shuffle
-      for (let i = rolePool.length - 1; i > 0; i--) {
-        const j = Math.floor(Math.random() * (i + 1));
-        [rolePool[i], rolePool[j]] = [rolePool[j], rolePool[i]];
-      }
-
-      // Khởi tạo người chơi nếu chưa được nạp
-      if (gameState.players.length === 0) {
-        gameState.players = activePlayers.map(p => ({
-          id: p.id,
-          name: p.name,
-          role: null,
-          originalRole: null,
-          isAlive: true,
-          isBot: p.id !== currentUserId,
-          lastProtectedId: null,
-          linkedLoverId: null,
-          revengeTriggered: false
-        }));
-      }
-
-      // Gán vai trò
-      gameState.players.forEach((player, idx) => {
-        player.role = rolePool[idx];
-        player.originalRole = rolePool[idx];
-        player.isAlive = true;
-        player.lastProtectedId = null;
-        player.linkedLoverId = null;
-        player.revengeTriggered = false;
-      });
-
-      gameState.status = 'IN_GAME';
-      gameState.day = 1;
-      gameState.logs = [`Trận đấu Ma Sói chính thức bắt đầu!`];
-      gameState.nightActions = {
-        wolfVotes: {},
-        protectedId: null,
-        witchHealUsed: false,
-        witchPoisonTarget: null,
-        detectiveTargets: [],
-        cupidTargets: [],
-        doppelgangerTarget: null
-      };
-
-      showToast("Vòng đấu bắt đầu! Phát vai trò thành công.", "success");
-      
-      // Chuyển UI
-      document.getElementById('werewolf-setup-screen').classList.add('hidden');
-      document.getElementById('werewolf-gameplay-screen').classList.remove('hidden');
-
-      startNightPhase();
-    }
-
-    // BẮT ĐẦU ĐÊM TỐI
-    function startNightPhase() {
-      gameState.phase = 'NIGHT_TURN';
-      
-      // Tính toán danh sách vai trò sẽ thức đêm nay
-      let sequence = [];
-      // Đêm 1: Cupid, Doppelganger
-      if (gameState.day === 1) {
-        if (hasRoleAlive('CUPID')) sequence.push('CUPID');
-        if (hasRoleAlive('DOPPELGANGER')) sequence.push('DOPPELGANGER');
-      }
-
-      // Sói, bảo vệ, phù thủy luôn hoạt động
-      sequence.push('WEREWOLF'); // Đại diện phe sói thức giấc
-      if (hasRoleAlive('BODYGUARD')) sequence.push('BODYGUARD');
-      if (hasRoleAlive('WITCH')) sequence.push('WITCH');
-      if (hasRoleAlive('DETECTIVE')) sequence.push('DETECTIVE');
-
-      gameState.nightActiveRoles = sequence;
-      gameState.currentNightTurnIndex = 0;
-
-      gameState.logs.push(`----- ĐÊM ${gameState.day} BẮT ĐẦU -----`);
-      runNightTurn();
-    }
-
-    function hasRoleAlive(roleKey) {
-      return gameState.players.some(p => p.isAlive && p.role === roleKey);
-    }
-
-    // CHẠY LƯỢT ĐÊM
-    function runNightTurn() {
-      if (gameState.currentNightTurnIndex >= gameState.nightActiveRoles.length) {
-        // Hết lượt đêm -> Tổng hợp kết quả
-        resolveNightActions();
-        return;
-      }
-
-      const currentTurnRole = gameState.nightActiveRoles[gameState.currentNightTurnIndex];
-      const activePlayersWithRole = gameState.players.filter(p => p.isAlive && p.role === currentTurnRole);
-
-      // Cập nhật Badge UI
-      document.getElementById('game-day-badge').innerText = `ĐÊM ${gameState.day}`;
-      document.getElementById('game-phase-title').innerText = `LƯỢT ĐI: ${ROLE_DETAILS[currentTurnRole].name}`;
-
-      // Kiểm tra xem lượt này có người chơi còn sống không (Sói bao gồm Werewolf, Traitor, Alpha Wolf)
-      let turnHasAlivePlayer = false;
-      if (currentTurnRole === 'WEREWOLF') {
-        turnHasAlivePlayer = gameState.players.some(p => p.isAlive && ['WEREWOLF', 'ALPHA_WOLF', 'TRAITOR'].includes(p.role));
-      } else {
-        turnHasAlivePlayer = activePlayersWithRole.length > 0;
-      }
-
-      if (!turnHasAlivePlayer) {
-        // Không có ai sống -> Bỏ qua nhanh
-        gameState.currentNightTurnIndex++;
-        runNightTurn();
-        return;
-      }
-
-      // Kiểm tra bầy sói còn độc nhất 1 con Alpha Wolf để x2 bite
-      if (currentTurnRole === 'WEREWOLF') {
-        const wolvesAlive = gameState.players.filter(p => p.isAlive && ['WEREWOLF', 'ALPHA_WOLF', 'TRAITOR'].includes(p.role));
-        gameState.alphaWolfDoubleBiteActive = wolvesAlive.length === 1 && wolvesAlive[0].role === 'ALPHA_WOLF';
-      }
-
-      // Xác định lượt đi là của BOT hay HUMAN
-      let isBotTurn = false;
-      if (currentTurnRole === 'WEREWOLF') {
-        const humansInWolf = gameState.players.filter(p => p.isAlive && !p.isBot && ['WEREWOLF', 'ALPHA_WOLF', 'TRAITOR'].includes(p.role));
-        isBotTurn = humansInWolf.length === 0;
-      } else {
-        isBotTurn = activePlayersWithRole.every(p => p.isBot);
-      }
-
-      renderNightActionInterface(currentTurnRole, isBotTurn);
-    }
-
-    // HIỂN THỊ GIAO DIỆN HÀNH ĐỘNG ĐÊM
-    function renderNightActionInterface(roleKey, isBot) {
-      const container = document.getElementById('game-action-interface');
-      container.innerHTML = '';
-      
-      const confirmBtn = document.getElementById('end-night-turn-btn');
-      confirmBtn.disabled = isBot;
-
-      if (isBot) {
-        container.innerHTML = `
-          <div class="flex flex-col items-center justify-center py-10 space-y-4">
-            <div class="w-12 h-12 border-4 border-rose-500 border-t-transparent rounded-full animate-spin"></div>
-            <p class="text-xs text-rose-300 italic font-semibold">Vai trò ${ROLE_DETAILS[roleKey].name} (BOT) đang cân nhắc hành động...</p>
-          </div>
-        `;
-        setTimeout(() => {
-          executeBotNightAction(roleKey);
-        }, 1500);
-        return;
-      }
-
-      // GIAO DIỆN CHO NGƯỜI CHƠI (HUMAN) TỰ CHỌN
-      const myPlayer = gameState.players.find(p => p.id === currentUserId);
-      const targets = gameState.players.filter(p => p.isAlive);
-
-      container.innerHTML = `<p class="text-xs text-slate-300 mb-3">${ROLE_DETAILS[roleKey].desc}</p>`;
-
-      if (roleKey === 'WEREWOLF') {
-        // Chat bầy Sói thảo luận
-        container.innerHTML += `
-          <div class="bg-red-950/20 border border-red-500/20 p-3 rounded-xl mb-4 space-y-2">
-            <h4 class="text-[10px] font-bold text-red-400 uppercase">Kênh thảo luận bầy sói</h4>
-            <div class="text-[11px] text-slate-400 italic">Sói thường & Kẻ phản bội cùng chung mục tiêu.</div>
-          </div>
-        `;
-
-        if (gameState.alphaWolfDoubleBiteActive) {
-          container.innerHTML += `<p class="text-xs text-yellow-400 font-bold mb-2">🔥 Kích hoạt Sức mạnh Alpha Sói độc hành: Được cắn tối đa 2 người!</p>`;
-        }
-
-        // Chọn nạn nhân
-        const selectContainer = document.createElement('div');
-        selectContainer.className = "space-y-2";
-        targets.forEach(t => {
-          const isVoted = gameState.nightActions.wolfVotes[t.id];
-          const btn = document.createElement('button');
-          btn.onclick = () => voteWolfTarget(t.id);
-          btn.className = `w-full p-2.5 rounded-xl text-left text-xs font-semibold flex items-center justify-between border transition ${
-            isVoted ? 'bg-red-600/20 border-red-500 text-red-200' : 'bg-white/5 border-transparent hover:bg-white/10'
-          }`;
-          btn.innerHTML = `
-            <span>🎯 Tấn công: ${t.name}</span>
-            <span class="text-[10px] font-mono text-red-400">${isVoted ? 'Bình chọn ✅' : ''}</span>
-          `;
-          selectContainer.appendChild(btn);
-        });
-        container.appendChild(selectContainer);
-        validateWolfVoteAgreement();
-
-      } else if (roleKey === 'BODYGUARD') {
-        const selectContainer = document.createElement('div');
-        selectContainer.className = "space-y-2";
-        targets.forEach(t => {
-          const isLastProtected = myPlayer.lastProtectedId === t.id;
-          const isCurrentlyProtected = gameState.nightActions.protectedId === t.id;
-          const btn = document.createElement('button');
-          
-          if (isLastProtected) {
-            btn.disabled = true;
-            btn.className = "w-full p-2.5 rounded-xl text-left text-xs bg-white/5 opacity-40 cursor-not-allowed border border-transparent";
-            btn.innerHTML = `🛡️ ${t.name} <span class="text-[9px] text-rose-400 italic float-right">Vừa bảo vệ đêm trước</span>`;
-          } else {
-            btn.onclick = () => selectGuardTarget(t.id);
-            btn.className = `w-full p-2.5 rounded-xl text-left text-xs font-semibold border transition ${
-              isCurrentlyProtected ? 'bg-emerald-600/20 border-emerald-500 text-emerald-200' : 'bg-white/5 border-transparent hover:bg-white/10'
-            }`;
-            btn.innerHTML = `🛡️ Che chở: ${t.name}`;
-          }
-          selectContainer.appendChild(btn);
-        });
-        container.appendChild(selectContainer);
-
-      } else if (roleKey === 'WITCH') {
-        const savedHeal = gameState.nightActions.witchHealUsed;
-        const savedPoison = gameState.nightActions.witchPoisonTarget;
-        
-        // Xác định nạn nhân của Sói nếu có
-        let wolfVictimName = "Không có";
-        let wolfVictimId = null;
-        let maxVotes = 0;
-        for (const [id, v] of Object.entries(gameState.nightActions.wolfVotes)) {
-          if (v > maxVotes) { maxVotes = v; wolfVictimId = id; }
-        }
-        if (wolfVictimId) {
-          wolfVictimName = (gameState.players.find(p => p.id === wolfVictimId) || {}).name;
-        }
-
-        container.innerHTML += `
-          <div class="bg-purple-950/20 border border-purple-500/20 p-3 rounded-xl mb-4 space-y-2">
-            <p class="text-xs text-slate-300">Nạn nhân bị cắn đêm nay: <span class="text-rose-400 font-bold">${wolfVictimName}</span></p>
-          </div>
-        `;
-
-        const btnHeal = document.createElement('button');
-        btnHeal.onclick = () => toggleWitchHeal(wolfVictimId);
-        btnHeal.className = `w-full mb-3 p-3 rounded-xl text-left text-xs font-bold border transition ${
-          savedHeal ? 'bg-emerald-600/20 border-emerald-500 text-emerald-200' : 'bg-white/5 border-transparent hover:bg-white/10'
-        }`;
-        btnHeal.innerHTML = `🧪 Sử dụng bình CỨU (Cứu ${wolfVictimName})`;
-        container.appendChild(btnHeal);
-
-        container.innerHTML += `<p class="text-[10px] text-slate-400 my-2">Sử dụng bình ĐỘC (Chọn 1 mục tiêu):</p>`;
-        const poisonContainer = document.createElement('div');
-        poisonContainer.className = "grid grid-cols-2 gap-2";
-        targets.forEach(t => {
-          const isPoisoned = savedPoison === t.id;
-          const btnP = document.createElement('button');
-          btnP.onclick = () => selectWitchPoison(t.id);
-          btnP.className = `p-2 rounded-lg text-xs font-semibold border transition text-center ${
-            isPoisoned ? 'bg-rose-600/20 border-rose-500 text-rose-300' : 'bg-white/5 border-transparent hover:bg-white/10'
-          }`;
-          btnP.innerHTML = `💀 Độc ${t.name}`;
-          poisonContainer.appendChild(btnP);
-        });
-        container.appendChild(poisonContainer);
-
-      } else if (roleKey === 'DETECTIVE') {
-        const selected = gameState.nightActions.detectiveTargets;
-        container.innerHTML += `<p class="text-[10px] text-slate-400 mb-2">Chọn 2 mục tiêu để thám thính phe cánh:</p>`;
-
-        const grid = document.createElement('div');
-        grid.className = "grid grid-cols-2 gap-2";
-        targets.forEach(t => {
-          if (t.id === currentUserId) return;
-          const isSelected = selected.includes(t.id);
-          const btn = document.createElement('button');
-          btn.onclick = () => toggleDetectiveTarget(t.id);
-          btn.className = `p-2 rounded-lg text-xs font-semibold border transition text-center ${
-            isSelected ? 'bg-indigo-600/20 border-indigo-500 text-indigo-300' : 'bg-white/5 border-transparent hover:bg-white/10'
-          }`;
-          btn.innerHTML = t.name;
-          grid.appendChild(btn);
-        });
-        container.appendChild(grid);
-
-        // Hiển thị kết quả trực tiếp nếu đã chọn đủ 2
-        if (selected.length === 2) {
-          const p1 = gameState.players.find(p => p.id === selected[0]);
-          const p2 = gameState.players.find(p => p.id === selected[1]);
-          const sameFaction = getGeneralFaction(p1.role) === getGeneralFaction(p2.role);
-          
-          const resultBox = document.createElement('div');
-          resultBox.className = "bg-indigo-950/40 p-3 rounded-xl border border-indigo-500/20 mt-4 text-center";
-          resultBox.innerHTML = `
-            <p class="text-xs font-semibold text-indigo-300">Kết quả thám thính:</p>
-            <p class="text-sm font-extrabold mt-1 text-slate-100">${p1.name} và ${p2.name} là ${sameFaction ? '🟢 CÙNG PHE' : '🔴 KHÁC PHE'}</p>
-          `;
-          container.appendChild(resultBox);
-        }
-
-      } else if (roleKey === 'CUPID') {
-        const selected = gameState.nightActions.cupidTargets;
-        container.innerHTML += `<p class="text-[10px] text-slate-400 mb-2">Chọn 2 mục tiêu ghép đôi Tình Yêu (Đêm 1):</p>`;
-
-        const grid = document.createElement('div');
-        grid.className = "grid grid-cols-2 gap-2";
-        targets.forEach(t => {
-          const isSelected = selected.includes(t.id);
-          const btn = document.createElement('button');
-          btn.onclick = () => toggleCupidTarget(t.id);
-          btn.className = `p-2 rounded-lg text-xs font-semibold border transition text-center ${
-            isSelected ? 'bg-pink-600/20 border-pink-500 text-pink-300' : 'bg-white/5 border-transparent hover:bg-white/10'
-          }`;
-          btn.innerHTML = `❤️ ${t.name}`;
-          grid.appendChild(btn);
-        });
-        container.appendChild(grid);
-
-      } else if (roleKey === 'DOPPELGANGER') {
-        const selected = gameState.nightActions.doppelgangerTarget;
-        container.innerHTML += `<p class="text-[10px] text-slate-400 mb-2">Chọn 1 người chơi để nhân bản năng lực (Đêm 1):</p>`;
-
-        const grid = document.createElement('div');
-        grid.className = "grid grid-cols-2 gap-2";
-        targets.forEach(t => {
-          if (t.id === currentUserId) return;
-          const isSelected = selected === t.id;
-          const btn = document.createElement('button');
-          btn.onclick = () => selectDoppelgangerTarget(t.id);
-          btn.className = `p-2 rounded-lg text-xs font-semibold border transition text-center ${
-            isSelected ? 'bg-amber-600/20 border-amber-500 text-amber-300' : 'bg-white/5 border-transparent hover:bg-white/10'
-          }`;
-          btn.innerHTML = `👤 ${t.name}`;
-          grid.appendChild(btn);
-        });
-        container.appendChild(grid);
-      }
-    }
-
-    // --- XỬ LÝ HÀNH ĐỘNG ĐÊM CỦA BOT TỰ ĐỘNG ---
-    function executeBotNightAction(roleKey) {
-      const alivePlayers = gameState.players.filter(p => p.isAlive);
-      
-      if (roleKey === 'WEREWOLF') {
-        // Bot sói chọn nạn nhân ngẫu nhiên
-        const randVictim = alivePlayers[Math.floor(Math.random() * alivePlayers.length)];
-        gameState.nightActions.wolfVotes[randVictim.id] = 1;
-        
-        // Nếu có Alpha Sói kích hoạt cắn x2
-        if (gameState.alphaWolfDoubleBiteActive && alivePlayers.length > 1) {
-          let randVictim2 = randVictim;
-          while (randVictim2.id === randVictim.id) {
-            randVictim2 = alivePlayers[Math.floor(Math.random() * alivePlayers.length)];
-          }
-          gameState.nightActions.wolfVotes[randVictim2.id] = 1;
-        }
-
-      } else if (roleKey === 'BODYGUARD') {
-        const randTarget = alivePlayers[Math.floor(Math.random() * alivePlayers.length)];
-        gameState.nightActions.protectedId = randTarget.id;
-
-      } else if (roleKey === 'WITCH') {
-        // Tỷ lệ dùng bình cứu ngẫu nhiên
-        let wolfVictimId = null;
-        let maxVotes = 0;
-        for (const [id, v] of Object.entries(gameState.nightActions.wolfVotes)) {
-          if (v > maxVotes) { maxVotes = v; wolfVictimId = id; }
-        }
-        if (wolfVictimId && Math.random() > 0.4) {
-          gameState.nightActions.witchHealUsed = true;
-          gameState.nightActions.wolfVictimId = wolfVictimId;
-        } else if (Math.random() > 0.6) {
-          // Đầu độc
-          const nonWitch = alivePlayers.filter(p => p.role !== 'WITCH');
-          if (nonWitch.length > 0) {
-            gameState.nightActions.witchPoisonTarget = nonWitch[Math.floor(Math.random() * nonWitch.length)].id;
-          }
-        }
-
-      } else if (roleKey === 'DETECTIVE') {
-        if (alivePlayers.length >= 3) {
-          const nonDet = alivePlayers.filter(p => p.role !== 'DETECTIVE');
-          const p1 = nonDet[Math.floor(Math.random() * nonDet.length)];
-          let p2 = p1;
-          while (p2.id === p1.id) {
-            p2 = nonDet[Math.floor(Math.random() * nonDet.length)];
-          }
-          gameState.nightActions.detectiveTargets = [p1.id, p2.id];
-        }
-
-      } else if (roleKey === 'CUPID') {
-        if (alivePlayers.length >= 2) {
-          const p1 = alivePlayers[Math.floor(Math.random() * alivePlayers.length)];
-          let p2 = p1;
-          while (p2.id === p1.id) {
-            p2 = alivePlayers[Math.floor(Math.random() * alivePlayers.length)];
-          }
-          gameState.nightActions.cupidTargets = [p1.id, p2.id];
-        }
-
-      } else if (roleKey === 'DOPPELGANGER') {
-        const nonDop = alivePlayers.filter(p => p.role !== 'DOPPELGANGER');
-        if (nonDop.length > 0) {
-          gameState.nightActions.doppelgangerTarget = nonDop[Math.floor(Math.random() * nonDop.length)].id;
-        }
-      }
-
-      // Tự động chuyển giao sang lượt tiếp theo
-      gameState.currentNightTurnIndex++;
-      runNightTurn();
-    }
-
-    // --- CÁC HÀM TƯƠNG TÁC LỰA CHỌN CỦA HUMAN ---
-    function voteWolfTarget(id) {
-      if (gameState.alphaWolfDoubleBiteActive) {
-        if (gameState.nightActions.wolfVotes[id]) {
-          delete gameState.nightActions.wolfVotes[id];
-        } else {
-          if (Object.keys(gameState.nightActions.wolfVotes).length < 2) {
-            gameState.nightActions.wolfVotes[id] = 1;
-          }
-        }
-      } else {
-        gameState.nightActions.wolfVotes = { [id]: 1 };
-        
-        // BOT SÓI ĐỒNG THUẬN (Wolf Co-op Vote): Tự động vote trùng mục tiêu với người chơi
-        gameState.players.forEach(p => {
-          if (p.isBot && ['WEREWOLF', 'ALPHA_WOLF', 'TRAITOR'].includes(p.role)) {
-            gameState.nightActions.wolfVotes[id] = (gameState.nightActions.wolfVotes[id] || 1) + 1;
-          }
-        });
-      }
-      renderNightActionInterface('WEREWOLF', false);
-    }
-
-    function validateWolfVoteAgreement() {
-      const confirmBtn = document.getElementById('end-night-turn-btn');
-      const votesCount = Object.keys(gameState.nightActions.wolfVotes).length;
-      
-      if (gameState.alphaWolfDoubleBiteActive) {
-        confirmBtn.disabled = votesCount === 0;
-      } else {
-        confirmBtn.disabled = votesCount !== 1;
-      }
-    }
-
-    function selectGuardTarget(id) {
-      gameState.nightActions.protectedId = id;
-      renderNightActionInterface('BODYGUARD', false);
-    }
-
-    function toggleWitchHeal(victimId) {
-      gameState.nightActions.witchHealUsed = !gameState.nightActions.witchHealUsed;
-      if (gameState.nightActions.witchHealUsed) {
-        gameState.nightActions.wolfVictimId = victimId;
-      }
-      renderNightActionInterface('WITCH', false);
-    }
-
-    function selectWitchPoison(id) {
-      if (gameState.nightActions.witchPoisonTarget === id) {
-        gameState.nightActions.witchPoisonTarget = null;
-      } else {
-        gameState.nightActions.witchPoisonTarget = id;
-      }
-      renderNightActionInterface('WITCH', false);
-    }
-
-    function toggleDetectiveTarget(id) {
-      const selected = gameState.nightActions.detectiveTargets;
-      if (selected.includes(id)) {
-        gameState.nightActions.detectiveTargets = selected.filter(x => x !== id);
-      } else {
-        if (selected.length < 2) {
-          gameState.nightActions.detectiveTargets.push(id);
-        }
-      }
-      renderNightActionInterface('DETECTIVE', false);
-    }
-
-    function toggleCupidTarget(id) {
-      const selected = gameState.nightActions.cupidTargets;
-      if (selected.includes(id)) {
-        gameState.nightActions.cupidTargets = selected.filter(x => x !== id);
-      } else {
-        if (selected.length < 2) {
-          gameState.nightActions.cupidTargets.push(id);
-        }
-      }
-      renderNightActionInterface('CUPID', false);
-    }
-
-    function selectDoppelgangerTarget(id) {
-      gameState.nightActions.doppelgangerTarget = id;
-      renderNightActionInterface('DOPPELGANGER', false);
-    }
-
-    // --- XÁC NHẬN CHUYỂN LƯỢT ĐÊM THỦ CÔNG ---
-    function confirmNightAction() {
-      const currentTurnRole = gameState.nightActiveRoles[gameState.currentNightTurnIndex];
-
-      // Ghi nhớ mục tiêu bảo vệ của Đêm để chống trùng lắp đêm sau
-      if (currentTurnRole === 'BODYGUARD') {
-        const guardPlayer = gameState.players.find(p => p.role === 'BODYGUARD');
-        if (guardPlayer) {
-          guardPlayer.lastProtectedId = gameState.nightActions.protectedId;
-        }
-      }
-
-      // Xích đôi lứa Cupid đêm 1
-      if (currentTurnRole === 'CUPID' && gameState.nightActions.cupidTargets.length === 2) {
-        const id1 = gameState.nightActions.cupidTargets[0];
-        const id2 = gameState.nightActions.cupidTargets[1];
-        
-        const p1 = gameState.players.find(p => p.id === id1);
-        const p2 = gameState.players.find(p => p.id === id2);
-        if (p1 && p2) {
-          p1.linkedLoverId = id2;
-          p2.linkedLoverId = id1;
-          gameState.logs.push(`Hệ thống Cupid: Đã kết nối tình yêu đôi lứa.`);
-        }
-      }
-
-      gameState.currentNightTurnIndex++;
-      runNightTurn();
-    }
-
-    // --- TỔNG KẾT QUẢ ĐÊM ĐEN CHUYỂN SANG NGÀY ---
-    function resolveNightActions() {
-      const deadTonight = [];
-      const actions = gameState.nightActions;
-
-      // 1. SÓI CẮN
-      let wolfTargets = [];
-      if (gameState.alphaWolfDoubleBiteActive) {
-        wolfTargets = Object.keys(actions.wolfVotes);
-      } else {
-        let maxVotes = 0;
-        let wolfTarget = null;
-        for (const [id, votes] of Object.entries(actions.wolfVotes)) {
-          if (votes > maxVotes) {
-            maxVotes = votes;
-            wolfTarget = id;
-          }
-        }
-        if (wolfTarget) wolfTargets.push(wolfTarget);
-      }
-
-      wolfTargets.forEach(targetId => {
-        const isProtected = actions.protectedId === targetId;
-        const isSavedByWitch = actions.witchHealUsed && (targetId === actions.wolfVictimId);
-
-        if (!isProtected && !isSavedByWitch) {
-          const victim = gameState.players.find(p => p.id === targetId);
-          if (victim) {
-            if (victim.role === 'CURSED_ONE') {
-              victim.role = 'WEREWOLF'; // Bị Sói nguyền chuyển hóa
-              gameState.logs.push(`Đêm ${gameState.day}: Một linh hồn yếu ớt đã thức tỉnh bóng tối Sói.`);
-            } else {
-              deadTonight.push({ id: targetId, reason: 'WOLF' });
-            }
-          }
-        }
-      });
-
-      // 2. PHÙ THỦY ĐỘC
-      if (actions.witchPoisonTarget) {
-        deadTonight.push({ id: actions.witchPoisonTarget, reason: 'WITCH_POISON' });
-      }
-
-      // Cập nhật người chết
-      deadTonight.forEach(d => {
-        const p = gameState.players.find(pl => pl.id === d.id);
-        if (p) {
-          p.isAlive = false;
-          p.deathReason = d.reason;
-          gameState.logs.push(`Đêm ${gameState.day}: ${p.name} đã ngã xuống trong im lặng.`);
-        }
-      });
-
-      // 3. LIÊN KẾT CUPID CHẾT CHÙM
-      gameState.players.forEach(p => {
-        if (!p.isAlive && p.linkedLoverId) {
-          const lover = gameState.players.find(l => l.id === p.linkedLoverId);
-          if (lover && lover.isAlive) {
-            lover.isAlive = false;
-            lover.deathReason = 'LOVER_DEATH';
-            gameState.logs.push(`Tình yêu Cupid: ${lover.name} đã tự sát đi theo người thương ${p.name}.`);
-          }
-        }
-      });
-
-      // 4. NHÂN BẢN PHỤC HẬN / KẾ THỪA CHỨC NĂNG
-      gameState.players.forEach(p => {
-        if (p.role === 'DOPPELGANGER' && actions.doppelgangerTarget) {
-          const target = gameState.players.find(t => t.id === actions.doppelgangerTarget);
-          if (target && !target.isAlive) {
-            p.role = target.originalRole;
-            gameState.logs.push(`Nhân Bản [${p.name}] đã hóa thân thừa kế vai trò [${target.originalRole}] từ ${target.name}.`);
-          }
-        }
-      });
-
-      // Khử âm Quản Gấu ban đêm scan
-      const gấuPlayer = gameState.players.find(p => p.isAlive && p.role === 'BEAR_TAMER');
-      if (gấuPlayer) {
-        const aliveArr = gameState.players.filter(p => p.isAlive);
-        const gIdx = aliveArr.findIndex(p => p.id === gấuPlayer.id);
-        if (gIdx !== -1) {
-          const len = aliveArr.length;
-          const left = aliveArr[(gIdx - 1 + len) % len];
-          const right = aliveArr[(gIdx + 1) % len];
-
-          const hasSói = ['WEREWOLF', 'ALPHA_WOLF', 'TRAITOR'].includes(left.role) || ['WEREWOLF', 'ALPHA_WOLF', 'TRAITOR'].includes(right.role);
-          gameState.logs.push(`Báo hiệu Quản Gấu: Gấu đã phát ra tiếng "${hasSói ? '🐾 GẦM' : '🐾 IM LẶNG'}" vang dội.`);
-        }
-      }
-
-      gameState.deadTonight = deadTonight;
-      
-      // Kiểm tra Thợ Săn báo thù trước khi bình minh
-      checkHunterRevenge(() => {
-        startDayPhase();
-      });
-    }
-
-    // KIỂM TRA THỢ SĂN BÁO THÙ
-    function checkHunterRevenge(callback) {
-      const deadHunter = gameState.players.find(p => !p.isAlive && p.role === 'HUNTER' && !p.revengeTriggered);
-      if (deadHunter) {
-        deadHunter.revengeTriggered = true;
-        gameState.phase = 'HUNTER_REVENGE';
-        gameState.hunterRevengeSourceId = deadHunter.id;
-        
-        gameState.logs.push(`CẢNH BÁO: Thợ Săn [${deadHunter.name}] gục xuống và đang nổ súng kéo kẻ thù chết chung!`);
-        renderHunterRevengeInterface(callback);
-      } else {
-        callback();
-      }
-    }
-
-    function renderHunterRevengeInterface(callback) {
-      const container = document.getElementById('game-action-interface');
-      container.innerHTML = `<p class="text-xs text-rose-300 font-bold mb-3">🎯 THỢ SĂN BÁO THÙ: Chọn 1 người chơi để kéo theo cái chết!</p>`;
-      
-      const hunter = gameState.players.find(p => p.id === gameState.hunterRevengeSourceId);
-      const targets = gameState.players.filter(p => p.isAlive);
-
-      if (hunter.isBot) {
-        // Bot bắn bừa
-        const randTarget = targets[Math.floor(Math.random() * targets.length)];
-        executeHunterShot(randTarget.id, callback);
-      } else {
-        // Cho người chơi tự chọn bắn ai
-        const grid = document.createElement('div');
-        grid.className = "grid grid-cols-2 gap-2";
-        targets.forEach(t => {
-          const btn = document.createElement('button');
-          btn.onclick = () => executeHunterShot(t.id, callback);
-          btn.className = "p-2 rounded-xl text-xs bg-rose-600/20 hover:bg-rose-600 hover:text-white transition text-center font-bold border border-rose-500/30";
-          btn.innerHTML = `Bắn ${t.name}`;
-          grid.appendChild(btn);
-        });
-        container.appendChild(grid);
-      }
-      updateGameplayUI();
-    }
-
-    function executeHunterShot(targetId, callback) {
-      const target = gameState.players.find(p => p.id === targetId);
-      if (target) {
-        target.isAlive = false;
-        target.deathReason = 'HUNTER_SHOT';
-        gameState.logs.push(`Thợ Săn nổ súng kết liễu [${target.name}]!`);
-        
-        // Kiểm tra tình nhân chết chùm
-        if (target.linkedLoverId) {
-          const lover = gameState.players.find(l => l.id === target.linkedLoverId);
-          if (lover && lover.isAlive) {
-            lover.isAlive = false;
-            lover.deathReason = 'LOVER_DEATH';
-            gameState.logs.push(`Liên kết sinh mệnh: ${lover.name} gục ngã vì người yêu chết.`);
-          }
-        }
-      }
-      gameState.hunterRevengeSourceId = null;
-      checkHunterRevenge(callback);
-    }
-
-    // PHÂN ĐOẠN BAN NGÀY
-    function startDayPhase() {
-      gameState.phase = 'DAY_ANNOUNCE';
-      document.getElementById('game-day-badge').innerText = `BAN NGÀY`;
-      document.getElementById('game-phase-title').innerText = `KẾT QUẢ BÌNH MINH`;
-
-      const container = document.getElementById('game-action-interface');
-      container.innerHTML = '';
-
-      if (gameState.deadTonight.length === 0) {
-        container.innerHTML = `<div class="p-4 bg-emerald-500/10 text-emerald-300 rounded-xl text-center font-bold">Thật diệu kỳ! Một đêm bình yên trôi qua không có ai tử nạn.</div>`;
-      } else {
-        let text = `<p class="text-xs text-rose-300 font-bold mb-2">Hôm nay toàn bộ ngôi làng bàng hoàng phát hiện các nạn nhân sau:</p>`;
-        gameState.deadTonight.forEach(d => {
-          const p = gameState.players.find(pl => pl.id === d.id);
-          text += `<div class="p-2.5 bg-rose-500/10 border border-rose-500/20 text-rose-300 rounded-xl text-xs font-semibold mb-1">💀 ${p.name} (${ROLE_DETAILS[p.originalRole].name})</div>`;
-        });
-        container.innerHTML = text;
-      }
-
-      // Check Game Over
-      if (checkGameOver()) return;
-
-      const btn = document.getElementById('end-night-turn-btn');
-      btn.innerText = "Bắt Đầu Thảo Luận Ban Ngày";
-      btn.disabled = false;
-      btn.onclick = () => startDiscussionPhase();
-      updateGameplayUI();
-    }
-
-    function startDiscussionPhase() {
-      gameState.phase = 'DAY_DISCUSS';
-      document.getElementById('game-phase-title').innerText = `THẢO LUẬN (2 PHÚT)`;
-
-      const container = document.getElementById('game-action-interface');
-      container.innerHTML = `
-        <div class="text-center py-6 space-y-3">
-          <p class="text-xs text-slate-300">Tất cả mọi người đang ngồi trong bàn họp và tiến hành tranh luận tìm ra Ma Sói.</p>
-          <div class="inline-block px-4 py-2 bg-indigo-500/10 border border-indigo-500/30 rounded-full text-indigo-300 text-xs font-bold animate-pulse">
-            Thời gian thảo luận đang đếm ngược...
-          </div>
-        </div>
-      `;
-
-      const btn = document.getElementById('end-night-turn-btn');
-      btn.innerText = "Chuyển Sang Bỏ Phiếu";
-      btn.onclick = () => startVotePhase();
-    }
-
-    // BỎ PHIẾU TREO CỔ
-    function startVotePhase() {
-      gameState.phase = 'DAY_VOTE';
-      document.getElementById('game-phase-title').innerText = `BỎ PHIẾU NGHI PHẠM`;
-
-      // Reset votes
-      gameState.players.forEach(p => p.votesRec = 0);
-      gameState.selectedVoteId = null;
-
-      renderVoteInterface();
-    }
-
-    function renderVoteInterface() {
-      const container = document.getElementById('game-action-interface');
-      container.innerHTML = `<p class="text-[10px] text-slate-400 mb-3">Chọn nghi phạm bạn muốn đưa lên giàn bào chữa:</p>`;
-
-      const targets = gameState.players.filter(p => p.isAlive);
-      const grid = document.createElement('div');
-      grid.className = "space-y-2";
-
-      targets.forEach(t => {
-        const isSelected = gameState.selectedVoteId === t.id;
-        const btn = document.createElement('button');
-        btn.onclick = () => { gameState.selectedVoteId = t.id; renderVoteInterface(); };
-        btn.className = `w-full p-2.5 rounded-xl text-left text-xs font-semibold flex items-center justify-between border transition ${
-          isSelected ? 'bg-rose-600/20 border-rose-500 text-rose-300' : 'bg-white/5 border-transparent hover:bg-white/10'
-        }`;
-        btn.innerHTML = `🎯 Bầu treo cổ: ${t.name}`;
-        grid.appendChild(btn);
-      });
-      container.appendChild(grid);
-
-      const btn = document.getElementById('end-night-turn-btn');
-      btn.innerText = "Chốt Lần Bỏ Phiếu";
-      btn.onclick = () => executeVotesTally();
-    }
-
-    function executeVotesTally() {
-      // 1. Ghi nhận lượt vote của Bot ngẫu nhiên
-      const alivePlayers = gameState.players.filter(p => p.isAlive);
-      alivePlayers.forEach(p => {
-        if (p.isBot) {
-          const randTarget = alivePlayers[Math.floor(Math.random() * alivePlayers.length)];
-          randTarget.votesRec = (randTarget.votesRec || 0) + 1;
-        } else if (gameState.selectedVoteId) {
-          const myVote = gameState.players.find(pl => pl.id === gameState.selectedVoteId);
-          myVote.votesRec = (myVote.votesRec || 0) + 1;
-        }
-      });
-
-      // Tìm người có vote nhiều nhất
-      let maxVotes = 0;
-      let target = null;
-      alivePlayers.forEach(p => {
-        if (p.votesRec > maxVotes) {
-          maxVotes = p.votesRec;
-          target = p;
-        }
-      });
-
-      if (target && maxVotes > 0) {
-        startDefendPhase(target.id);
-      } else {
-        gameState.logs.push("Ngôi làng đồng lòng bỏ phiếu trắng. Không ai bị nghi kỵ!");
-        startNightPhase();
-      }
-    }
-
-    // BÀO CHỮA LÊN GIÀN
-    function startDefendPhase(targetId) {
-      gameState.phase = 'HANGING_DEFEND';
-      gameState.trialTargetId = targetId;
-      const target = gameState.players.find(p => p.id === targetId);
-
-      document.getElementById('game-phase-title').innerText = `BÀO CHỮA TRÊN GIÀN`;
-
-      const container = document.getElementById('game-action-interface');
-      container.innerHTML = `
-        <div class="text-center py-6 space-y-3 bg-rose-950/20 border border-rose-500/20 rounded-2xl p-4">
-          <span class="text-4xl animate-bounce">⚖️</span>
-          <h4 class="text-sm font-bold text-rose-300">Nghi phạm: ${target.name}</h4>
-          <p class="text-xs text-slate-300 leading-relaxed italic">
-            "Tôi hoàn toàn vô tội và là một dân lành gương mẫu của nhóm Lighter! Mong mọi người hãy biểu quyết giữ lại sinh mệnh của tôi để cống hiến."
-          </p>
-        </div>
-      `;
-
-      const btn = document.getElementById('end-night-turn-btn');
-      btn.innerText = "Chuyển Sang Biểu Quyết Cuối";
-      btn.onclick = () => startFinalHangingVote();
-    }
-
-    // BIỂU QUYẾT SỐNG CHẾT CUỐI CÙNG
-    let hangingVoteChoice = null; // 'HANG' or 'FORGIVE'
-    function startFinalHangingVote() {
-      gameState.phase = 'HANGING_VOTE';
-      document.getElementById('game-phase-title').innerText = `BIỂU QUYẾT TREO CỔ`;
-      hangingVoteChoice = null;
-      renderFinalHangingVoteInterface();
-    }
-
-    function renderFinalHangingVoteInterface() {
-      const container = document.getElementById('game-action-interface');
-      const target = gameState.players.find(p => p.id === gameState.trialTargetId);
-
-      container.innerHTML = `
-        <p class="text-xs text-slate-300 text-center mb-4">Lựa chọn của bạn đối với việc treo cổ <span class="font-bold text-rose-300">${target.name}</span>:</p>
-        <div class="grid grid-cols-2 gap-3">
-          <button onclick="selectHangingChoice('HANG')" class="p-4 rounded-2xl border text-center transition font-bold text-xs ${
-            hangingVoteChoice === 'HANG' ? 'bg-rose-600/20 border-rose-500 text-rose-300' : 'bg-white/5 border-transparent hover:bg-white/10 text-slate-400'
-          }">
-            💀 Treo Cổ
-          </button>
-          <button onclick="selectHangingChoice('FORGIVE')" class="p-4 rounded-2xl border text-center transition font-bold text-xs ${
-            hangingVoteChoice === 'FORGIVE' ? 'bg-emerald-600/20 border-emerald-500 text-emerald-300' : 'bg-white/5 border-transparent hover:bg-white/10 text-slate-400'
-          }">
-            😇 Tha Bổng
-          </button>
-        </div>
-      `;
-
-      const btn = document.getElementById('end-night-turn-btn');
-      btn.innerText = "Xác nhận biểu quyết";
-      btn.onclick = () => executeFinalHangingResolution();
-    }
-
-    function selectHangingChoice(choice) {
-      hangingVoteChoice = choice;
-      renderFinalHangingVoteInterface();
-    }
-
-    function executeFinalHangingResolution() {
-      const target = gameState.players.find(p => p.id === gameState.trialTargetId);
-      const alivePlayers = gameState.players.filter(p => p.isAlive);
-
-      let hangVotes = 0;
-      let forgiveVotes = 0;
-
-      // Tính biểu quyết Bot ngẫu nhiên
-      alivePlayers.forEach(p => {
-        if (p.isBot) {
-          if (Math.random() > 0.5) hangVotes++; else forgiveVotes++;
-        } else {
-          if (hangingVoteChoice === 'HANG') hangVotes++; else forgiveVotes++;
-        }
-      });
-
-      gameState.logs.push(`Biểu quyết đối với [${target.name}]: ${hangVotes} Treo cổ vs ${forgiveVotes} Tha bổng.`);
-
-      if (hangVotes > forgiveVotes) {
-        // TREO CỔ!
-        // Luật đặc biệt: THẰNG NGỐC (IDIOT WIN)
-        if (target.role === 'IDIOT') {
-          target.isAlive = false;
-          target.deathReason = 'HANGED';
-          gameState.logs.push(`Hệ thống Idiot: Thằng Ngốc [${target.name}] bị treo cổ và đã thắng độc lập!`);
-          triggerGameEnd('IDIOT_SOLO');
-          return;
-        }
-
-        target.isAlive = false;
-        target.deathReason = 'HANGED';
-        gameState.logs.push(`Ngôi làng đã phán quyết TREO CỔ [${target.name}].`);
-
-        // Check Cupid tử nạn chùm
-        if (target.linkedLoverId) {
-          const lover = gameState.players.find(l => l.id === target.linkedLoverId);
-          if (lover && lover.isAlive) {
-            lover.isAlive = false;
-            lover.deathReason = 'LOVER_DEATH';
-            gameState.logs.push(`Liên kết Cupid: ${lover.name} tự sát đi cùng ${target.name}.`);
-          }
-        }
-
-        // Báo thù của thợ săn nếu có
-        checkHunterRevenge(() => {
-          if (checkGameOver()) return;
-          startNextDayNightCycle();
-        });
-      } else {
-        gameState.logs.push(`Ngôi làng tha bổng cho [${target.name}].`);
-        startNextDayNightCycle();
-      }
-    }
-
-    function startNextDayNightCycle() {
-      gameState.day++;
-      startNightPhase();
-    }
-
-
-    // --- KIỂM TRA ĐIỀU KIỆN KẾT THÚC VÒNG ĐẤU ---
-    function checkGameOver() {
-      const wolves = gameState.players.filter(p => p.isAlive && ['WEREWOLF', 'ALPHA_WOLF', 'TRAITOR'].includes(p.role));
-      const village = gameState.players.filter(p => p.isAlive && !['WEREWOLF', 'ALPHA_WOLF', 'TRAITOR'].includes(p.role));
-
-      if (wolves.length === 0) {
-        triggerGameEnd('VILLAGE');
-        return true;
-      }
-
-      if (wolves.length >= village.length) {
-        // Kiểm tra xem phe dân có ai đang yêu Sói không (Cupid thắng đôi lứa)
-        const lovers = gameState.players.filter(p => p.isAlive && p.linkedLoverId);
-        if (lovers.length === 2) {
-          const p1 = lovers[0];
-          const p2 = lovers[1];
-          const isWolf1 = ['WEREWOLF', 'ALPHA_WOLF', 'TRAITOR'].includes(p1.role);
-          const isWolf2 = ['WEREWOLF', 'ALPHA_WOLF', 'TRAITOR'].includes(p2.role);
-          
-          if (isWolf1 !== isWolf2 && wolves.length === 1 && village.length === 1) {
-            triggerGameEnd('LOVERS');
-            return true;
-          }
-        }
-        triggerGameEnd('WEREWOLF');
-        return true;
-      }
-
-      return false;
-    }
-
-    function triggerGameEnd(winner) {
-      gameState.status = 'OVER';
-      gameState.phase = 'PRE_GAME';
-
-      const container = document.getElementById('game-action-interface');
-      container.innerHTML = '';
-
-      let bannerClass = "bg-emerald-600/20 border-emerald-500 text-emerald-300";
-      let title = "DÂN LÀNG DÀNH CHIẾN THẮNG!";
-      let desc = "Bầy Sói đã bị thanh trừng hoàn toàn khỏi Lighter Arena.";
-
-      if (winner === 'WEREWOLF') {
-        bannerClass = "bg-rose-600/20 border-rose-500 text-rose-300";
-        title = "PHE SÓI DÀNH CHIẾN THẮNG!";
-        desc = "Thế lực bóng tối đã nuốt trọn ngôi làng nhỏ.";
-      } else if (winner === 'IDIOT_SOLO') {
-        bannerClass = "bg-yellow-600/20 border-yellow-500 text-yellow-300";
-        title = "THẰNG NGỐC DÀNH CHIẾN THẮNG ĐỘC LẬP!";
-        desc = "Trò cười của Thằng ngốc đã thao túng phán quyết ngôi làng.";
-      } else if (winner === 'LOVERS') {
-        bannerClass = "bg-pink-600/20 border-pink-500 text-pink-300";
-        title = "CẶP ĐÔI KHÁC PHE CHIẾN THẮNG!";
-        desc = "Tình yêu vượt qua ranh giới chủng tộc đã làm chủ thế giới.";
-      }
-
-      container.innerHTML = `
-        <div class="p-6 rounded-2xl border text-center space-y-4 ${bannerClass}">
-          <span class="text-5xl">🏆</span>
-          <h2 class="text-lg font-extrabold heading-font">${title}</h2>
-          <p class="text-xs leading-relaxed max-w-sm mx-auto">${desc}</p>
-          <button onclick="resetToLobby()" class="mt-4 px-4 py-2 bg-indigo-600 hover:bg-indigo-500 text-white font-bold rounded-xl text-xs transition">Quay về Phòng Chờ</button>
-        </div>
-      `;
-
-      const btn = document.getElementById('end-night-turn-btn');
-      btn.innerText = "Đã Kết Thúc Vòng Đấu";
-      btn.disabled = true;
-      updateGameplayUI();
-    }
-
-    function resetToLobby() {
-      gameState.status = 'WAITING';
-      gameState.phase = 'PRE_GAME';
-      gameState.players = [];
-
-      document.getElementById('werewolf-setup-screen').classList.remove('hidden');
-      document.getElementById('werewolf-gameplay-screen').classList.add('hidden');
-      updateLobbyUI();
-    }
-
-    // --- CẬP NHẬT GIAO DIỆN CHƠI GAME ĐỘNG ---
-    function updateGameplayUI() {
-      // 1. Ghi nhận vai trò của bạn
-      const myPlayer = gameState.players.find(p => p.id === currentUserId);
-      const myRoleDisplay = document.getElementById('my-role-display');
-
-      if (myPlayer) {
-        const role = ROLE_DETAILS[myPlayer.role];
-        const isSecret = ['WEREWOLF', 'ALPHA_WOLF', 'TRAITOR'].includes(myPlayer.role);
-        
-        myRoleDisplay.innerHTML = `
-          <div class="w-12 h-12 rounded-full bg-slate-800 flex items-center justify-center text-3xl shadow-md">${role.emoji}</div>
-          <div>
-            <h4 class="text-xs font-bold text-slate-100">${role.name} (${myPlayer.isAlive ? '🟢 Sống sót' : '💀 Đã tử nạn'})</h4>
-            <p class="text-[9px] text-slate-400 mt-0.5 max-w-xs leading-normal">${role.desc}</p>
-          </div>
-        `;
-      } else {
-        myRoleDisplay.innerHTML = `
-          <div class="w-12 h-12 rounded-full bg-slate-800 flex items-center justify-center text-3xl shadow-md">👀</div>
-          <div>
-            <h4 class="text-xs font-bold text-slate-100">Người Quan Sát / Admin</h4>
-            <p class="text-[9px] text-slate-400 mt-0.5">Bạn đang theo dõi tiến trình của Đấu trường.</p>
-          </div>
-        `;
-      }
-
-      // 2. Nhật ký sự kiện
-      const logsBox = document.getElementById('game-event-logs');
-      logsBox.innerHTML = '';
-      gameState.logs.slice().reverse().forEach(log => {
-        const p = document.createElement('p');
-        p.className = "py-1 border-b border-white/5 last:border-none leading-relaxed";
-        p.innerText = log;
-        logsBox.appendChild(p);
-      });
-
-      // 3. Danh sách người chơi trong game (Alive/Dead)
-      const listEl = document.getElementById('gameplay-players-list');
-      listEl.innerHTML = '';
-
-      gameState.players.forEach(p => {
-        const isSelected = p.id === currentUserId;
-        const div = document.createElement('div');
-        div.className = `p-2.5 rounded-xl border flex items-center justify-between text-xs transition ${
-          p.isAlive 
-            ? 'bg-white/5 border-white/5 text-slate-200' 
-            : 'bg-black/40 border-rose-950 text-slate-500 line-through'
-        } ${isSelected ? 'border-rose-400/50' : ''}`;
-
-        // Xác định xem có hiển thị vai trò (nếu chết, hoặc là admin, hoặc chính họ)
-        const canSeeRole = !p.isAlive || currentUserId === 'admin' || p.id === currentUserId;
-        const role = canSeeRole ? ROLE_DETAILS[p.role] : { emoji: '❓', name: 'Bí ẩn' };
-
-        div.innerHTML = `
-          <div class="flex items-center space-x-2">
-            <span class="text-base">${p.isAlive ? role.emoji : '💀'}</span>
-            <span class="font-bold">${p.name} ${isSelected ? '(Tôi)' : ''}</span>
-          </div>
-          <span class="text-[9px] text-slate-400 font-medium">
-            ${canSeeRole ? role.name : 'Vị trí ẩn'}
-          </span>
-        `;
-        listEl.appendChild(div);
-      });
-    }
-
-    // TUA NHANH PHASE ĐÊM (HỖ TRỢ KIỂM THỬ)
-    function skipPhase() {
-      if (gameState.phase === 'NIGHT_TURN') {
-        // Tua lượt đêm tiếp theo
-        gameState.currentNightTurnIndex++;
-        runNightTurn();
-      } else if (gameState.phase === 'DAY_DISCUSS') {
-        startVotePhase();
-      } else if (gameState.phase === 'DAY_VOTE') {
-        executeVotesTally();
-      } else if (gameState.phase === 'HANGING_DEFEND') {
-        startFinalHangingVote();
-      } else if (gameState.phase === 'HANGING_VOTE') {
-        executeFinalHangingResolution();
-      }
-    }
-
-    // HELPER MĂNG TÌM KIẾM PHE (Dành cho Tiên Tri / Gấu / Thám Tử)
-    function getSeerFaction(role) {
-      if (role === 'TRAITOR' || role === 'CURSED_ONE') return 'VILLAGE';
-      if (role === 'WEREWOLF' || role === 'ALPHA_WOLF') return 'WEREWOLF';
-      return 'VILLAGE';
-    }
-
-    // Đánh giá phe chung cho Thám tử và Cupid
-    function getGeneralFaction(role) {
-      if (role === 'WEREWOLF' || role === 'ALPHA_WOLF' || role === 'TRAITOR') {
-        return 'WEREWOLF';
-      }
-      if (role === 'IDIOT') return 'THIRD_PARTY';
-      return 'VILLAGE';
-    }
-    // 🚀 ĐÃ DÁN VÀO ĐÂY THÀNH CÔNG:Khởi tạo kết nối lên mây
-    const socket = io({
-        transports: ["websocket", "polling"]
-    });
-
-    socket.on("connect", () => {
-        console.log("Đã thông mạng lên Vercel! ID Máy:", socket.id);
-    });
-    // --- CHẠY HỆ THỐNG KHI LOAD TRANG ---
     window.onload = function() {
       init();
+      switchTab('workspace');
     };
   </script>
 </body>
