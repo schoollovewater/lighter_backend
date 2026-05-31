@@ -4,8 +4,11 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Lighter Werewolf Arena & Workspace</title>
+  <!-- Tailwind CSS -->
   <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Lucide Icons -->
   <script src="https://unpkg.com/lucide@latest"></script>
+  <!-- Nhúng Socket.io Client -->
   <script src="https://cdn.socket.io/4.7.5/socket.io.min.js"></script>
   <style>
     @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Space+Grotesk:wght@400;500;600;700&display=swap');
@@ -19,11 +22,13 @@
 </head>
 <body class="bg-gradient-to-br from-slate-950 via-indigo-950 to-rose-950 text-slate-100 min-h-screen flex flex-col selection:bg-rose-500 selection:text-white">
 
+  <!-- TOAST NOTIFICATION -->
   <div id="toast" class="fixed top-5 right-5 z-50 transform translate-y-[-150%] transition-transform duration-300 ease-out bg-slate-900/90 backdrop-blur-md border border-rose-500/30 p-4 rounded-2xl shadow-2xl flex items-center space-x-3 max-w-sm">
     <div id="toast-icon" class="text-rose-400">✨</div>
     <p id="toast-text" class="text-sm font-medium text-slate-200">Thông báo</p>
   </div>
 
+  <!-- HEADER -->
   <header class="border-b border-white/10 bg-black/40 backdrop-blur-md px-6 py-4 sticky top-0 z-40">
     <div class="max-w-7xl mx-auto flex flex-col md:flex-row md:items-center md:justify-between gap-4">
       <div>
@@ -49,8 +54,10 @@
     </div>
   </header>
 
+  <!-- CONTAINER CHÍNH -->
   <main class="flex-1 max-w-7xl w-full mx-auto p-4 md:p-6">
     
+    <!-- ==================== TAB 1: VĂN PHÒNG THẢO LUẬN ==================== -->
     <div id="tab-content-workspace" class="grid grid-cols-1 lg:grid-cols-12 gap-6">
       <div class="lg:col-span-4 flex flex-col space-y-4">
         <div class="bg-slate-900/60 border border-white/10 rounded-3xl p-5 shadow-xl space-y-4">
@@ -139,8 +146,10 @@
       </div>
     </div>
 
+    <!-- ==================== TAB 2: ĐẤU TRƯỜNG MA SÓI ==================== -->
     <div id="tab-content-arena" class="hidden grid grid-cols-1 lg:grid-cols-12 gap-6">
       
+      <!-- Cấu hình bài bên trái -->
       <div class="lg:col-span-5 flex flex-col space-y-4">
         <div class="bg-slate-900/60 border border-white/10 rounded-3xl p-5 shadow-2xl space-y-4">
           <h2 class="text-base font-bold text-rose-300 heading-font flex items-center gap-2 border-b border-white/10 pb-2">
@@ -175,6 +184,7 @@
         </div>
       </div>
 
+      <!-- Vòng tròn ghế ngồi Ma Sói bên phải -->
       <div class="lg:col-span-7 flex flex-col space-y-4">
         <div class="bg-slate-900/60 border border-white/10 rounded-3xl p-5 shadow-2xl space-y-4 min-h-[300px] flex flex-col justify-between">
           <div>
@@ -198,6 +208,7 @@
 
   </main>
 
+  <!-- MODAL LOGIN -->
   <div id="login-modal" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm">
     <div class="bg-slate-900 border border-white/15 rounded-3xl p-6 max-w-sm w-full shadow-2xl relative space-y-4">
       <div class="text-center">
@@ -224,7 +235,7 @@
 
   <script>
     // ==========================================
-    // 🔗 DÁN ĐƯỜNG LINK RENDER MIỄN PHÍ CỦA BẠN VÀO GIỮA DẤU "" DƯỚI ĐÂY NÈ BẠN:
+    // 🔗 LINK SERVER RENDER MIỄN PHÍ CỦA BẠN:
     const RENDER_SERVER_URL = "https://lighter-backend.onrender.com"; 
 
     const socket = io(RENDER_SERVER_URL, {
@@ -246,4 +257,358 @@
     // --- DANH SÁCH THÀNH VIÊN ---
     const INITIAL_CHARACTERS = {
       quetruong: { id: 'quetruong', name: 'Quế Trường', title: 'Nam Nhân Lighter', avatar: '😎', code: 'quetruong' },
-      xuantoan: { id: 'xuantoan', name: 'Xuân Toàn', title: 'Nam Nhân Lighter', avatar: '🦊', code: 'xuanto
+      xuantoan: { id: 'xuantoan', name: 'Xuân Toàn', title: 'Nam Nhân Lighter', avatar: '🦊', code: 'xuantoan' },
+      bangbang: { id: 'bangbang', name: 'Băng Băng', title: 'Miss Grand Yên Thành', avatar: '💃', code: 'bangbang' },
+      tuhoang: { id: 'tuhoang', name: 'Tú Hoàng', title: 'Nam Nhân Lighter', avatar: '🤖', code: 'tuhoang' },
+      anhquan: { id: 'anhquan', name: 'Anh Quân', title: 'Nam Nhân Lighter', avatar: '🎓', code: 'anhquan' },
+      sytien: { id: 'sytien', name: 'Sỹ Tiến', title: 'Nam Nhân Lighter', avatar: '🦁', code: 'sytien' },
+      ngocdiep: { id: 'ngocdiep', name: 'Ngọc Diệp', title: 'Miss Grand Nam Cát', avatar: '🌸', code: 'ngocdiep' },
+      kienle: { id: 'kienle', name: 'Kiên Lê', title: 'Hậu Cần Lighter', avatar: '📦', code: 'kienle' },
+      admin: { id: 'admin', name: 'Admin (Phòng 501)', title: 'Ban Quản Trị Hệ Thống', avatar: '👑', code: 'admin' }
+    };
+
+    let characters = { ...INITIAL_CHARACTERS };
+    let currentUserId = null;
+    let officeTopics = [];
+    let officeMessages = [];
+
+    // --- HỆ THỐNG LẮNG NGHE TÍN HIỆU TỪ SERVER (REAL-TIME NHẬN) ---
+    socket.on('receive_chat_message', (msgData) => {
+        officeMessages.push(msgData);
+        renderOfficeMessages();
+    });
+
+    socket.on('receive_new_topic', (topicData) => {
+        officeTopics.push(topicData);
+        renderOfficeWorkspace();
+    });
+
+    socket.on('topic_approved', (topicId) => {
+        officeTopics.forEach(t => {
+            if (t.status === 'active') t.status = 'archived';
+            if (t.id === topicId) t.status = 'active';
+        });
+        renderOfficeWorkspace();
+    });
+
+    socket.on('arena_roles_distributed', (gameConfig) => {
+        showToast("Hệ thống vừa tiến hành xáo bài trực tuyến thành công!", "success");
+        renderArenaPlayersGrid();
+    });
+
+    // --- KHỞI TẠO ---
+    function init() {
+      const savedChars = localStorage.getItem('lighter_custom_chars');
+      if (savedChars) characters = JSON.parse(savedChars);
+
+      officeTopics = [
+        { id: 't1', title: 'Kế hoạch cắm trại Lighter cuối tuần này! 🥳', creator: 'admin', status: 'active', createdAt: Date.now() }
+      ];
+
+      renderMembersList();
+      renderArenaPlayersGrid();
+      lucide.createIcons();
+    }
+
+    function showToast(text, type = 'info') {
+      const toast = document.getElementById('toast');
+      document.getElementById('toast-text').innerText = text;
+      document.getElementById('toast-icon').innerText = type === 'success' ? '✅' : type === 'error' ? '❌' : 'ℹ️';
+      toast.classList.remove('translate-y-[-150%]');
+      setTimeout(() => toast.classList.add('translate-y-[-150%]'), 3000);
+    }
+
+    function switchTab(tab) {
+      const btnWorkspace = document.getElementById('tab-btn-workspace');
+      const btnArena = document.getElementById('tab-btn-arena');
+      const contentWorkspace = document.getElementById('tab-content-workspace');
+      const contentArena = document.getElementById('tab-content-arena');
+
+      if (tab === 'workspace') {
+        btnWorkspace.className = "px-4 py-2 rounded-xl text-xs font-bold transition flex items-center gap-1.5 bg-rose-500 text-white shadow-lg shadow-rose-500/20";
+        btnArena.className = "px-4 py-2 rounded-xl text-xs font-bold transition flex items-center gap-1.5 bg-white/5 text-slate-400 hover:text-slate-100";
+        contentWorkspace.classList.remove('hidden');
+        contentArena.classList.add('hidden');
+      } else {
+        btnArena.className = "px-4 py-2 rounded-xl text-xs font-bold transition flex items-center gap-1.5 bg-rose-500 text-white shadow-lg shadow-rose-500/20";
+        btnWorkspace.className = "px-4 py-2 rounded-xl text-xs font-bold transition flex items-center gap-1.5 bg-white/5 text-slate-400 hover:text-slate-100";
+        contentArena.classList.remove('hidden');
+        contentWorkspace.classList.add('hidden');
+      }
+    }
+
+    function renderMembersList() {
+      const listEl = document.getElementById('members-list');
+      listEl.innerHTML = '';
+      Object.values(characters).forEach(char => {
+        const isMe = currentUserId === char.id;
+        const card = document.createElement('div');
+        card.onclick = () => openLoginModal(char.id);
+        card.className = `group cursor-pointer p-3 rounded-2xl border transition-all duration-300 flex items-center justify-between ${
+          isMe ? 'bg-gradient-to-r from-rose-500/10 to-indigo-500/10 border-rose-500 shadow-md shadow-rose-500/5' : 'bg-white/5 border-white/5 hover:bg-white/10'
+        }`;
+        card.innerHTML = `
+          <div class="flex items-center space-x-3">
+            <div class="w-10 h-10 rounded-full bg-slate-800 flex items-center justify-center text-xl transform group-hover:scale-105 transition">${char.avatar}</div>
+            <div>
+              <h4 class="text-xs font-bold text-slate-200">${char.name}</h4>
+              <p class="text-[10px] text-slate-400">${char.title}</p>
+            </div>
+          </div>
+          <div class="text-slate-400">
+            ${isMe ? '<span class="text-[9px] bg-rose-500 text-white font-extrabold px-1.5 py-0.5 rounded-full">ME</span>' : '<i data-lucide="lock" class="w-3.5 h-3.5"></i>'}
+          </div>
+        `;
+        listEl.appendChild(card);
+      });
+      lucide.createIcons();
+    }
+
+    function renderArenaPlayersGrid() {
+      const gridEl = document.getElementById('arena-players-grid');
+      if (!gridEl) return;
+      gridEl.innerHTML = '';
+      
+      const activePlayers = Object.values(characters).filter(c => c.id !== 'admin');
+      
+      activePlayers.forEach((player, index) => {
+        const isMe = currentUserId === player.id;
+        const card = document.createElement('div');
+        card.className = `p-4 rounded-2xl border text-center relative transition-all duration-300 ${
+          isMe ? 'bg-gradient-to-b from-rose-500/20 to-slate-900 border-rose-500 shadow-lg' : 'bg-black/30 border-white/5'
+        }`;
+        card.innerHTML = `
+          <div class="absolute top-2 left-2 text-[9px] px-1.5 py-0.5 bg-black/40 rounded-md text-slate-400 font-mono">Vị trí ${index + 1}</div>
+          <div class="text-2xl my-2">${player.avatar}</div>
+          <div class="text-xs font-bold text-slate-200 truncate">${player.name}</div>
+          <div class="text-[9px] text-slate-500 mt-1">${isMe ? 'Tài khoản của bạn' : 'Ghế trống/Bot'}</div>
+        `;
+        gridEl.appendChild(card);
+      });
+    }
+
+    let pendingLoginId = null;
+    function openLoginModal(charId) {
+      if (currentUserId === charId) return;
+      pendingLoginId = charId;
+      const char = characters[charId];
+      document.getElementById('login-avatar').innerText = char.avatar;
+      document.getElementById('login-name').innerText = char.name;
+      document.getElementById('login-title').innerText = char.title;
+      document.getElementById('login-password-input').value = '';
+      document.getElementById('login-error-msg').classList.add('hidden');
+      document.getElementById('login-modal').classList.remove('hidden');
+    }
+
+    function closeLoginModal() {
+      document.getElementById('login-modal').classList.add('hidden');
+      pendingLoginId = null;
+    }
+
+    function submitLogin(e) {
+      e.preventDefault();
+      const codeInput = document.getElementById('login-password-input').value;
+      const targetChar = characters[pendingLoginId];
+
+      if (codeInput === targetChar.code) {
+        currentUserId = pendingLoginId;
+        closeLoginModal();
+        showToast(`Đăng nhập thành công với vai trò ${targetChar.name}!`, 'success');
+        
+        document.getElementById('welcome-banner').classList.add('hidden');
+        document.getElementById('office-workspace').classList.remove('hidden');
+        document.getElementById('logout-btn').classList.remove('hidden');
+        document.getElementById('account-settings-card').classList.remove('hidden');
+        document.getElementById('settings-display-name').value = targetChar.name;
+        document.getElementById('settings-password').value = targetChar.code;
+
+        renderMembersList();
+        renderActiveUserHeader();
+        renderOfficeWorkspace();
+        renderArenaPlayersGrid(); 
+      } else {
+        const err = document.getElementById('login-error-msg');
+        err.innerText = "Mật khẩu chưa chính xác! (Mặc định: tên viết liền không dấu)";
+        err.classList.remove('hidden');
+      }
+    }
+
+    function logoutCurrentCharacter() {
+      currentUserId = null;
+      document.getElementById('welcome-banner').classList.remove('hidden');
+      document.getElementById('office-workspace').classList.add('hidden');
+      document.getElementById('logout-btn').classList.add('hidden');
+      document.getElementById('account-settings-card').classList.add('hidden');
+      renderMembersList();
+      renderArenaPlayersGrid();
+      showToast("Đã đăng xuất tài khoản.", "info");
+    }
+
+    function saveAccountSettings() {
+      if (!currentUserId) return;
+      const newName = document.getElementById('settings-display-name').value.trim();
+      const newPass = document.getElementById('settings-password').value.trim();
+      if (!newName || !newPass) return;
+      characters[currentUserId].name = newName;
+      characters[currentUserId].code = newPass;
+      localStorage.setItem('lighter_custom_chars', JSON.stringify(characters));
+      showToast("Đã lưu cài đặt tài khoản mới!", "success");
+      renderMembersList();
+      renderActiveUserHeader();
+      renderArenaPlayersGrid();
+    }
+
+    function renderActiveUserHeader() {
+      const header = document.getElementById('active-user-header');
+      const char = characters[currentUserId];
+      header.innerHTML = `
+        <div class="flex items-center space-x-3">
+          <span class="text-3xl">${char.avatar}</span>
+          <div>
+            <h3 class="font-extrabold text-xs">Phòng làm việc: ${char.name}</h3>
+            <p class="text-[9px] opacity-80">${char.title}</p>
+          </div>
+        </div>
+        <div class="bg-black/30 px-3 py-1.5 rounded-xl text-[10px] font-mono">
+          Vai trò: ${currentUserId === 'admin' ? 'Chủ phòng 👑' : 'Lighter Staff 💻'}
+        </div>
+      `;
+    }
+
+    function renderOfficeWorkspace() {
+      const adminSection = document.getElementById('admin-approval-section');
+      if (currentUserId === 'admin') {
+        adminSection.classList.remove('hidden');
+        renderPendingTopics();
+      } else {
+        adminSection.classList.add('hidden');
+      }
+
+      const activeTopic = officeTopics.find(t => t.status === 'active');
+      const topicTitleEl = document.getElementById('current-active-topic');
+      if (activeTopic) {
+        topicTitleEl.innerText = activeTopic.title;
+      } else {
+        topicTitleEl.innerText = "Chưa có chủ đề chính thức nào được kích hoạt.";
+      }
+      renderOfficeMessages();
+    }
+
+    function renderPendingTopics() {
+      const listEl = document.getElementById('pending-topics-list');
+      listEl.innerHTML = '';
+      const pendings = officeTopics.filter(t => t.status === 'pending');
+      if (pendings.length === 0) {
+        listEl.innerHTML = `<p class="text-[10px] text-slate-400 italic">Không có đề xuất chủ đề nào mới.</p>`;
+        return;
+      }
+      pendings.forEach(topic => {
+        const div = document.createElement('div');
+        div.className = "bg-white/5 border border-white/5 p-2 rounded-xl flex items-center justify-between gap-3";
+        div.innerHTML = `
+          <div>
+            <p class="text-[11px] font-bold text-slate-200">${topic.title}</p>
+            <p class="text-[9px] text-slate-400">Yêu cầu từ: ${(characters[topic.creator] || {}).name}</p>
+          </div>
+          <div class="flex gap-1.5">
+            <button onclick="approveTopic('${topic.id}')" class="px-2 py-1 bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg text-[9px] font-bold transition">Duyệt</button>
+          </div>
+        `;
+        listEl.appendChild(div);
+      });
+    }
+
+    function proposeTopic(e) {
+      e.preventDefault();
+      const input = document.getElementById('propose-topic-input');
+      const title = input.value.trim();
+      if (!title) return;
+
+      const newTopic = {
+        id: 'top_' + Date.now(),
+        title: title,
+        creator: currentUserId,
+        status: currentUserId === 'admin' ? 'active' : 'pending',
+        createdAt: Date.now()
+      };
+
+      if (currentUserId === 'admin') {
+          socket.emit('approve_topic', newTopic.id); 
+      }
+      socket.emit('propose_topic', newTopic); 
+      
+      input.value = '';
+      showToast(currentUserId === 'admin' ? "Đã kích hoạt chủ đề mới!" : "Gửi đề xuất thành công, đợi Admin duyệt nhé!", "success");
+    }
+
+    function approveTopic(topicId) {
+      socket.emit('approve_topic', topicId);
+      showToast("Đã duyệt chuyển giao chủ đề thảo luận!", "success");
+    }
+
+    function renderOfficeMessages() {
+      const box = document.getElementById('office-chat-box');
+      box.innerHTML = '';
+      const activeTopic = officeTopics.find(t => t.status === 'active');
+      if (!activeTopic) {
+        box.innerHTML = `<p class="text-xs text-slate-500 italic text-center py-8">Vui lòng chờ Admin mở chủ đề hoạt động.</p>`;
+        return;
+      }
+      const activeMsgs = officeMessages.filter(m => m.topicId === 't1' || m.topicId === activeTopic.id);
+      activeMsgs.forEach(msg => {
+        const sender = characters[msg.sender] || { name: 'Người lạ', avatar: '👤' };
+        const isMe = msg.sender === currentUserId;
+        const msgEl = document.createElement('div');
+        msgEl.className = `flex items-start gap-2.5 ${isMe ? 'flex-row-reverse' : ''}`;
+        msgEl.innerHTML = `
+          <div class="w-8 h-8 rounded-full bg-slate-800 flex items-center justify-center text-base">${sender.avatar}</div>
+          <div class="max-w-[75%] flex flex-col ${isMe ? 'items-end' : 'items-start'}">
+            <span class="text-[9px] font-bold text-slate-400 mb-0.5">${sender.name}</span>
+            <div class="rounded-2xl px-3.5 py-2 text-xs leading-relaxed ${isMe ? 'bg-rose-500 text-white rounded-tr-none' : 'bg-white/10 text-slate-100 rounded-tl-none'}">
+              ${msg.text}
+            </div>
+          </div>
+        `;
+        box.appendChild(msgEl);
+      });
+      box.scrollTop = box.scrollHeight;
+    }
+
+    function sendOfficeMessage(e) {
+      e.preventDefault();
+      const input = document.getElementById('office-chat-input');
+      const txt = input.value.trim();
+      const activeTopic = officeTopics.find(t => t.status === 'active');
+      if (!txt || !activeTopic) return;
+
+      const newMsg = {
+        id: 'msg_' + Date.now() + '_' + Math.random().toString(36).substring(7),
+        topicId: activeTopic.id,
+        sender: currentUserId,
+        text: txt,
+        createdAt: Date.now()
+      };
+
+      socket.emit('send_chat_message', newMsg);
+      input.value = '';
+    }
+
+    function hostStartDistribution() {
+        if (currentUserId !== 'admin') {
+            showToast("Chỉ có Admin mới có quyền phát động xáo bài phân vai trò!", "error");
+            return;
+        }
+        socket.emit('distribute_arena_roles', {
+            timestamp: Date.now(),
+            count: document.getElementById('game-player-count').value
+        });
+        showToast("Đang phát sóng lệnh xáo bài phân vai trò tới bàn cờ...", "success");
+    }
+
+    window.onload = function() {
+      init();
+      switchTab('workspace');
+    };
+  </script>
+</body>
+</html>
