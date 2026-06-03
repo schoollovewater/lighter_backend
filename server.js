@@ -7,17 +7,17 @@ const path = require('path');
 const app = express();
 app.use(cors()); 
 
-// Phục vụ giao diện Frontend tĩnh từ thư mục "public"
+// Phục vụ giao diện Frontend tĩnh từ thư mục "public"[cite: 9]
 app.use(express.static(path.join(__dirname, 'public')));
 
-// Trả về trang index.html cho mọi đường dẫn không khớp
-app.get('*', (req, res) => {
+// CHỈNH SỬA QUAN TRỌNG: Đổi dấu '*' thành '(.*)' để sửa triệt để lỗi Express 5 sập nguồn trên Render
+app.get('(.*)', (req, res) => {
     res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
 
 const server = http.createServer(app);
 
-// Khởi tạo máy chủ Socket.io hỗ trợ kết nối thời gian thực
+// Khởi tạo máy chủ Socket.io hỗ trợ kết nối thời gian thực[cite: 9]
 const io = new Server(server, {
     cors: {
         origin: "*", 
@@ -26,7 +26,7 @@ const io = new Server(server, {
 });
 
 // ==========================================
-// 🧠 BỘ NHỚ TRẠNG THÁI TRÊN SERVER (IN-MEMORY STATE)
+// 🧠 BỘ NHỚ TRẠNG THÁI TRÊN SERVER (IN-MEMORY STATE)[cite: 9]
 // ==========================================
 let serverMessages = [
     { id: 'm1', topicId: 't1', sender: 'admin', text: 'Chào mừng đến với Lighter Hardcore Arena! Máy chủ Socket.io đã sẵn sàng vận hành.', createdAt: Date.now() }
@@ -77,12 +77,12 @@ let serverGameState = {
 };
 
 // ==========================================
-// 🚀 QUẢN LÝ KẾT NỐI REAL-TIME
+// 🚀 QUẢN LÝ KẾT NỐI REAL-TIME[cite: 9]
 // ==========================================
 io.on('connection', (socket) => {
     console.log(`🟢 [SOCKET] Thiết bị kết nối thành công: ${socket.id}`);
 
-    // Gửi trạng thái ban đầu khi client vừa kết nối vào phòng
+    // Gửi trạng thái ban đầu khi client vừa kết nối vào phòng[cite: 9]
     socket.emit('initial_state', {
         messages: serverMessages,
         topics: serverTopics,
@@ -90,25 +90,25 @@ io.on('connection', (socket) => {
         members: serverMembers
     });
 
-    // Đồng bộ danh sách người chơi
+    // Đồng bộ danh sách người chơi[cite: 9]
     socket.on('sync_members', (membersData) => {
         serverMembers = membersData;
         socket.broadcast.emit('update_members', membersData);
     });
 
-    // Xử lý gửi tin nhắn văn phòng
+    // Xử lý gửi tin nhắn văn phòng[cite: 9]
     socket.on('send_chat_message', (msgData) => {
         serverMessages.push(msgData);
         io.emit('receive_chat_message', msgData); 
     });
 
-    // Đề xuất chủ đề mới
+    // Đề xuất chủ đề mới[cite: 9]
     socket.on('propose_topic', (topicData) => {
         serverTopics.push(topicData);
         io.emit('receive_new_topic', topicData);
     });
 
-    // Phê duyệt chủ đề chính (Admin duyệt)
+    // Phê duyệt chủ đề chính (Admin duyệt)[cite: 9]
     socket.on('approve_topic', (topicId) => {
         serverTopics.forEach(t => {
             if (t.status === 'active') t.status = 'archived';
@@ -117,13 +117,13 @@ io.on('connection', (socket) => {
         io.emit('topic_approved', serverTopics); 
     });
 
-    // Xóa chủ đề
+    // Xóa chủ đề[cite: 9]
     socket.on('delete_topic', (topicId) => {
         serverTopics = serverTopics.filter(t => t.id !== topicId);
         io.emit('topic_deleted', serverTopics);
     });
 
-    // Đồng bộ trạng thái phòng game Ma Sói thời gian thực
+    // Đồng bộ trạng thái phòng game Ma Sói thời gian thực[cite: 9]
     socket.on('sync_game_state', (newState) => {
         serverGameState = newState;
         socket.broadcast.emit('update_game_state', serverGameState);
@@ -134,7 +134,7 @@ io.on('connection', (socket) => {
     });
 });
 
-// Chạy máy chủ tại cổng quy định
+// Chạy máy chủ tại cổng quy định[cite: 9]
 const PORT = process.env.PORT || 3000;
 server.listen(PORT, () => {
     console.log(`🚀 Máy chủ Backend đang vận hành mượt mà tại cổng: ${PORT}`);
