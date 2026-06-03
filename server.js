@@ -7,12 +7,17 @@ const path = require('path');
 const app = express();
 app.use(cors()); 
 
-// Cấp quyền cho express truy cập thư mục public
-app.use(express.static('public'));
+// Phục vụ giao diện Frontend tĩnh từ thư mục "public"
+app.use(express.static(path.join(__dirname, 'public')));
+
+// Trả về trang index.html cho mọi đường dẫn không khớp
+app.get('*', (req, res) => {
+    res.sendFile(path.join(__dirname, 'public', 'index.html'));
+});
 
 const server = http.createServer(app);
 
-// Cấu hình Socket.io nhận mọi kết nối
+// Khởi tạo máy chủ Socket.io hỗ trợ kết nối thời gian thực
 const io = new Server(server, {
     cors: {
         origin: "*", 
@@ -21,40 +26,116 @@ const io = new Server(server, {
 });
 
 // ==========================================
-// 🚀 TRUNG TÂM XỬ LÝ DỮ LIỆU REAL-TIME
-io.on('connection', (socket) => {
-    console.log(`🟢 Có người chơi vừa kết nối! ID Máy: ${socket.id}`);
+// 🧠 BỘ NHỚ TRẠNG THÁI TRÊN SERVER (IN-MEMORY STATE)
+// ==========================================
+let serverMessages = [
+    { id: 'm1', topicId: 't1', sender: 'admin', text: 'Chào mừng đến với Lighter Hardcore Arena! Máy chủ Socket.io đã sẵn sàng vận hành.', createdAt: Date.now() }
+];
 
-    // 1. Lắng nghe tín hiệu: Có người gửi tin nhắn Chat
-    socket.on('send_chat_message', (msgData) => {
-        // Phát loa phóng thanh truyền tin nhắn này tới TẤT CẢ các thiết bị đang online
-        io.emit('receive_chat_message', msgData);
+let serverTopics = [
+    { id: 't1', title: 'Thảo luận chiến thuật Đấu trường Ma Sói Hardcore Lighter 🐺', creator: 'admin', status: 'active', createdAt: Date.now() }
+];
+
+let serverMembers = null; 
+
+let serverGameState = {
+    status: 'WAITING', 
+    phase: 'PRE_GAME', 
+    day: 1,
+    players: [], 
+    selectedRoles: { 
+        VILLAGER: 1, 
+        WEREWOLF: 1, 
+        TRAITOR: 1, 
+        CURSED_ONE: 1, 
+        BEAR_TAMER: 1, 
+        WITCH: 1, 
+        BODYGUARD: 1, 
+        HUNTER: 1 
+    },
+    currentNightStepIndex: 0,
+    nightActiveSteps: [], 
+    nightVotes: {}, 
+    actions: { 
+        wolvesTarget1: null, 
+        wolvesTarget2: null, 
+        witchHealUsed: false, 
+        witchPoisonTarget: null, 
+        protectedId: null, 
+        lockedId: null, 
+        shamanRuinedId: null, 
+        cupidTargets: [], 
+        doppelgangerTarget: null, 
+        hunterTarget: null 
+    },
+    logs: ["Hệ thống máy chủ Lighter đã sẵn sàng nhận lệnh."],
+    deadTonight: [],
+    dayVotes: {}, 
+    hangingTargetId: null, 
+    trialVotes: {},
+    alphaWolfDoubleBiteActive: false
+};
+
+// ==========================================
+// 🚀 QUẢN LÝ KẾT NỐI REAL-TIME
+// ==========================================
+io.on('connection', (socket) => {
+    console.log(`🟢 [SOCKET] Thiết bị kết nối thành công: ${socket.id}`);
+
+    // Gửi trạng thái ban đầu khi client vừa kết nối vào phòng
+    socket.emit('initial_state', {
+        messages: serverMessages,
+        topics: serverTopics,
+        gameState: serverGameState,
+        members: serverMembers
     });
 
-    // 2. Lắng nghe tín hiệu: Có người đề xuất Chủ đề mới
+    // Đồng bộ danh sách người chơi
+    socket.on('sync_members', (membersData) => {
+        serverMembers = membersData;
+        socket.broadcast.emit('update_members', membersData);
+    });
+
+    // Xử lý gửi tin nhắn văn phòng
+    socket.on('send_chat_message', (msgData) => {
+        serverMessages.push(msgData);
+        io.emit('receive_chat_message', msgData); 
+    });
+
+    // Đề xuất chủ đề mới
     socket.on('propose_topic', (topicData) => {
+        serverTopics.push(topicData);
         io.emit('receive_new_topic', topicData);
     });
 
-    // 3. Lắng nghe tín hiệu: Admin vừa duyệt một chủ đề
+    // Phê duyệt chủ đề chính (Admin duyệt)
     socket.on('approve_topic', (topicId) => {
-        io.emit('topic_approved', topicId);
+        serverTopics.forEach(t => {
+            if (t.status === 'active') t.status = 'archived';
+            if (t.id === topicId) t.status = 'active';
+        });
+        io.emit('topic_approved', serverTopics); 
     });
 
-    // Khi có người ngắt kết nối
+    // Xóa chủ đề
+    socket.on('delete_topic', (topicId) => {
+        serverTopics = serverTopics.filter(t => t.id !== topicId);
+        io.emit('topic_deleted', serverTopics);
+    });
+
+    // Đồng bộ trạng thái phòng game Ma Sói thời gian thực
+    socket.on('sync_game_state', (newState) => {
+        serverGameState = newState;
+        socket.broadcast.emit('update_game_state', serverGameState);
+    });
+
     socket.on('disconnect', () => {
-        console.log(`🔴 Người chơi ${socket.id} đã rời mạng.`);
+        console.log(`🔴 [SOCKET] Thiết bị đã rời mạng: ${socket.id}`);
     });
 });
-// ==========================================
 
-// Ép Express trả về file index.html khi truy cập trang chủ
-app.get('/', (req, res) => {
-    res.sendFile(path.join(__dirname, 'public', 'index.html'));
-});
-
-// Cấu hình cổng chạy Server
-const PORT = process.env.PORT || 5000; 
+// Chạy máy chủ tại cổng quy định
+const PORT = process.env.PORT || 3000;
 server.listen(PORT, () => {
-    console.log(`Backend Ma Sói đang chạy online tại cổng: ${PORT}`);
+    console.log(`🚀 Máy chủ Backend đang vận hành mượt mà tại cổng: ${PORT}`);
 });
