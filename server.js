@@ -10,8 +10,7 @@ app.use(cors());
 // Phục vụ giao diện Frontend tĩnh từ thư mục "public"
 app.use(express.static(path.join(__dirname, 'public')));
 
-// CHỈNH SỬA SỬA LỖI EXPRESS 5: Chuyển hẳn sang định dạng RegExp thuần /.*/ 
-// Loại bỏ hoàn toàn chuỗi nháy đơn và cặp dấu ngoặc đơn để không bị bẻ lỗi "Unexpected ("
+// Cú pháp chuẩn Express 5.x - Chạy mượt mà không lo sập nguồn sảnh Render
 app.get(/.*/, (req, res) => {
     res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
@@ -28,6 +27,7 @@ const io = new Server(server, {
 
 // ==========================================
 // 🧠 BỘ NHỚ TRẠNG THÁI TRÊN SERVER (IN-MEMORY STATE)
+// Đã đồng bộ tài khoản quản trị S C H O O L mới tinh
 // ==========================================
 let serverMessages = [
     { id: 'm1', topicId: 't1', sender: 'admin', text: 'Chào mừng đến với Lighter Hardcore Arena! Máy chủ Socket.io đã sẵn sàng vận hành.', createdAt: Date.now() }
@@ -78,7 +78,7 @@ let serverGameState = {
 };
 
 // ==========================================
-// 🚀 QUẢN LÝ KẾT NỐI REAL-TIME
+// 🚀 QUẢN LÝ KẾT NỐI REAL-TIME SOCKET.IO
 // ==========================================
 io.on('connection', (socket) => {
     console.log(`🟢 [SOCKET] Thiết bị kết nối thành công: ${socket.id}`);
@@ -91,7 +91,7 @@ io.on('connection', (socket) => {
         members: serverMembers
     });
 
-    // Đồng bộ danh sách người chơi
+    // Đồng bộ danh sách người chơi (Bao gồm cả tài khoản Khách tự tạo)
     socket.on('sync_members', (membersData) => {
         serverMembers = membersData;
         socket.broadcast.emit('update_members', membersData);
