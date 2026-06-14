@@ -12,52 +12,16 @@
     @import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap');
     body { font-family: 'Plus Jakarta Sans', sans-serif; background-color: #1A2421; }
     .heading-font { font-family: 'Space Grotesk', sans-serif; }
-    .bg-dark-moss { background-color: #1A2421; }
-    .text-fire { color: #FF4500; }
-    .bg-fire { background-color: #FF4500; }
-    .border-fire { border-color: #FF4500; }
     .border-moss { border-color: rgba(45, 61, 56, 0.8); }
     .bg-moss-card { background-color: rgba(14, 21, 18, 0.98); }
     .glow-fire { box-shadow: 0 0 15px rgba(255, 69, 0, 0.35); }
-    .glow-fire-intense { box-shadow: 0 0 45px rgba(255, 69, 0, 0.9); }
-    @keyframes flameGlow { 0%, 100% { box-shadow: 0 0 12px rgba(255, 69, 0, 0.3); } 50% { box-shadow: 0 0 28px rgba(255, 69, 0, 0.7); } }
-    .flame-active { animation: flameGlow 2s infinite alternate; }
+    .text-fire { color: #FF4500; }
     ::-webkit-scrollbar { width: 5px; height: 5px; }
     ::-webkit-scrollbar-track { background: #0d1412; }
     ::-webkit-scrollbar-thumb { background: #FF4500; border-radius: 99px; }
   </style>
 </head>
 <body class="text-slate-200 min-h-screen flex flex-col relative overflow-x-hidden selection:bg-[#FF4500] selection:text-white">
-
-  <!-- AUDIO ENGINE -->
-  <script>
-    const SFX = {
-      ctx: null,
-      init() { if (!this.ctx) this.ctx = new (window.AudioContext || window.webkitAudioContext)(); },
-      playZippoClick() {
-        this.init();
-        try {
-          const osc = this.ctx.createOscillator(); const gain = this.ctx.createGain();
-          osc.type = 'triangle'; osc.frequency.setValueAtTime(140, this.ctx.currentTime); osc.frequency.exponentialRampToValueAtTime(1100, this.ctx.currentTime + 0.05);
-          gain.gain.setValueAtTime(0.2, this.ctx.currentTime); gain.gain.exponentialRampToValueAtTime(0.001, this.ctx.currentTime + 0.06);
-          osc.connect(gain); gain.connect(this.ctx.destination); osc.start(); osc.stop(this.ctx.currentTime + 0.07);
-        } catch(e){}
-      },
-      playDryStrike() {
-        this.init();
-        try {
-          const bufferSize = this.ctx.sampleRate * 0.12; const buffer = this.ctx.createBuffer(1, bufferSize, this.ctx.sampleRate);
-          const data = buffer.getChannelData(0); for (let i = 0; i < bufferSize; i++) data[i] = Math.random() * 2 - 1;
-          const source = this.ctx.createBufferSource(); source.buffer = buffer; const filter = this.ctx.createBiquadFilter();
-          filter.type = 'highpass'; filter.frequency.value = 5200; const gain = this.ctx.createGain();
-          gain.gain.setValueAtTime(0.18, this.ctx.currentTime); gain.gain.exponentialRampToValueAtTime(0.001, this.ctx.currentTime + 0.1);
-          source.connect(filter); filter.connect(gain); gain.connect(this.ctx.destination); source.start();
-        } catch(e){}
-      }
-    };
-    function triggerZippoOpen() { SFX.playZippoClick(); }
-    function triggerZippoStrike() { SFX.playDryStrike(); }
-  </script>
 
   <!-- TOAST ALERTS -->
   <div id="tau-toast" class="fixed top-6 right-6 z-50 transform translate-y-[-150%] transition-transform duration-300 bg-[#0d1412]/95 border-l-4 border-[#FF4500] p-4 rounded-xl shadow-2xl flex items-center space-x-3 max-w-sm glow-fire">
@@ -76,7 +40,7 @@
           <span class="text-3xl">🔥</span>
           <h1 class="text-2xl font-extrabold tracking-tight heading-font bg-gradient-to-r from-orange-400 via-[#FF4500] to-rose-400 bg-clip-text text-transparent">LIGHTER WORKSPACE & ARENA</h1>
         </div>
-        <p class="text-[10px] text-[#FF4500] font-extrabold uppercase tracking-widest mt-1">Hệ thống Đồng bộ Socket.io • Không độ trễ</p>
+        <p class="text-[10px] text-[#FF4500] font-extrabold uppercase tracking-widest mt-1">Hệ thống Đồng bộ Socket.io • Sảnh chờ chủ động</p>
       </div>
       
       <div class="flex flex-wrap items-center gap-3">
@@ -85,11 +49,10 @@
           <input type="text" id="render-url-input" placeholder="Dán URL Render vào đây" class="bg-black/80 border border-moss rounded px-2.5 py-1 text-[11px] text-slate-200 w-44 focus:outline-none focus:border-[#FF4500]">
           <button onclick="saveRenderUrl()" class="px-2.5 py-1 bg-[#FF4500] text-white rounded-lg text-[10px] font-bold hover:bg-orange-500 transition shadow-md">Kết nối</button>
         </div>
-
-        <button onclick="triggerZippoOpen(); switchTab('workspace')" id="tab-workspace" class="px-4 py-2 rounded-xl text-xs font-bold transition flex items-center gap-1.5 bg-[#FF4500] text-white shadow-lg glow-fire">
+        <button onclick="switchTab('workspace')" id="tab-workspace" class="px-4 py-2 rounded-xl text-xs font-bold transition flex items-center gap-1.5 bg-[#FF4500] text-white shadow-lg glow-fire">
           <i data-lucide="message-square" class="w-3.5 h-3.5"></i> Văn Phòng Lighter
         </button>
-        <button onclick="triggerZippoOpen(); switchTab('arena')" id="tab-arena" class="px-4 py-2 rounded-xl text-xs font-bold transition flex items-center gap-1.5 bg-white/5 text-slate-300 hover:bg-white/10">
+        <button onclick="switchTab('arena')" id="tab-arena" class="px-4 py-2 rounded-xl text-xs font-bold transition flex items-center gap-1.5 bg-white/5 text-slate-300 hover:bg-white/10">
           <i data-lucide="swords" class="w-3.5 h-3.5"></i> Đấu Trường Ma Sói
         </button>
       </div>
@@ -103,23 +66,15 @@
         <div class="flex items-center justify-between border-b border-moss pb-3">
           <h2 class="text-xs font-bold text-slate-300 uppercase tracking-widest flex items-center gap-1.5"><i data-lucide="users" class="w-4 h-4 text-[#FF4500]"></i> Danh tính Lighter</h2>
           <div class="flex items-center gap-1.5">
-            <!-- NÚT THÊM KHÁCH LINH HOẠT -->
-            <button onclick="triggerZippoOpen(); openAddGuestModal()" class="px-2 py-1 rounded-lg bg-emerald-600/20 hover:bg-emerald-600 text-emerald-400 hover:text-white text-[10px] font-bold transition flex items-center gap-1 border border-emerald-500/30">
-              <i data-lucide="user-plus" class="w-3 h-3"></i> + Khách
-            </button>
-            <button id="logout-btn" onclick="triggerZippoOpen(); logout()" class="hidden px-2 py-1 rounded-lg bg-[#FF4500]/10 hover:bg-[#FF4500] text-[#FF4500] hover:text-white text-[10px] font-bold transition flex items-center gap-1 border border-[#FF4500]/30">
-              <i data-lucide="log-out" class="w-3 h-3"></i> Ra
-            </button>
+            <button onclick="openAddGuestModal()" class="px-2 py-1 rounded-lg bg-emerald-600/20 hover:bg-emerald-600 text-emerald-400 hover:text-white text-[10px] font-bold transition flex items-center gap-1 border border-emerald-500/30"><i data-lucide="user-plus" class="w-3 h-3"></i> + Khách</button>
+            <button id="logout-btn" onclick="logout()" class="hidden px-2 py-1 rounded-lg bg-[#FF4500]/10 hover:bg-[#FF4500] text-[#FF4500] hover:text-white text-[10px] font-bold transition flex items-center gap-1 border border-[#FF4500]/30"><i data-lucide="log-out" class="w-3 h-3"></i> Ra</button>
           </div>
         </div>
         <div id="members-grid" class="grid grid-cols-1 gap-2.5 max-h-[360px] overflow-y-auto pr-1"></div>
       </div>
       
-      <!-- KHU VỰC CÀI ĐẶT PROFILE -->
       <div id="account-settings-card" class="hidden bg-moss-card border border-moss rounded-3xl p-5 shadow-xl space-y-4">
-        <div class="flex items-center space-x-2 border-b border-moss pb-2">
-          <i data-lucide="user-cog" class="text-[#FF4500] w-4 h-4"></i><h3 class="text-xs font-bold text-slate-300 uppercase tracking-wider">Cấu hình hồ sơ cá nhân</h3>
-        </div>
+        <div class="flex items-center space-x-2 border-b border-moss pb-2"><i data-lucide="user-cog" class="text-[#FF4500] w-4 h-4"></i><h3 class="text-xs font-bold text-slate-300 uppercase tracking-wider">Cấu hình hồ sơ cá nhân</h3></div>
         <form onsubmit="updateAccountSettings(event)" class="space-y-3.5">
           <div>
             <label class="text-[9px] text-slate-400 block mb-1">Chọn Avatar biểu tượng:</label>
@@ -130,10 +85,10 @@
             <input type="text" id="display-name-input" class="w-full bg-black/40 border border-moss rounded-xl px-3 py-2 text-xs text-slate-200 focus:outline-none focus:border-[#FF4500]" required>
           </div>
           <div>
-            <label class="text-[9px] text-slate-400 block mb-1">Mật khẩu mới (Mã đăng nhập):</label>
+            <label class="text-[9px] text-slate-400 block mb-1">Mật khẩu mới:</label>
             <input type="text" id="display-pass-input" class="w-full bg-black/40 border border-moss rounded-xl px-3 py-2 text-xs font-mono text-slate-200 focus:outline-none focus:border-[#FF4500]" required>
           </div>
-          <button type="submit" class="w-full py-2.5 bg-gradient-to-r from-[#FF4500] to-orange-500 text-white rounded-xl text-xs font-bold transition shadow-md glow-fire">Chốt lưu thông tin</button>
+          <button type="submit" class="w-full py-2.5 bg-gradient-to-r from-[#FF4500] to-orange-500 text-white rounded-xl text-xs font-bold transition shadow-md">Chốt lưu thông tin</button>
         </form>
       </div>
     </section>
@@ -144,37 +99,17 @@
         <div id="workspace-login-welcome" class="bg-moss-card border border-moss rounded-3xl p-8 flex flex-col items-center justify-center text-center space-y-4 min-h-[350px]">
           <div class="w-16 h-16 rounded-full bg-[#FF4500]/10 flex items-center justify-center border border-[#FF4500]/20 animate-bounce"><i data-lucide="lock" class="w-8 h-8 text-[#FF4500]"></i></div>
           <h2 class="text-sm font-extrabold text-slate-200 uppercase heading-font tracking-wide">XÁC THỰC DANH TÍNH LÀM VIỆC</h2>
-          <p class="text-xs text-slate-400 max-w-sm leading-relaxed">Đăng nhập tài khoản hoặc chọn tài khoản Khách bên trái để vào phòng.</p>
+          <p class="text-xs text-slate-400 max-w-sm leading-relaxed">Đăng nhập tài khoản bên trái để vào sảnh kết nối.</p>
         </div>
 
         <div id="workspace-active" class="hidden space-y-6">
           <div id="user-welcome-bar" class="p-4 rounded-2xl bg-gradient-to-r from-emerald-950 to-[#1A2421] border border-emerald-500/20 text-white flex items-center justify-between shadow-lg"></div>
-          <div class="bg-moss-card border border-moss rounded-2xl p-5 shadow-md">
-            <h3 class="text-xs font-bold text-slate-300 mb-2 flex items-center gap-1.5 uppercase tracking-wider"><i data-lucide="sparkles" class="w-4 h-4 text-[#FF4500]"></i> Đề xuất chủ đề mới</h3>
-            <form onsubmit="submitProposedTopic(event)" class="flex gap-2">
-              <input type="text" id="proposed-topic-input" placeholder="Ví dụ: Lên kèo Ma Sói tối nay?" class="flex-1 bg-black/40 border border-moss rounded-xl px-4 py-2.5 text-xs text-slate-200 focus:outline-none focus:border-[#FF4500]" required>
-              <button type="submit" class="bg-[#FF4500] hover:bg-orange-500 text-white font-bold px-4 py-2 rounded-xl text-xs transition">Gửi đề xuất</button>
-            </form>
-          </div>
-          <div id="admin-moderation-board" class="hidden bg-moss-card border border-[#FF4500]/30 rounded-2xl p-5 shadow-xl space-y-3">
-            <h3 class="text-xs font-bold text-[#FF4500] flex items-center gap-1.5 uppercase tracking-wider"><i data-lucide="shield-alert" class="w-4 h-4 animate-pulse"></i> Ban Kiểm Duyệt Chủ Đề</h3>
-            <div id="admin-pending-topics" class="space-y-2 max-h-[150px] overflow-y-auto"></div>
-          </div>
           <div class="bg-moss-card border border-moss rounded-3xl shadow-xl flex flex-col overflow-hidden">
-            <div class="bg-black/30 px-5 py-3 border-b border-moss flex items-center justify-between">
-              <div class="flex items-center space-x-3">
-                <i data-lucide="messages-square" class="text-[#FF4500] w-5 h-5 animate-pulse"></i>
-                <div>
-                  <span class="text-[9px] bg-[#FF4500]/20 text-[#FF4500] font-bold px-1.5 py-0.5 rounded uppercase tracking-widest heading-font">Mục Tiêu Thảo Luận</span>
-                  <h3 id="workspace-topic-title" class="text-xs font-bold text-slate-200 mt-1">Đang tải chủ đề...</h3>
-                </div>
-              </div>
-            </div>
             <div id="workspace-chat-scroller" class="p-5 space-y-4 max-h-[300px] min-h-[250px] overflow-y-auto"></div>
             <div class="p-3 bg-black/20 border-t border-moss">
               <form onsubmit="sendWorkspaceMsg(event)" class="flex gap-2">
                 <input type="text" id="workspace-msg-input" placeholder="Gõ ý kiến thảo luận..." class="flex-1 bg-black/40 border border-moss rounded-xl px-4 py-2.5 text-xs text-slate-200 focus:outline-none focus:border-[#FF4500]">
-                <button type="submit" class="bg-[#FF4500] hover:bg-orange-500 text-white px-4 py-2 rounded-xl text-xs font-bold transition flex items-center gap-1">Chốt chưa? <i data-lucide="send" class="w-3 h-3"></i></button>
+                <button type="submit" class="bg-[#FF4500] hover:bg-orange-500 text-white px-4 py-2 rounded-xl text-xs font-bold transition">Gửi</button>
               </form>
             </div>
           </div>
@@ -186,28 +121,34 @@
         <div id="arena-setup" class="bg-moss-card border border-moss rounded-3xl p-6 space-y-6 shadow-2xl">
           <div class="text-center space-y-1.5">
             <h2 class="text-2xl font-extrabold text-[#FF4500] heading-font tracking-wider uppercase">ĐẤU TRƯỜNG MA SÓI HARDCORE</h2>
-            <p class="text-xs text-slate-400">Trộn bài Fisher-Yates • Hệ thống gọi đêm thời gian thực.</p>
+            <p class="text-xs text-slate-400">Không có Bot • Tắt app tự động Out phòng chờ.</p>
           </div>
+          
           <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 pt-2">
             <div class="bg-black/30 border border-moss/50 p-4 rounded-2xl space-y-3">
-              <h3 class="text-xs font-bold text-slate-300 border-b border-moss pb-1.5 uppercase tracking-wider flex items-center gap-1.5"><i data-lucide="settings-2" class="w-4 h-4 text-[#FF4500]"></i> Cấu hình SelectedRoles</h3>
+              <h3 class="text-xs font-bold text-slate-300 border-b border-moss pb-1.5 uppercase tracking-wider">Cấu hình SelectedRoles</h3>
               <div id="arena-roles-sliders" class="space-y-2.5 max-h-[250px] overflow-y-auto pr-1"></div>
               <div class="pt-2 flex items-center justify-between text-xs font-bold text-slate-400">
                 <span>Tổng bài phát: <span id="roles-counter-sum" class="text-fire">0</span></span>
-                <span>Yêu cầu bàn chơi: <span id="required-counter-sum" class="text-fire">8</span></span>
               </div>
             </div>
+            
             <div class="bg-black/30 border border-moss/50 p-4 rounded-2xl flex flex-col justify-between space-y-4">
               <div>
                 <h3 class="text-xs font-bold text-slate-300 border-b border-moss pb-1.5 uppercase tracking-wider flex items-center justify-between">
-                  <span><i data-lucide="users" class="w-4 h-4 text-[#FF4500] inline mr-1"></i> Phòng chờ Lobby</span>
-                  <span id="lobby-count-badge" class="text-[10px] text-slate-400">0/8 người</span>
+                  <span>Phòng chờ Đấu Trường (Lobby)</span>
+                  <span id="lobby-count-badge" class="text-[10px] text-slate-400">0 người</span>
                 </h3>
                 <div id="arena-lobby-players" class="grid grid-cols-2 gap-2 pt-2.5"></div>
               </div>
-              <div class="flex gap-2">
-                <button onclick="triggerZippoStrike(); fillLobbyBots()" class="flex-1 py-3 bg-[#FF4500]/15 hover:bg-[#FF4500]/30 text-[#FF4500] border border-[#FF4500]/30 rounded-xl text-xs font-bold transition uppercase tracking-wider">Mời Bot</button>
-                <button onclick="triggerZippoOpen(); startHardcoreMatch()" class="flex-1 py-3 bg-[#FF4500] hover:bg-orange-500 text-white rounded-xl text-xs font-extrabold transition uppercase tracking-wider shadow-lg glow-fire">BẮT ĐẦU 🐺</button>
+              
+              <!-- NÚT CHỨC NĂNG VÀO / RA PHÒNG CHỜ CHỦ ĐỘNG -->
+              <div class="space-y-2">
+                <div id="lobby-action-zone" class="grid grid-cols-2 gap-2">
+                  <button onclick="joinGameLobby()" class="py-2.5 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl text-xs font-bold transition uppercase">Vào phòng chờ</button>
+                  <button onclick="leaveGameLobby()" class="py-2.5 bg-rose-600/20 hover:bg-rose-600 text-rose-300 rounded-xl text-xs font-bold transition uppercase">Rút lui khỏi sảnh</button>
+                </div>
+                <button onclick="startHardcoreMatch()" class="w-full py-3 bg-[#FF4500] hover:bg-orange-500 text-white rounded-xl text-xs font-extrabold transition uppercase tracking-wider shadow-lg glow-fire">KHỞI TRẬN 🐺</button>
               </div>
             </div>
           </div>
@@ -216,12 +157,11 @@
         <div id="arena-gameplay" class="hidden grid grid-cols-1 lg:grid-cols-12 gap-6 animate-fade-in">
           <div class="lg:col-span-4 space-y-6">
             <div class="bg-gradient-to-br from-black/80 to-[#1A2421] border border-moss rounded-2xl p-5 shadow-xl relative overflow-hidden">
-              <div class="absolute -right-6 -bottom-6 text-slate-900/10 text-8xl font-black select-none">🐺</div>
               <h3 class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Chức năng của Mi</h3>
               <div id="my-identity-display" class="flex items-center space-x-3.5 mt-3"></div>
             </div>
             <div class="bg-moss-card border border-moss rounded-2xl p-5 flex flex-col h-[280px]">
-              <h3 class="text-xs font-bold text-slate-300 border-b border-moss pb-1.5 uppercase tracking-wider flex items-center gap-1.5"><i data-lucide="scroll" class="w-4 h-4 text-[#FF4500]"></i> Sử ký vòng đấu</h3>
+              <h3 class="text-xs font-bold text-slate-300 border-b border-moss pb-1.5 uppercase tracking-wider">Sử ký vòng đấu</h3>
               <div id="gameplay-logs" class="flex-1 overflow-y-auto space-y-2 pt-2.5 text-xs text-slate-400 font-mono"></div>
             </div>
           </div>
@@ -229,18 +169,18 @@
             <div>
               <div class="border-b border-moss pb-3 flex items-center justify-between">
                 <div>
-                  <span id="gameplay-day-badge" class="bg-[#FF4500]/20 text-[#FF4500] text-[10px] font-bold px-2 py-0.5 rounded-full uppercase tracking-widest heading-font">Đêm 1</span>
+                  <span id="gameplay-day-badge" class="bg-[#FF4500]/20 text-[#FF4500] text-[10px] font-bold px-2 py-0.5 rounded-full uppercase tracking-widest">Đêm 1</span>
                   <h3 id="gameplay-phase-badge" class="text-xs font-extrabold text-slate-300 mt-1 uppercase tracking-wider">LƯỢT ĐI ĐẶC BIỆT</h3>
                 </div>
               </div>
               <div id="gameplay-interactive-action" class="py-5 space-y-4"></div>
             </div>
             <div id="gameplay-confirm-area" class="border-t border-moss pt-4">
-              <button id="end-action-turn-btn" onclick="triggerZippoOpen(); confirmActionTurn()" class="w-full py-3 bg-[#FF4500] hover:bg-orange-500 text-white rounded-xl text-xs font-extrabold transition uppercase tracking-widest disabled:opacity-30 disabled:cursor-not-allowed glow-fire">Chốt chưa?</button>
+              <button id="end-action-turn-btn" onclick="confirmActionTurn()" class="w-full py-3 bg-[#FF4500] hover:bg-orange-500 text-white rounded-xl text-xs font-extrabold transition uppercase tracking-widest disabled:opacity-30 disabled:cursor-not-allowed glow-fire">Chốt chưa?</button>
             </div>
           </div>
           <div class="lg:col-span-3 bg-moss-card border border-moss rounded-2xl p-5 shadow-md flex flex-col h-[460px]">
-            <h3 class="text-xs font-bold text-slate-300 border-b border-moss pb-1.5 uppercase tracking-wider flex items-center gap-1.5"><i data-lucide="skull" class="w-4 h-4 text-[#FF4500]"></i> Trạng thái Sinh Tử</h3>
+            <h3 class="text-xs font-bold text-slate-300 border-b border-moss pb-1.5 uppercase tracking-wider">Trạng thái Sinh Tử</h3>
             <div id="gameplay-status-list" class="flex-1 overflow-y-auto space-y-2 pt-2.5 pr-1"></div>
           </div>
         </div>
@@ -248,32 +188,30 @@
     </section>
   </main>
 
-  <!-- MODAL ĐĂNG NHẬP -->
+  <!-- MODAL LOGIN -->
   <div id="login-modal" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/90 backdrop-blur-sm">
     <div class="bg-moss-card border border-[#FF4500]/30 rounded-3xl p-6 max-w-sm w-full shadow-2xl relative space-y-4">
       <div class="text-center">
         <div id="login-avatar-circle" class="w-14 h-14 rounded-full bg-[#FF4500]/10 mx-auto flex items-center justify-center text-3xl mb-2">👤</div>
         <h3 id="login-display-title" class="text-sm font-bold text-slate-100 uppercase heading-font tracking-wider">Mi là ai rứa?</h3>
-        <p class="text-[10px] text-slate-400">Vui lòng cung cấp mật khẩu để xác thực</p>
       </div>
       <form onsubmit="confirmLogin(event)" class="space-y-3">
         <div><input type="password" id="login-password-input" class="w-full bg-black/50 border border-moss rounded-xl px-4 py-2.5 text-center text-sm font-mono tracking-widest text-slate-200 focus:outline-none focus:border-[#FF4500]" required></div>
         <p id="login-err" class="hidden text-[10px] text-rose-400 bg-rose-500/10 p-2 rounded-lg border border-rose-500/20 text-center font-bold"></p>
         <div class="flex gap-2">
-          <button type="button" onclick="triggerZippoOpen(); closeLoginModal()" class="flex-1 bg-white/5 hover:bg-white/10 text-slate-300 py-2 rounded-xl text-xs font-bold border border-white/5 transition">Hủy</button>
+          <button type="button" onclick="closeLoginModal()" class="flex-1 bg-white/5 text-slate-300 py-2 rounded-xl text-xs font-bold border transition">Hủy</button>
           <button type="submit" class="flex-1 bg-[#FF4500] hover:bg-orange-500 text-white py-2 rounded-xl text-xs font-bold transition shadow-lg">Xác nhận</button>
         </div>
       </form>
     </div>
   </div>
 
-  <!-- CẬP NHẬT: MODAL TẠO TÀI KHOẢN KHÁCH ĐẶT TÊN + CHỌN AVATAR -->
+  <!-- MODAL TẠO TÀI KHOẢN KHÁCH -->
   <div id="guest-create-modal" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/95 backdrop-blur-sm">
     <div class="bg-moss-card border border-emerald-500/30 rounded-3xl p-6 max-w-sm w-full shadow-2xl space-y-4">
       <div class="text-center">
         <span class="text-3xl p-3 bg-emerald-500/10 rounded-full inline-block mb-1">🎫</span>
         <h3 class="text-sm font-bold text-slate-100 uppercase heading-font tracking-wider">Cấp thẻ Khách Tham Gia</h3>
-        <p class="text-[10px] text-slate-400">Khách tự đặt tên và avatar thương hiệu (Mật khẩu mặc định: 123)</p>
       </div>
       <div class="space-y-3">
         <div>
@@ -282,7 +220,7 @@
         </div>
         <div>
           <label class="text-[9px] text-slate-400 block mb-1">Nhập Tên Khách:</label>
-          <input type="text" id="guest-name-input" placeholder="Ví dụ: Anh Ba, Bé Bự..." class="w-full bg-black/50 border border-moss rounded-xl px-3 py-2 text-xs text-slate-200 focus:outline-none focus:border-[#FF4500]">
+          <input type="text" id="guest-name-input" class="w-full bg-black/50 border border-moss rounded-xl px-3 py-2 text-xs text-slate-200 focus:outline-none focus:border-[#FF4500]">
         </div>
         <div class="flex gap-2 pt-1">
           <button onclick="closeAddGuestModal()" class="flex-1 bg-white/5 text-slate-300 py-2 rounded-xl text-xs font-bold transition">Hủy</button>
@@ -350,7 +288,7 @@
       admin: { id: 'admin', name: 'S C H O O L', title: 'Superuser / Host', avatar: '👑', code: 'school' }
     };
 
-    let members = JSON.parse(localStorage.getItem('lighter_custom_members_v3')) || { ...INITIAL_MEMBERS };
+    let members = JSON.parse(localStorage.getItem('lighter_custom_members_v4')) || { ...INITIAL_MEMBERS };
     let selectedAvatar = '😎';
     let guestSelectedAvatar = '🥷';
     let currentUserId = null;
@@ -369,22 +307,46 @@
       lucide.createIcons();
     }
 
-    // CẬP NHẬT: QUY TRÌNH MỞ MODAL ĐỂ TẠO KHÁCH LINH HOẠT
+    // CHỦ ĐỘNG ĐĂNG KÝ VÀO PHÒNG CHỜ
+    function joinGameLobby() {
+      if (!currentUserId) { showToast("Vui lòng đăng nhập tài khoản trước nhé!", "error"); return; }
+      if (matchState.status !== 'WAITING') { showToast("Trận đấu đang diễn ra rồi, không thể vào sảnh!", "error"); return; }
+      
+      const alreadyIn = matchState.players.some(p => p.id === currentUserId);
+      if (alreadyIn) { showToast("Bạn đã có mặt trong phòng chờ rồi tề!", "info"); return; }
+      
+      const me = members[currentUserId];
+      matchState.players.push({
+        id: me.id, name: me.name, role: null, originalRole: null, isAlive: true, isBot: false,
+        lastProtectedId: null, linkedLoverId: null, isLocked: false, isRuined: false,
+        isTargeted1: false, isTargeted2: false, isProtected: false, isSaved: false, isPoisoned: false, isHunted: false, votesRec: 0
+      });
+      
+      syncGameStateToServer();
+      updateLobby();
+      showToast("Đăng ký vào sảnh chờ Ma Sói thành công!", "success");
+    }
+
+    // CHỦ ĐỘNG RÚT LUI KHỎI PHÒNG CHỜ
+    function leaveGameLobby() {
+      if (!currentUserId) return;
+      if (matchState.status !== 'WAITING') return;
+      
+      matchState.players = matchState.players.filter(p => p.id !== currentUserId);
+      syncGameStateToServer();
+      updateLobby();
+      showToast("Đã rút lui khỏi sảnh chờ Ma Sói.", "info");
+    }
+
     function openAddGuestModal() {
       const currentGuests = Object.keys(members).filter(k => k.startsWith('guest_'));
-      if (currentGuests.length >= 7) {
-        showToast("Bàn chơi đã đầy hạn ngạch tối đa 7 tài khoản khách!", "error");
-        return;
-      }
+      if (currentGuests.length >= 7) { showToast("Đã đạt giới hạn 7 khách!", "error"); return; }
       guestSelectedAvatar = AVATAR_POOL[Math.floor(Math.random() * AVATAR_POOL.length)];
       document.getElementById('guest-name-input').value = '';
       renderGuestAvatarPool();
       document.getElementById('guest-create-modal').classList.remove('hidden');
     }
-
-    function closeAddGuestModal() {
-      document.getElementById('guest-create-modal').classList.add('hidden');
-    }
+    function closeAddGuestModal() { document.getElementById('guest-create-modal').classList.add('hidden'); }
 
     function renderGuestAvatarPool() {
       const container = document.getElementById('guest-avatar-pool'); container.innerHTML = '';
@@ -399,24 +361,11 @@
 
     function confirmCreateGuestAccount() {
       const nameInput = document.getElementById('guest-name-input').value.trim();
-      if (!nameInput) {
-        showToast("Vui lòng đặt tên hiển thị cho Khách tề!", "error");
-        return;
-      }
-      const currentGuests = Object.keys(members).filter(k => k.startsWith('guest_'));
-      const nextId = currentGuests.length + 1;
-      const guestKey = `guest_${Date.now()}`; // Tạo key độc bản không trùng lặp
-      
-      members[guestKey] = {
-        id: guestKey,
-        name: nameInput,
-        title: 'Thành viên Khách',
-        avatar: guestSelectedAvatar,
-        code: '123'
-      };
-      
+      if (!nameInput) { showToast("Vui lòng đặt tên hiển thị cho Khách!", "error"); return; }
+      const guestKey = `guest_${Date.now()}`;
+      members[guestKey] = { id: guestKey, name: nameInput, title: 'Thành viên Khách', avatar: guestSelectedAvatar, code: '123' };
       syncMembersToServer();
-      showToast(`Đã tạo Khách: ${nameInput} (Mật khẩu đăng nhập: 123)`, "success");
+      showToast(`Đã tạo Khách: ${nameInput} (Mã đăng nhập: 123)`, "success");
       closeAddGuestModal();
       renderMembers();
     }
@@ -425,13 +374,14 @@
         if (data.messages) officeMessages = data.messages;
         if (data.topics) officeTopics = data.topics;
         if (data.gameState) matchState = data.gameState;
-        
         if (data.members) {
             members = data.members;
-            localStorage.setItem('lighter_custom_members_v3', JSON.stringify(members));
+            localStorage.setItem('lighter_custom_members_v4', JSON.stringify(members));
         } else {
             socket.emit('sync_members', members);
         }
+        // Phát tín hiệu định danh session lên Server Render để quản lý khi mất mạng/out app
+        if(currentUserId) socket.emit('register_user_session', currentUserId);
 
         renderMembers();
         renderConfigSliders();
@@ -440,23 +390,12 @@
         lucide.createIcons();
     });
 
-    socket.on('update_members', (data) => { 
-        members = data; 
-        localStorage.setItem('lighter_custom_members_v3', JSON.stringify(members));
-        renderMembers(); 
-    });
-    
+    socket.on('update_members', (data) => { members = data; localStorage.setItem('lighter_custom_members_v4', JSON.stringify(members)); renderMembers(); });
     socket.on('receive_chat_message', (msg) => { officeMessages.push(msg); renderWorkspaceMessages(); });
-    socket.on('receive_new_topic', (topic) => { officeTopics.push(topic); renderWorkspaceArea(); });
-    socket.on('topic_approved', (topics) => { officeTopics = topics; renderWorkspaceArea(); });
-    socket.on('topic_deleted', (topics) => { officeTopics = topics; renderWorkspaceArea(); });
     socket.on('update_game_state', (newState) => { matchState = newState; updateLobby(); updateGameplay(); renderActiveGameplayStep(); });
 
     function syncGameStateToServer() { socket.emit('sync_game_state', matchState); }
-    function syncMembersToServer() { 
-        localStorage.setItem('lighter_custom_members_v3', JSON.stringify(members));
-        socket.emit('sync_members', members); 
-    }
+    function syncMembersToServer() { localStorage.setItem('lighter_custom_members_v4', JSON.stringify(members)); socket.emit('sync_members', members); }
 
     function showToast(text, type = 'info') {
       const toast = document.getElementById('tau-toast');
@@ -484,9 +423,9 @@
       Object.values(members).forEach(m => {
         const isMe = currentUserId === m.id;
         const card = document.createElement('div');
-        card.onclick = () => { triggerZippoOpen(); openLoginModal(m.id); };
-        card.className = `group cursor-pointer p-3 rounded-2xl border transition-all duration-200 flex items-center justify-between ${isMe ? 'bg-[#FF4500]/10 border-[#FF4500] shadow-md' : 'bg-black/20 border-moss hover:bg-black/40'}`;
-        card.innerHTML = `<div class="flex items-center space-x-3"><div class="w-9 h-9 rounded-full bg-black flex items-center justify-center text-lg transform group-hover:scale-105 transition">${m.avatar}</div><div><h4 class="text-xs font-bold text-slate-200">${m.name}</h4><p class="text-[9px] text-slate-400 font-mono">${m.title}</p></div></div><div class="text-slate-400">${isMe ? '<span class="text-[9px] bg-[#FF4500] text-white font-black px-1.5 py-0.5 rounded-full heading-font">TA</span>' : '<i data-lucide="lock" class="w-3.5 h-3.5"></i>'}</div>`;
+        card.onclick = () => openLoginModal(m.id);
+        card.className = `group cursor-pointer p-3 rounded-2xl border transition-all duration-200 flex items-center justify-between ${isMe ? 'bg-[#FF4500]/10 border-[#FF4500]' : 'bg-black/20 border-moss hover:bg-black/40'}`;
+        card.innerHTML = `<div class="flex items-center space-x-3"><div class="w-9 h-9 rounded-full bg-black flex items-center justify-center text-lg">${m.avatar}</div><div><h4 class="text-xs font-bold text-slate-200">${m.name}</h4><p class="text-[9px] text-slate-400 font-mono">${m.title}</p></div></div><div class="text-slate-400">${isMe ? '<span class="text-[9px] bg-[#FF4500] text-white font-black px-1.5 py-0.5 rounded-full heading-font">TA</span>' : '<i data-lucide="lock" class="w-3.5 h-3.5"></i>'}</div>`;
         container.appendChild(card);
       });
       lucide.createIcons();
@@ -495,30 +434,22 @@
     function renderAvatarSelector() {
       const container = document.getElementById('avatar-selector-grid'); container.innerHTML = '';
       AVATAR_POOL.forEach(av => {
-        const btn = document.createElement('button');
-        btn.type = 'button';
+        const btn = document.createElement('button'); btn.type = 'button';
         btn.onclick = () => { selectedAvatar = av; renderAvatarSelector(); };
         btn.className = `w-8 h-8 rounded-lg text-sm flex items-center justify-center transition border ${selectedAvatar === av ? 'bg-[#FF4500]/20 border-[#FF4500]' : 'bg-black/40 border-transparent hover:bg-black/60'}`;
-        btn.innerText = av;
-        container.appendChild(btn);
+        btn.innerText = av; container.appendChild(btn);
       });
     }
 
     let pendingLoginId = null;
-    function openLoginModal(id) {
-      if (currentUserId === id) return;
-      pendingLoginId = id; const target = members[id];
-      document.getElementById('login-avatar-circle').innerText = target.avatar;
-      document.getElementById('login-password-input').value = '';
-      document.getElementById('login-err').classList.add('hidden');
-      document.getElementById('login-modal').classList.remove('hidden');
-    }
+    function openLoginModal(id) { if (currentUserId === id) return; pendingLoginId = id; const target = members[id]; document.getElementById('login-avatar-circle').innerText = target.avatar; document.getElementById('login-password-input').value = ''; document.getElementById('login-err').classList.add('hidden'); document.getElementById('login-modal').classList.remove('hidden'); }
     function closeLoginModal() { document.getElementById('login-modal').classList.add('hidden'); pendingLoginId = null; }
     
     function confirmLogin(e) {
       e.preventDefault(); const code = document.getElementById('login-password-input').value.trim(); const target = members[pendingLoginId];
       if (code === target.code) {
         currentUserId = pendingLoginId; selectedAvatar = target.avatar; closeLoginModal(); showToast(`Đã nhận diện: ${target.name}!`, 'success');
+        socket.emit('register_user_session', currentUserId); // Báo danh với Render ngay khi login
         document.getElementById('workspace-login-welcome').classList.add('hidden');
         document.getElementById('workspace-active').classList.remove('hidden');
         document.getElementById('logout-btn').classList.remove('hidden');
@@ -527,7 +458,7 @@
         document.getElementById('display-pass-input').value = target.code;
         renderAvatarSelector(); renderMembers(); renderActiveUserHeader(); renderWorkspaceArea(); updateLobby(); updateGameplay(); renderActiveGameplayStep();
       } else {
-        triggerZippoStrike(); document.getElementById('login-err').innerText = "Mật mã không đúng rồi bạn ơi!"; document.getElementById('login-err').classList.remove('hidden');
+        document.getElementById('login-err').innerText = "Mật mã sai rồi!"; document.getElementById('login-err').classList.remove('hidden');
       }
     }
     
@@ -536,69 +467,60 @@
       members[currentUserId].name = document.getElementById('display-name-input').value.trim();
       members[currentUserId].code = document.getElementById('display-pass-input').value.trim();
       members[currentUserId].avatar = selectedAvatar;
-      syncMembersToServer(); showToast("Đã lưu thay đổi thông tin tài khoản!", "success");
+      syncMembersToServer(); showToast("Đã lưu thông tin mới!", "success");
       renderMembers(); renderActiveUserHeader(); renderWorkspaceArea();
     }
 
     function logout() {
+      leaveGameLobby(); // Tự động out lobby khi rút lui tài khoản
       currentUserId = null;
       document.getElementById('workspace-login-welcome').classList.remove('hidden'); document.getElementById('workspace-active').classList.add('hidden');
       document.getElementById('logout-btn').classList.add('hidden'); document.getElementById('account-settings-card').classList.add('hidden');
-      renderMembers(); updateLobby(); showToast("Đã đăng xuất.", "info");
+      renderMembers(); updateLobby(); showToast("Đã rút lui.", "info");
     }
 
     function renderActiveUserHeader() {
       const char = members[currentUserId];
-      document.getElementById('user-welcome-bar').innerHTML = `<div class="flex items-center space-x-3"><span class="text-3xl">${char.avatar}</span><div><h3 class="font-extrabold text-xs">Phòng làm việc: ${char.name}</h3><p class="text-[9px] opacity-80">${char.title}</p></div></div><div class="bg-black/30 px-3 py-1.5 rounded-xl text-[10px] font-mono">Vai trò: ${currentUserId === 'admin' ? 'Superuser 👑' : 'Lighter Staff 💻'}</div>`;
+      document.getElementById('user-welcome-bar').innerHTML = `<div class="flex items-center space-x-3"><span class="text-3xl">${char.avatar}</span><div><h3 class="font-extrabold text-xs">Phòng làm việc: ${char.name}</h3><p class="text-[9px] opacity-80">${char.title}</p></div></div>`;
     }
 
-    function renderWorkspaceArea() {
-      const activeTopic = officeTopics.find(t => t.status === 'active');
-      document.getElementById('workspace-topic-title').innerText = activeTopic ? activeTopic.title : "Chưa có chủ đề nào hoạt động.";
-      const modBoard = document.getElementById('admin-moderation-board');
-      if (currentUserId === 'admin') { modBoard.classList.remove('hidden'); renderAdminPendingTopics(); } else { modBoard.classList.add('hidden'); }
-      renderWorkspaceMessages();
-    }
-
-    // --- (PHẦN LOGIC THẢO LUẬN VÀ TRẬN ĐẤU MA SÓI GIỮ NGUYÊN ĐỂ ĐẢM BẢO HOẠT ĐỘNG ỔN ĐỊNH) ---
-    function renderAdminPendingTopics() { const list = document.getElementById('admin-pending-topics'); list.innerHTML = ''; const pendings = officeTopics.filter(t => t.status === 'pending'); if (pendings.length === 0) { list.innerHTML = `<p class="text-[10px] text-slate-400 italic">Không có chủ đề mới cần duyệt.</p>`; return; } pendings.forEach(topic => { list.innerHTML += `<div class="bg-black/30 border border-moss p-2.5 rounded-xl flex items-center justify-between"><div><p class="text-xs font-bold text-slate-200">${topic.title}</p><p class="text-[9px] text-slate-400">Yêu cầu bởi: ${(members[topic.creator] || {}).name}</p></div><div class="flex gap-2"><button onclick="socket.emit('approve_topic', '${topic.id}')" class="px-2.5 py-1 bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg text-[9px] font-bold">Duyệt</button><button onclick="socket.emit('delete_topic', '${topic.id}')" class="px-2.5 py-1 bg-rose-600/20 hover:bg-rose-600 text-rose-300 rounded-lg text-[9px]">Xóa</button></div></div>`; }); }
-    function submitProposedTopic(e) { e.preventDefault(); const val = document.getElementById('proposed-topic-input').value.trim(); if (!val) return; const isSuper = currentUserId === 'admin'; const newTopic = { id: 'topic_' + Date.now(), title: val, creator: currentUserId, status: isSuper ? 'active' : 'pending', createdAt: Date.now() }; if (isSuper) { officeTopics.forEach(t => { if(t.status === 'active') t.status = 'archived'; }); officeTopics.push(newTopic); socket.emit('approve_topic', newTopic.id); } else { socket.emit('propose_topic', newTopic); showToast("Gửi đề xuất thành công!", "success"); } document.getElementById('proposed-topic-input').value = ''; }
-    function renderWorkspaceMessages() { const box = document.getElementById('workspace-chat-scroller'); box.innerHTML = ''; const activeTopic = officeTopics.find(t => t.status === 'active'); if (!activeTopic) { box.innerHTML = `<p class="text-xs text-slate-500 italic text-center py-6">Đang chờ phê duyệt chủ đề mới.</p>`; return; } const activeMsgs = officeMessages.filter(m => m.topicId === activeTopic.id); activeMsgs.forEach(msg => { const sender = members[msg.sender] || { name: 'Người lạ', avatar: '👤' }; const isMe = msg.sender === currentUserId; box.innerHTML += `<div class="flex items-start gap-2.5 ${isMe ? 'flex-row-reverse' : ''}"><div class="w-8 h-8 rounded-full bg-black/60 flex items-center justify-center text-sm">${sender.avatar}</div><div class="max-w-[70%] flex flex-col ${isMe ? 'items-end' : 'items-start'}"><span class="text-[9px] font-bold text-slate-500 mb-0.5">${sender.name}</span><div class="rounded-2xl px-3.5 py-2 text-xs leading-relaxed shadow-sm bg-white/5 text-slate-200">${msg.text}</div></div></div>`; }); box.scrollTop = box.scrollHeight; }
-    function sendWorkspaceMsg(e) { e.preventDefault(); const val = document.getElementById('workspace-msg-input').value.trim(); const activeTopic = officeTopics.find(t => t.status === 'active'); if (!val || !activeTopic) return; socket.emit('send_chat_message', { id: 'msg_' + Date.now(), topicId: activeTopic.id, sender: currentUserId, text: val, createdAt: Date.now() }); document.getElementById('workspace-msg-input').value = ''; }
-    function renderConfigSliders() { const container = document.getElementById('arena-roles-sliders'); container.innerHTML = ''; Object.keys(matchState.selectedRoles).forEach(roleKey => { const r = HARDCORE_ROLES[roleKey]; const count = matchState.selectedRoles[roleKey]; container.innerHTML += `<div class="bg-black/30 border border-moss p-2.5 rounded-xl flex items-center justify-between"><div class="flex items-center space-x-2"><span class="text-lg">${r.emoji}</span><div><h4 class="text-xs font-bold text-slate-200">${r.name}</h4><p class="text-[8px] text-slate-400 line-clamp-1">${r.desc}</p></div></div><div class="flex items-center space-x-1.5"><button onclick="triggerZippoStrike(); adjustRole('${roleKey}', -1)" class="w-6 h-6 rounded bg-black border border-moss font-bold">-</button><span class="text-xs font-mono font-bold w-4 text-center text-fire">${count}</span><button onclick="triggerZippoStrike(); adjustRole('${roleKey}', 1)" class="w-6 h-6 rounded bg-black border border-moss font-bold">+</button></div></div>`; }); document.getElementById('roles-counter-sum').innerText = Object.values(matchState.selectedRoles).reduce((a, b) => a + b, 0); document.getElementById('required-counter-sum').innerText = Object.values(members).filter(m => m.id !== 'admin').length; }
+    function renderWorkspaceArea() { renderWorkspaceMessages(); }
+    function renderWorkspaceMessages() { const box = document.getElementById('workspace-chat-scroller'); box.innerHTML = ''; officeMessages.forEach(msg => { const sender = members[msg.sender] || { name: 'Khách vãng lai', avatar: '🥷' }; const isMe = msg.sender === currentUserId; box.innerHTML += `<div class="flex items-start gap-2.5 ${isMe ? 'flex-row-reverse' : ''}"><div class="w-8 h-8 rounded-full bg-black/60 flex items-center justify-center text-sm">${sender.avatar}</div><div class="max-w-[70%] flex flex-col ${isMe ? 'items-end' : 'items-start'}"><span class="text-[9px] font-bold text-slate-500 mb-0.5">${sender.name}</span><div class="rounded-2xl px-3.5 py-2 text-xs bg-white/5 text-slate-200">${msg.text}</div></div></div>`; }); box.scrollTop = box.scrollHeight; }
+    function sendWorkspaceMsg(e) { e.preventDefault(); const val = document.getElementById('workspace-msg-input').value.trim(); if (!val) return; socket.emit('send_chat_message', { id: 'msg_' + Date.now(), topicId: 't1', sender: currentUserId, text: val, createdAt: Date.now() }); document.getElementById('workspace-msg-input').value = ''; }
+    
+    function renderConfigSliders() { const container = document.getElementById('arena-roles-sliders'); container.innerHTML = ''; Object.keys(matchState.selectedRoles).forEach(roleKey => { const r = HARDCORE_ROLES[roleKey]; const count = matchState.selectedRoles[roleKey]; container.innerHTML += `<div class="bg-black/30 border border-moss p-2.5 rounded-xl flex items-center justify-between"><div class="flex items-center space-x-2"><span class="text-base">${r.emoji}</span><div><h4 class="text-xs font-bold text-slate-200">${r.name}</h4></div></div><div class="flex items-center space-x-1.5"><button onclick="adjustRole('${roleKey}', -1)" class="w-5 h-5 rounded bg-black border border-moss text-xs font-bold">-</button><span class="text-xs font-mono font-bold w-4 text-center text-fire">${count}</span><button onclick="adjustRole('${roleKey}', 1)" class="w-5 h-5 rounded bg-black border border-moss text-xs font-bold">+</button></div></div>`; }); document.getElementById('roles-counter-sum').innerText = Object.values(matchState.selectedRoles).reduce((a, b) => a + b, 0); }
     function adjustRole(roleKey, delta) { if (matchState.status !== 'WAITING') return; matchState.selectedRoles[roleKey] = Math.max(0, (matchState.selectedRoles[roleKey] || 0) + delta); syncGameStateToServer(); renderConfigSliders(); }
-    function updateLobby() { const activePlayers = Object.values(members).filter(m => m.id !== 'admin'); document.getElementById('lobby-count-badge').innerText = `${activePlayers.length}/8 người`; const container = document.getElementById('arena-lobby-players'); container.innerHTML = ''; activePlayers.forEach(char => { const isBot = matchState.players.find(p => p.id === char.id)?.isBot; const isMe = char.id === currentUserId; container.innerHTML += `<div class="p-2.5 rounded-xl border flex items-center justify-between ${isMe ? 'bg-[#FF4500]/5 border-[#FF4500]' : 'bg-black/30 border-moss'}"><span class="text-xs font-semibold text-slate-200 truncate">${char.avatar} ${char.name}</span><span class="text-[8px] px-1.5 py-0.5 rounded font-mono ${isBot ? 'bg-indigo-600/20 text-indigo-300' : 'bg-emerald-600/20 text-emerald-300'}">${isBot ? 'BOT' : 'HUMAN'}</span></div>`; }); }
-    function fillLobbyBots() { const activePlayers = Object.values(members).filter(m => m.id !== 'admin'); matchState.players = activePlayers.map(p => ({ id: p.id, name: p.name, role: null, originalRole: null, isAlive: true, isBot: p.id !== currentUserId, lastProtectedId: null, linkedLoverId: null, isLocked: false, isRuined: false, isTargeted1: false, isTargeted2: false, isProtected: false, isSaved: false, isPoisoned: false, isHunted: false, votesRec: 0 })); syncGameStateToServer(); updateLobby(); showToast("Đã gọi Bot tham gia Lobby!", "success"); }
-    function startHardcoreMatch() { const activePlayers = Object.values(members).filter(m => m.id !== 'admin'); const totalRoles = Object.values(matchState.selectedRoles).reduce((a, b) => a + b, 0); if (totalRoles !== activePlayers.length) { triggerZippoStrike(); showToast(`Lỗi: Bài phát (${totalRoles}) lệch số người (${activePlayers.length})!`, "error"); return; } let rolePool = []; Object.entries(matchState.selectedRoles).forEach(([roleKey, count]) => { for (let i = 0; i < count; i++) rolePool.push(roleKey); }); for (let i = rolePool.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [rolePool[i], rolePool[j]] = [rolePool[j], rolePool[i]]; } if (matchState.players.length === 0) fillLobbyBots(); matchState.players.forEach((p, idx) => { p.role = rolePool[idx]; p.originalRole = rolePool[idx]; p.isAlive = true; p.isLocked = false; p.isRuined = false; p.lastProtectedId = null; p.linkedLoverId = null; }); matchState.status = 'IN_GAME'; matchState.day = 1; matchState.logs = ["Vòng đấu Hardcore Ma Sói bắt đầu!"]; matchState.actions = { wolvesTarget1: null, wolvesTarget2: null, witchHealUsed: false, witchPoisonTarget: null, protectedId: null, lockedId: null, shamanRuinedId: null, cupidTargets: [], doppelgangerTarget: null, hunterTarget: null }; document.getElementById('arena-setup').classList.add('hidden'); document.getElementById('arena-gameplay').classList.remove('hidden'); startNightRuntime(); }
+    
+    // CẬP NHẬT RENDER PHÒNG CHỜ CHỈ HIỆN AI ĐĂNG KÝ
+    function updateLobby() {
+      document.getElementById('lobby-count-badge').innerText = `${matchState.players.length} người đang sẵn sàng`;
+      const container = document.getElementById('arena-lobby-players'); container.innerHTML = '';
+      
+      matchState.players.forEach(p => {
+        const memberInfo = Object.values(members).find(m => m.name === p.name) || { avatar: '🥷' };
+        const isMe = p.id === currentUserId;
+        container.innerHTML += `<div class="p-2.5 rounded-xl border flex items-center justify-between bg-black/30 border-moss ${isMe ? 'border-[#FF4500] bg-[#FF4500]/5' : ''}"><span class="text-xs font-semibold text-slate-200 truncate">${memberInfo.avatar} ${p.name}</span><span class="text-[8px] px-1.5 py-0.5 rounded bg-emerald-600/20 text-emerald-300 font-mono">READY</span></div>`;
+      });
+    }
+
+    function startHardcoreMatch() { const totalRoles = Object.values(matchState.selectedRoles).reduce((a, b) => a + b, 0); if (totalRoles !== matchState.players.length || totalRoles === 0) { showToast(`Bài phát (${totalRoles}) phải khớp chuẩn số người đăng ký (${matchState.players.length})!`, "error"); return; } let rolePool = []; Object.entries(matchState.selectedRoles).forEach(([roleKey, count]) => { for (let i = 0; i < count; i++) rolePool.push(roleKey); }); for (let i = rolePool.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [rolePool[i], rolePool[j]] = [rolePool[j], rolePool[i]]; } matchState.players.forEach((p, idx) => { p.role = rolePool[idx]; p.originalRole = rolePool[idx]; p.isAlive = true; p.isLocked = false; p.isRuined = false; p.lastProtectedId = null; p.linkedLoverId = null; }); matchState.status = 'IN_GAME'; matchState.day = 1; matchState.logs = ["Vòng đấu chính thức bắt đầu!"]; matchState.actions = { wolvesTarget1: null, wolvesTarget2: null, witchHealUsed: false, witchPoisonTarget: null, protectedId: null, lockedId: null, shamanRuinedId: null, cupidTargets: [], doppelgangerTarget: null, hunterTarget: null }; document.getElementById('arena-setup').classList.add('hidden'); document.getElementById('arena-gameplay').classList.remove('hidden'); startNightRuntime(); }
     function startNightRuntime() { matchState.phase = 'NIGHT_TURN'; let seq = []; if (matchState.day === 1) { seq.push('CUPID'); seq.push('DOPPELGANGER'); } seq.push('MOON_GIRL', 'CURSED_ONE', 'WEREWOLF', 'ALPHA_WOLF', 'SHAMAN_WOLF', 'BODYGUARD', 'WITCH', 'BEAR_TAMER', 'DETECTIVE', 'IDIOT', 'HUNTER'); matchState.nightActiveSteps = seq; matchState.currentNightStepIndex = 0; matchState.logs.push(`----- BAN ĐÊM ${matchState.day} BẮT ĐẦU -----`); matchState.players.forEach(p => { p.isTargeted1 = false; p.isTargeted2 = false; p.isProtected = false; p.isSaved = false; p.isPoisoned = false; p.isLocked = false; }); syncGameStateToServer(); runNightStep(); }
-    function runNightStep() { if (matchState.currentNightStepIndex >= matchState.nightActiveSteps.length) { resolveDeathScan(); return; } const role = matchState.nightActiveSteps[matchState.currentNightStepIndex]; const activePlayers = matchState.players.filter(p => p.isAlive && p.role === role); document.getElementById('gameplay-day-badge').innerText = `BAN ĐÊM ${matchState.day}`; document.getElementById('gameplay-phase-badge').innerText = `LƯỢT VAI: ${HARDCORE_ROLES[role] ? HARDCORE_ROLES[role].name : role}`; let hasAlive = role === 'WEREWOLF' ? matchState.players.some(p => p.isAlive && ['WEREWOLF', 'ALPHA_WOLF', 'TRAITOR'].includes(p.role)) : activePlayers.length > 0; if (!hasAlive) { matchState.currentNightStepIndex++; runNightStep(); return; } if (role === 'ALPHA_WOLF') { const wolvesAlive = matchState.players.filter(p => p.isAlive && ['WEREWOLF', 'ALPHA_WOLF', 'TRAITOR'].includes(p.role)); if (!(wolvesAlive.length === 1 && wolvesAlive[0].role === 'ALPHA_WOLF')) { matchState.currentNightStepIndex++; runNightStep(); return; } } let isBotTurn = role === 'WEREWOLF' ? matchState.players.filter(p => p.isAlive && !p.isBot && ['WEREWOLF', 'TRAITOR', 'ALPHA_WOLF'].includes(p.role)).length === 0 : activePlayers.every(p => p.isBot); renderNightInteractive(role, isBotTurn); }
-    function renderNightInteractive(roleKey, isBot) { const container = document.getElementById('gameplay-interactive-action'); container.innerHTML = ''; const confirmBtn = document.getElementById('end-action-turn-btn'); confirmBtn.innerText = "Xác nhận & Kết thúc"; confirmBtn.disabled = isBot; if (isBot) { container.innerHTML = `<div class="flex flex-col items-center justify-center py-10 space-y-3"><div class="w-10 h-10 border-4 border-[#FF4500] border-t-transparent rounded-full animate-spin"></div><p class="text-[11px] text-[#FF4500] font-bold uppercase tracking-wider">Bot ${HARDCORE_ROLES[roleKey].name} đang suy nghĩ...</p></div>`; if (currentUserId === 'admin') setTimeout(() => executeBotNightAction(roleKey), 1500); return; } const myPlayer = matchState.players.find(p => p.id === currentUserId); const aliveTargets = matchState.players.filter(p => p.isAlive); container.innerHTML = `<p class="text-xs text-slate-400 mb-3">${HARDCORE_ROLES[roleKey].desc}</p>`; const genGrid = (renderFn) => { const div = document.createElement('div'); div.className = "grid grid-cols-2 gap-2"; aliveTargets.forEach(t => div.appendChild(renderFn(t))); return div; }; const btnClass = (sel) => `p-2 rounded-xl text-[11px] font-bold border transition ${sel ? 'bg-[#FF4500]/20 border-[#FF4500] text-[#FF4500]' : 'bg-black/20 border-moss hover:bg-black/40'}`; if (roleKey === 'CUPID') container.appendChild(genGrid(t => { const b = document.createElement('button'); b.className = btnClass(matchState.actions.cupidTargets.includes(t.id)); b.innerText = `🏹 ${t.name}`; b.onclick = () => { selectCupidTarget(t.id); syncGameStateToServer(); }; return b; })); else if (roleKey === 'DOPPELGANGER') container.appendChild(genGrid(t => { if(t.id===currentUserId) return b; const b = document.createElement('button'); b.className = btnClass(matchState.actions.doppelgangerTarget === t.id); b.innerText = `👥 ${t.name}`; b.onclick = () => { matchState.actions.doppelgangerTarget = t.id; syncGameStateToServer(); }; return b; })); else if (roleKey === 'MOON_GIRL') container.appendChild(genGrid(t => { const b = document.createElement('button'); b.className = btnClass(matchState.actions.lockedId === t.id); b.innerText = `💃 Khóa: ${t.name}`; b.onclick = () => { matchState.actions.lockedId = t.id; syncGameStateToServer(); }; return b; })); else if (roleKey === 'CURSED_ONE') container.innerHTML += `<div class="p-4 bg-black/40 border border-[#FF4500]/20 rounded-xl text-center"><p class="text-xs text-slate-300">Trạng thái sinh mệnh:</p><p class="text-sm font-extrabold text-[#FF4500] uppercase mt-1">${myPlayer.role === 'WEREWOLF' ? 'SÓI CUỒNG BẠO 🐺' : 'DÂN LÀNG 🧑🌾'}</p></div>`; else if (roleKey === 'WEREWOLF') { container.innerHTML += `<div class="bg-red-950/20 border border-red-500/15 p-3 rounded-xl mb-4 text-xs text-slate-400">Thống nhất cắn ai (Mục tiêu 1).</div>`; const div = document.createElement('div'); div.className = "space-y-2"; aliveTargets.forEach(t => { const sel = matchState.actions.wolvesTarget1 === t.id; const b = document.createElement('button'); b.className = `w-full p-2.5 rounded-xl text-left text-xs font-bold border transition flex justify-between ${sel ? 'bg-red-950/40 border-red-500 text-red-400 flame-active' : 'bg-black/20 border-moss hover:bg-black/40'}`; b.innerHTML = `<span>🎯 Sát hại 1: ${t.name}</span> <span>${sel ? 'CHỐT ✅' : ''}</span>`; b.onclick = () => { matchState.actions.wolvesTarget1 = t.id; syncGameStateToServer(); }; div.appendChild(b); }); container.appendChild(div); confirmBtn.disabled = !matchState.actions.wolvesTarget1; } else if (roleKey === 'ALPHA_WOLF') container.appendChild(genGrid(t => { const b = document.createElement('button'); b.className = btnClass(matchState.actions.wolvesTarget2 === t.id, 'red'); b.innerText = `🩸 Cắn mục tiêu 2: ${t.name}`; b.onclick = () => { matchState.actions.wolvesTarget2 = t.id; syncGameStateToServer(); }; return b; })); else if (roleKey === 'SHAMAN_WOLF') container.appendChild(genGrid(t => { const b = document.createElement('button'); const isTeam = ['WEREWOLF','ALPHA_WOLF','TRAITOR','SHAMAN_WOLF'].includes(t.role); if(isTeam){ b.disabled=true; b.className="p-2 rounded-xl text-xs bg-black/40 border border-transparent opacity-30 text-slate-500"; b.innerText=`🧙‍♂️ ${t.name} (Đồng bọn)`; } else { b.className = btnClass(matchState.actions.shamanRuinedId === t.id); b.innerText = `🧙‍♂️ Ruin: ${t.name}`; b.onclick = () => { matchState.actions.shamanRuinedId = t.id; syncGameStateToServer(); }; } return b; })); else if (roleKey === 'BODYGUARD') container.appendChild(genGrid(t => { const b = document.createElement('button'); const isLast = myPlayer.lastProtectedId === t.id; if(isLast){ b.disabled=true; b.className="p-2 rounded-xl text-xs bg-black/40 border border-transparent opacity-30"; b.innerText=`🛡️ ${t.name} (Cũ)`; } else { b.className = btnClass(matchState.actions.protectedId === t.id); b.innerText = `🛡️ Bảo vệ: ${t.name}`; b.onclick = () => { matchState.actions.protectedId = t.id; syncGameStateToServer(); }; } return b; })); else if (roleKey === 'WITCH') { const target1Name = matchState.actions.wolvesTarget1 ? (matchState.players.find(p => p.id === matchState.actions.wolvesTarget1) || {}).name : "Không có"; container.innerHTML += `<div class="bg-purple-950/20 border border-purple-500/25 p-3 rounded-xl mb-4 text-xs text-slate-300">Nạn nhân bị cắn ĐẦU TIÊN: <span class="text-[#FF4500] font-bold">${target1Name}</span></div>`; const b = document.createElement('button'); b.className = `w-full p-3 rounded-xl border text-xs font-bold transition mb-3 ${matchState.actions.witchHealUsed ? 'bg-emerald-950/40 border-emerald-500 text-emerald-400' : 'bg-black/20 border-moss hover:bg-black/40'}`; b.innerText = `🧪 Dùng bình CỨU (Hồi sinh ${target1Name})`; b.onclick = () => { matchState.actions.witchHealUsed = !matchState.actions.witchHealUsed; syncGameStateToServer(); }; container.appendChild(b); container.appendChild(genGrid(t => { const b = document.createElement('button'); const isPoi = matchState.actions.witchPoisonTarget === t.id; b.className = btnClass(isPoi); b.innerText = `☠️ Độc: ${t.name}`; b.onclick = () => { matchState.actions.witchPoisonTarget = isPoi ? null : t.id; syncGameStateToServer(); }; return b; })); } else if (roleKey === 'BEAR_TAMER') { const aliveArr = matchState.players.filter(p => p.isAlive); const idx = aliveArr.findIndex(p => p.id === currentUserId); let growl = "IM LẶNG"; if (idx !== -1) { const l = aliveArr.length; const hasT = ['WEREWOLF', 'ALPHA_WOLF', 'TRAITOR'].includes(aliveArr[(idx - 1 + l) % l].role) || ['WEREWOLF', 'ALPHA_WOLF', 'TRAITOR'].includes(aliveArr[(idx + 1) % l].role); growl = hasT ? "GẦM THÉT! 🐾" : "IM LẶNG 👍"; } container.innerHTML += `<div class="p-5 bg-black/40 border border-yellow-500/20 rounded-2xl text-center"><span class="text-4xl">🐻</span><p class="text-xs text-slate-300 mt-2">Phản hồi của Gấu đêm nay:</p><p class="text-base font-extrabold text-yellow-500 uppercase">${growl}</p></div>`; } else if (roleKey === 'DETECTIVE') { const sel = matchState.actions.detectiveTargets || []; container.appendChild(genGrid(t => { const b = document.createElement('button'); if(t.id===currentUserId) return b; b.className = btnClass(sel.includes(t.id)); b.innerText = t.name; b.onclick = () => { toggleDetectiveTarget(t.id); syncGameStateToServer(); }; return b; })); if (sel.length === 2) { const p1 = matchState.players.find(p => p.id === sel[0]); const p2 = matchState.players.find(p => p.id === sel[1]); const isSame = (p1.role === 'TRAITOR' ? 'Werewolf' : HARDCORE_ROLES[p1.role].faction) === (p2.role === 'TRAITOR' ? 'Werewolf' : HARDCORE_ROLES[p2.role].faction); container.innerHTML += `<div class="p-3 bg-black/40 border border-[#FF4500]/20 rounded-xl mt-4 text-center"><p class="text-[10px] text-slate-400">Kết quả thám thính:</p><p class="text-xs font-extrabold text-slate-100 mt-1">${p1.name} & ${p2.name} -> ${isSame ? '🟩 CÙNG PHE' : '🟥 KHÁC PHE'}</p></div>`; } } else if (roleKey === 'IDIOT') container.innerHTML += `<div class="p-4 bg-black/40 border border-orange-500/20 rounded-2xl text-center"><span class="text-3xl inline-block">🤡</span><p class="text-xs text-slate-200 mt-2">Bạn là Thằng Ngốc - Cố bị treo để thắng độc lập!</p></div>`; else if (roleKey === 'HUNTER') container.appendChild(genGrid(t => { const b = document.createElement('button'); b.className = btnClass(matchState.actions.hunterTarget === t.id); b.innerText = `🎯 Găm: ${t.name}`; b.onclick = () => { matchState.actions.hunterTarget = t.id; syncGameStateToServer(); }; return b; })); }
-    function renderActiveGameplayStep() { const step = matchState.nightActiveSteps[matchState.currentNightStepIndex]; if (step && matchState.phase === 'NIGHT_TURN') { const isBot = matchState.players.filter(p => p.isAlive && p.role === step).every(p => p.isBot); renderNightInteractive(step, isBot); } }
+    function runNightStep() { if (matchState.currentNightStepIndex >= matchState.nightActiveSteps.length) { resolveDeathScan(); return; } const role = matchState.nightActiveSteps[matchState.currentNightStepIndex]; const activePlayers = matchState.players.filter(p => p.isAlive && p.role === role); document.getElementById('gameplay-day-badge').innerText = `BAN ĐÊM ${matchState.day}`; document.getElementById('gameplay-phase-badge').innerText = `LƯỢT VAI: ${HARDCORE_ROLES[role] ? HARDCORE_ROLES[role].name : role}`; if (activePlayers.length === 0 && role !== 'WEREWOLF') { matchState.currentNightStepIndex++; runNightStep(); return; } if (role === 'WEREWOLF' && !matchState.players.some(p => p.isAlive && ['WEREWOLF', 'ALPHA_WOLF', 'TRAITOR'].includes(p.role))) { matchState.currentNightStepIndex++; runNightStep(); return; } renderNightInteractive(role); }
+    function renderNightInteractive(roleKey) { const container = document.getElementById('gameplay-interactive-action'); container.innerHTML = ''; const confirmBtn = document.getElementById('end-action-turn-btn'); confirmBtn.innerText = "Xác nhận & Gửi lệnh"; confirmBtn.disabled = false; const myPlayer = matchState.players.find(p => p.id === currentUserId); const aliveTargets = matchState.players.filter(p => p.isAlive); container.innerHTML = `<p class="text-xs text-slate-400 mb-3">${HARDCORE_ROLES[roleKey].desc}</p>`; const genGrid = (renderFn) => { const div = document.createElement('div'); div.className = "grid grid-cols-2 gap-2"; aliveTargets.forEach(t => div.appendChild(renderFn(t))); return div; }; const btnClass = (sel) => `p-2 rounded-xl text-[11px] font-bold border transition ${sel ? 'bg-[#FF4500]/20 border-[#FF4500] text-[#FF4500]' : 'bg-black/20 border-moss hover:bg-black/40'}`; if (roleKey === 'CUPID') container.appendChild(genGrid(t => { const b = document.createElement('button'); b.className = btnClass(matchState.actions.cupidTargets.includes(t.id)); b.innerText = `🏹 ${t.name}`; b.onclick = () => { selectCupidTarget(t.id); syncGameStateToServer(); }; return b; })); else if (roleKey === 'DOPPELGANGER') container.appendChild(genGrid(t => { if(t.id===currentUserId) return b; const b = document.createElement('button'); b.className = btnClass(matchState.actions.doppelgangerTarget === t.id); b.innerText = `👥 ${t.name}`; b.onclick = () => { matchState.actions.doppelgangerTarget = t.id; syncGameStateToServer(); }; return b; })); else if (roleKey === 'MOON_GIRL') container.appendChild(genGrid(t => { const b = document.createElement('button'); b.className = btnClass(matchState.actions.lockedId === t.id); b.innerText = `💃 Khóa: ${t.name}`; b.onclick = () => { matchState.actions.lockedId = t.id; syncGameStateToServer(); }; return b; })); else if (roleKey === 'CURSED_ONE') container.innerHTML += `<div class="p-4 bg-black/40 text-center"><p class="text-sm font-extrabold text-[#FF4500] uppercase mt-1">${myPlayer && myPlayer.role === 'WEREWOLF' ? 'SÓI CUỒNG BẠO 🐺' : 'DÂN LÀNG 🧑🌾'}</p></div>`; else if (roleKey === 'WEREWOLF') { const div = document.createElement('div'); div.className = "space-y-2"; aliveTargets.forEach(t => { const sel = matchState.actions.wolvesTarget1 === t.id; const b = document.createElement('button'); b.className = `w-full p-2.5 rounded-xl text-left text-xs font-bold border transition flex justify-between ${sel ? 'bg-red-950/40 border-red-500 text-red-400' : 'bg-black/20 border-moss'}`; b.innerHTML = `<span>🎯 Sát hại: ${t.name}</span>`; b.onclick = () => { matchState.actions.wolvesTarget1 = t.id; syncGameStateToServer(); }; div.appendChild(b); }); container.appendChild(div); confirmBtn.disabled = !matchState.actions.wolvesTarget1; } else if (roleKey === 'ALPHA_WOLF') container.appendChild(genGrid(t => { const b = document.createElement('button'); b.className = btnClass(matchState.actions.wolvesTarget2 === t.id); b.innerText = `🩸 Mục tiêu 2: ${t.name}`; b.onclick = () => { matchState.actions.wolvesTarget2 = t.id; syncGameStateToServer(); }; return b; })); else if (roleKey === 'SHAMAN_WOLF') container.appendChild(genGrid(t => { const b = document.createElement('button'); b.className = btnClass(matchState.actions.shamanRuinedId === t.id); b.innerText = `🧙‍♂️ Ruin: ${t.name}`; b.onclick = () => { matchState.actions.shamanRuinedId = t.id; syncGameStateToServer(); }; return b; })); else if (roleKey === 'BODYGUARD') container.appendChild(genGrid(t => { const b = document.createElement('button'); b.className = btnClass(matchState.actions.protectedId === t.id); b.innerText = `🛡️ Bảo vệ: ${t.name}`; b.onclick = () => { matchState.actions.protectedId = t.id; syncGameStateToServer(); }; return b; })); else if (roleKey === 'WITCH') { const target1Name = matchState.actions.wolvesTarget1 ? (matchState.players.find(p => p.id === matchState.actions.wolvesTarget1) || {}).name : "Không có"; const b = document.createElement('button'); b.className = `w-full p-3 rounded-xl border text-xs font-bold mb-3 ${matchState.actions.witchHealUsed ? 'bg-emerald-950/40 border-emerald-500 text-emerald-400' : 'bg-black/20 border-moss'}`; b.innerText = `🧪 Bình cứu (Hồi sinh ${target1Name})`; b.onclick = () => { matchState.actions.witchHealUsed = !matchState.actions.witchHealUsed; syncGameStateToServer(); }; container.appendChild(b); container.appendChild(genGrid(t => { const b = document.createElement('button'); b.className = btnClass(matchState.actions.witchPoisonTarget === t.id); b.innerText = `☠️ Độc: ${t.name}`; b.onclick = () => { matchState.actions.witchPoisonTarget = matchState.actions.witchPoisonTarget === t.id ? null : t.id; syncGameStateToServer(); }; return b; })); } else if (roleKey === 'BEAR_TAMER') { container.innerHTML += `<div class="p-5 bg-black/40 text-center"><span class="text-4xl">🐻</span><p class="text-xs text-slate-300 mt-2">Gấu đang thám thính âm thầm...</p></div>`; } else if (roleKey === 'DETECTIVE') { const sel = matchState.actions.detectiveTargets || []; container.appendChild(genGrid(t => { const b = document.createElement('button'); b.className = btnClass(sel.includes(t.id)); b.innerText = t.name; b.onclick = () => { toggleDetectiveTarget(t.id); syncGameStateToServer(); }; return b; })); } else if (roleKey === 'HUNTER') container.appendChild(genGrid(t => { const b = document.createElement('button'); b.className = btnClass(matchState.actions.hunterTarget === t.id); b.innerText = `🎯 Găm gục: ${t.name}`; b.onclick = () => { matchState.actions.hunterTarget = t.id; syncGameStateToServer(); }; return b; })); }
+    function renderActiveGameplayStep() { const step = matchState.nightActiveSteps[matchState.currentNightStepIndex]; if (step && matchState.phase === 'NIGHT_TURN') { renderNightInteractive(step); } }
     function selectCupidTarget(id) { const s = matchState.actions.cupidTargets || []; if (s.includes(id)) matchState.actions.cupidTargets = s.filter(x => x !== id); else if (s.length < 2) matchState.actions.cupidTargets.push(id); }
     function toggleDetectiveTarget(id) { const s = matchState.actions.detectiveTargets || []; if (s.includes(id)) matchState.actions.detectiveTargets = s.filter(x => x !== id); else if (s.length < 2) matchState.actions.detectiveTargets.push(id); }
-    function executeBotNightAction(roleKey) { const aliveTargets = matchState.players.filter(p => p.isAlive); const rnd = () => aliveTargets[Math.floor(Math.random() * aliveTargets.length)]; if (roleKey === 'CUPID' && aliveTargets.length >= 2) { const t1 = rnd(); let t2 = t1; while (t2.id === t1.id) t2 = rnd(); matchState.actions.cupidTargets = [t1.id, t2.id]; } else if (roleKey === 'DOPPELGANGER') { const n = aliveTargets.filter(p => p.role !== 'DOPPELGANGER'); if (n.length > 0) matchState.actions.doppelgangerTarget = n[Math.floor(Math.random() * n.length)].id; } else if (roleKey === 'MOON_GIRL') matchState.actions.lockedId = rnd().id; else if (roleKey === 'WEREWOLF') matchState.actions.wolvesTarget1 = rnd().id; else if (roleKey === 'ALPHA_WOLF') matchState.actions.wolvesTarget2 = rnd().id; else if (roleKey === 'SHAMAN_WOLF') { const n = aliveTargets.filter(p => !['WEREWOLF', 'TRAITOR', 'ALPHA_WOLF', 'SHAMAN_WOLF'].includes(p.role)); if (n.length > 0) matchState.actions.shamanRuinedId = n[Math.floor(Math.random() * n.length)].id; } else if (roleKey === 'BODYGUARD') matchState.actions.protectedId = rnd().id; else if (roleKey === 'WITCH') { if (Math.random() > 0.4) matchState.actions.witchHealUsed = true; else if (Math.random() > 0.6) matchState.actions.witchPoisonTarget = rnd().id; } else if (roleKey === 'DETECTIVE' && aliveTargets.length >= 2) { const t1 = rnd(); let t2 = t1; while (t2.id === t1.id) t2 = rnd(); matchState.actions.detectiveTargets = [t1.id, t2.id]; } else if (roleKey === 'HUNTER') matchState.actions.hunterTarget = rnd().id; matchState.currentNightStepIndex++; syncGameStateToServer(); runNightStep(); }
-    function confirmActionTurn() { const currentRole = matchState.nightActiveSteps[matchState.currentNightStepIndex]; const actor = matchState.players.find(p => p.role === currentRole); if (currentRole === 'BODYGUARD' && actor) actor.lastProtectedId = matchState.actions.protectedId; if (currentRole === 'CUPID' && matchState.actions.cupidTargets.length === 2) { const p1 = matchState.players.find(p => p.id === matchState.actions.cupidTargets[0]); const p2 = matchState.players.find(p => p.id === matchState.actions.cupidTargets[1]); if (p1 && p2) { p1.linkedLoverId = p2.id; p2.linkedLoverId = p1.id; matchState.logs.push(`Cupid: Đã xích tơ duyên.`); } } document.getElementById('gameplay-interactive-action').innerHTML = `<div class="flex flex-col items-center justify-center py-10 space-y-3"><div class="w-10 h-10 border-4 border-[#FF4500] border-t-transparent rounded-full animate-spin"></div><p class="text-[11px] text-[#FF4500] font-bold">Đang mã hóa danh tính...</p></div>`; document.getElementById('end-action-turn-btn').disabled = true; matchState.currentNightStepIndex++; syncGameStateToServer(); setTimeout(() => runNightStep(), 1000); }
-    function resolveDeathScan() { const actions = matchState.actions; const deadTonight = []; matchState.players.forEach(p => { if(p.id===actions.protectedId) p.isProtected=true; if(p.id===actions.wolvesTarget1 && actions.witchHealUsed) p.isSaved=true; if(p.id===actions.witchPoisonTarget) p.isPoisoned=true; if(p.id===actions.lockedId) p.isLocked=true; if(p.id===actions.shamanRuinedId) p.isRuined=true; }); matchState.players.forEach(p => { if (!p.isAlive) return; if (p.isPoisoned) { p.isAlive = false; p.deathReason = 'POISON'; deadTonight.push(p.id); } else if ((p.id === actions.wolvesTarget1 || p.id === actions.wolvesTarget2) && !p.isProtected && !p.isSaved) { if (p.role === 'CURSED_ONE') { if (p.isLocked) { p.isAlive=false; p.deathReason='WOLF'; deadTonight.push(p.id); } else { p.role='WEREWOLF'; matchState.logs.push("🌙 Kẻ Bị Nguyền đã thức tỉnh!"); } } else { p.isAlive=false; p.deathReason='WOLF'; deadTonight.push(p.id); } } }); matchState.players.forEach(p => { if (!p.isAlive && p.role === 'HUNTER' && actions.hunterTarget) { if (p.isLocked) matchState.logs.push(`Thợ Săn [${p.name}] bị khóa không nổ súng!`); else { const t = matchState.players.find(x => x.id === actions.hunterTarget); if(t && t.isAlive) { t.isAlive=false; t.deathReason='HUNTER_SHOT'; deadTonight.push(t.id); matchState.logs.push(`Thợ Săn gục súng kéo theo [${t.name}].`); } } } }); matchState.players.forEach(p => { if (!p.isAlive && p.linkedLoverId) { const pt = matchState.players.find(x => x.id === p.linkedLoverId); if(pt && pt.isAlive) { pt.isAlive=false; pt.deathReason='CUPID_CHAIN'; deadTonight.push(pt.id); matchState.logs.push(`Cupid: [${pt.name}] chết theo người thương.`); } } }); matchState.players.forEach(p => { if (p.role === 'DOPPELGANGER' && actions.doppelgangerTarget) { const t = matchState.players.find(x => x.id === actions.doppelgangerTarget); if(t && !t.isAlive) { p.role = ['CUPID','IDIOT'].includes(t.originalRole) ? 'VILLAGER' : t.originalRole; matchState.logs.push(`Nhân Bản thừa kế vai trò từ ${t.name}.`); } } }); matchState.deadTonight = deadTonight; syncGameStateToServer(); startDayAnnouncement(); }
-    function startDayAnnouncement() { matchState.phase = 'DAY_ANNOUNCE'; document.getElementById('gameplay-day-badge').innerText = `BAN NGÀY`; document.getElementById('gameplay-phase-badge').innerText = `BÁO TỬ BÌNH MINH`; const c = document.getElementById('gameplay-interactive-action'); c.innerHTML = ''; if (matchState.deadTonight.length === 0) c.innerHTML = `<div class="p-4 bg-emerald-950/20 text-emerald-400 border border-emerald-500/20 rounded-xl text-center font-bold">Làng bình yên không ai tử nạn tề.</div>`; else { c.innerHTML = `<p class="text-xs text-rose-400 font-bold mb-3">Tử nạn đêm qua:</p>`; matchState.deadTonight.forEach(id => { const p = matchState.players.find(x => x.id === id); c.innerHTML += `<div class="p-2.5 bg-[#FF4500]/10 border border-[#FF4500]/20 text-[#FF4500] rounded-xl text-xs font-mono mb-1">💀 ${p.name}</div>`; }); } if (checkWinConditions()) return; document.getElementById('end-action-turn-btn').innerText = "Tiến Vào Thảo Luận"; document.getElementById('end-action-turn-btn').disabled = false; document.getElementById('end-action-turn-btn').onclick = () => { startDiscussionPhase(); syncGameStateToServer(); }; updateGameplay(); }
-    function startDiscussionPhase() { matchState.phase = 'DAY_DISCUSS'; document.getElementById('gameplay-phase-badge').innerText = `THẢO LUẬN & GHIM LỬA VOTE`; document.getElementById('gameplay-interactive-action').innerHTML = `<div class="space-y-4"><p class="text-xs text-slate-400 italic">Thảo luận tự do. Chuẩn bị khóa phiếu cưỡng chế.</p><div class="text-center py-4 bg-black/30 border border-moss rounded-2xl"><span class="text-3xl animate-bounce inline-block">🔥</span></div></div>`; matchState.dayVotes = {}; document.getElementById('end-action-turn-btn').innerText = "Khóa Phiếu Biểu Quyết"; document.getElementById('end-action-turn-btn').onclick = () => { startLockVotePhase(); syncGameStateToServer(); }; updateGameplay(); }
-    function startLockVotePhase() { matchState.phase = 'DAY_VOTE'; document.getElementById('gameplay-phase-badge').innerText = `KHÓA PHIẾU QUY TRÌNH`; matchState.dayVotes = {}; renderLockVoteInterface(); setTimeout(() => triggerAntiAFKCheck(), 3000); }
-    function renderLockVoteInterface() { const c = document.getElementById('gameplay-interactive-action'); c.innerHTML = `<p class="text-[10px] text-slate-400 mb-3">Bỏ phiếu cưỡng chế ai lên giàn?</p>`; const div = document.createElement('div'); div.className = "space-y-2"; matchState.players.filter(p => p.isAlive).forEach(t => { const sel = matchState.dayVotes[currentUserId] === t.id; const b = document.createElement('button'); b.className = `w-full p-2.5 rounded-xl text-left text-xs font-bold border flex justify-between ${sel ? 'bg-[#FF4500]/20 border-[#FF4500] text-[#FF4500] glow-fire' : 'bg-black/20 border-moss'}`; b.innerHTML = `<span>Gửi lên giàn: ${t.name}</span> <span>${sel ? 'CHỐT ✅' : ''}</span>`; b.onclick = () => { matchState.dayVotes[currentUserId] = t.id; syncGameStateToServer(); checkAFKResolution(); }; div.appendChild(b); }); c.appendChild(div); const btn = document.getElementById('end-action-turn-btn'); btn.innerText = "Tally Phiếu Bầu (Host chốt)"; btn.onclick = () => { if(currentUserId === 'admin' || !document.getElementById('end-action-turn-btn').disabled) { tallyLockVotes(); } }; }
-    function triggerAntiAFKCheck() { const alertDiv = document.getElementById('afk-red-alert'); if (matchState.phase === 'DAY_VOTE' && !matchState.dayVotes[currentUserId]) { alertDiv.classList.remove('hidden'); triggerZippoStrike(); setTimeout(() => { if (matchState.phase === 'DAY_VOTE' && !matchState.dayVotes[currentUserId]) { alertDiv.classList.add('hidden'); logout(); showToast("Bị Kick do AFK!", "error"); } }, 30000); } else alertDiv.classList.add('hidden'); }
-    function checkAFKResolution() { document.getElementById('afk-red-alert').classList.add('hidden'); }
-    function tallyLockVotes() { const alives = matchState.players.filter(p => p.isAlive); alives.forEach(p => { if (p.isBot) matchState.dayVotes[p.id] = alives[Math.floor(Math.random() * alives.length)].id; }); alives.forEach(p => p.votesRec = 0); Object.values(matchState.dayVotes).forEach(tid => { const p = matchState.players.find(x => x.id === tid); if (p) p.votesRec = (p.votesRec || 0) + 1; }); let max = 0; let target = null; alives.forEach(p => { if (p.votesRec > max) { max = p.votesRec; target = p; } }); if (target && max > 0) startDefendPhase(target.id); else { matchState.logs.push("Làng bỏ phiếu trắng."); syncGameStateToServer(); startNightRuntime(); } }
-    function startDefendPhase(targetId) { matchState.phase = 'HANGING_DEFEND'; matchState.hangingTargetId = targetId; const target = matchState.players.find(p => p.id === targetId); document.getElementById('gameplay-phase-badge').innerText = `BIỆN HỘ TRĂN TRỐI`; const c = document.getElementById('gameplay-interactive-action'); if (target.isLocked) { c.innerHTML = `<div class="p-4 bg-red-950/20 border-red-500/20 rounded-xl text-center"><p class="text-xs text-rose-400 font-extrabold uppercase">MUTE ENFORCEMENT</p><p class="text-[10px]">Cưỡng chế câm lặng do bùa Nguyệt Nữ!</p></div>`; setTimeout(() => { startPhanQuyetPhase(); syncGameStateToServer(); }, 3000); } else { c.innerHTML = `<div class="p-5 bg-[#FF4500]/5 border-[#FF4500]/20 rounded-2xl text-center"><h4 class="text-xs font-extrabold text-[#FF4500] uppercase">Nghi can: ${target.name}</h4><p class="text-xs text-slate-300 italic">"Tui oan lắm tề!"</p></div>`; document.getElementById('end-action-turn-btn').innerText = "Chuyển Sang Phán Quyết"; document.getElementById('end-action-turn-btn').onclick = () => { startPhanQuyetPhase(); syncGameStateToServer(); }; } syncGameStateToServer(); updateGameplay(); }
-    function startPhanQuyetPhase() { matchState.phase = 'HANGING_VOTE'; document.getElementById('gameplay-phase-badge').innerText = `PHÁN QUYẾT 👍/👎`; matchState.trialVotes = {}; renderPhanQuyetInterface(); }
-    function renderPhanQuyetInterface() { const c = document.getElementById('gameplay-interactive-action'); const target = matchState.players.find(p => p.id === matchState.hangingTargetId); c.innerHTML = `<p class="text-xs text-slate-300 text-center mb-4">Phán quyết <span class="text-fire font-bold">${target.name}</span>:</p><div class="grid grid-cols-2 gap-3"><button onclick="submitPhanQuyet('HANG')" class="p-4 rounded-xl border text-center font-bold text-xs ${matchState.trialVotes[currentUserId]==='HANG'?'bg-red-950/40 border-red-500 text-red-400':'bg-black/20 border-moss hover:bg-black/40 text-slate-400'}">👍 Treo</button><button onclick="submitPhanQuyet('FORGIVE')" class="p-4 rounded-xl border text-center font-bold text-xs ${matchState.trialVotes[currentUserId]==='FORGIVE'?'bg-emerald-950/40 border-emerald-500 text-emerald-400':'bg-black/20 border-moss hover:bg-black/40 text-slate-400'}">👎 Tha</button></div>`; document.getElementById('end-action-turn-btn').innerText = "Xác nhận phán quyết (Host chốt)"; document.getElementById('end-action-turn-btn').onclick = () => { if(currentUserId === 'admin' || !document.getElementById('end-action-turn-btn').disabled) tallyPhanQuyetVotes(); }; }
-    function submitPhanQuyet(choice) { matchState.trialVotes[currentUserId] = choice; syncGameStateToServer(); }
-    function tallyPhanQuyetVotes() { const target = matchState.players.find(p => p.id === matchState.hangingTargetId); const alives = matchState.players.filter(p => p.isAlive && p.id !== target.id); let hang = 0; let forgive = 0; alives.forEach(p => { if (p.isBot) { if (Math.random() > 0.5) hang++; else forgive++; } else { if (matchState.trialVotes[p.id] === 'HANG') hang++; else forgive++; } }); matchState.logs.push(`Phán quyết [${target.name}]: ${hang} Treo vs ${forgive} Tha.`); if (hang > forgive) { if (target.role === 'IDIOT') { target.isAlive = false; target.deathReason = 'HANGED'; matchState.logs.push(`Thằng Ngốc bị treo, thắng độc lập!`); triggerMatchOver('IDIOT_SOLO'); return; } target.isAlive = false; target.deathReason = 'HANGED'; matchState.logs.push(`Đã treo cổ [${target.name}].`); if (target.linkedLoverId) { const pt = matchState.players.find(x => x.id === target.linkedLoverId); if (pt && pt.isAlive) { pt.isAlive = false; pt.deathReason = 'CUPID_CHAIN'; matchState.logs.push(`Cupid: [${pt.name}] chết theo.`); } } if (target.role === 'HUNTER' && !target.isLocked) { triggerHunterRevengeScene(); syncGameStateToServer(); return; } else { if (checkWinConditions()) return; startNextDayNightLoop(); } } else { matchState.logs.push(`Tha bổng [${target.name}].`); startNextDayNightLoop(); } }
-    function triggerHunterRevengeScene() { matchState.phase = 'HUNTER_REVENGE'; document.getElementById('gameplay-phase-badge').innerText = `THỢ SĂN PHỤC HẬN`; const c = document.getElementById('gameplay-interactive-action'); c.innerHTML = `<p class="text-xs text-rose-400 font-bold mb-3">Thợ Săn chọn 1 người chết chung:</p><div class="grid grid-cols-2 gap-2">`; const div = document.createElement('div'); div.className = "grid grid-cols-2 gap-2"; matchState.players.filter(p => p.isAlive).forEach(t => { const b = document.createElement('button'); b.className = "p-2.5 rounded-xl bg-red-950/20 border border-red-500/30 text-red-400 font-bold text-xs"; b.innerText = `Bắn ${t.name}`; b.onclick = () => { executeHunterShoot(t.id); }; div.appendChild(b); }); c.appendChild(div); }
-    function executeHunterShoot(targetId) { const target = matchState.players.find(p => p.id === targetId); if (target) { target.isAlive = false; target.deathReason = 'HUNTER_SHOT'; matchState.logs.push(`Thợ Săn hạ sát [${target.name}]!`); if (target.linkedLoverId) { const pt = matchState.players.find(x => x.id === target.linkedLoverId); if(pt && pt.isAlive){ pt.isAlive=false; pt.deathReason='CUPID_CHAIN'; matchState.logs.push(`Cupid: ${pt.name} gục ngã chết chùm.`); } } } if (checkWinConditions()) return; startNextDayNightLoop(); }
-    function startNextDayNightLoop() { matchState.day++; syncGameStateToServer(); startNightRuntime(); }
-    function checkWinConditions() { const cupids = matchState.players.filter(p => p.isAlive && p.linkedLoverId); const wolves = matchState.players.filter(p => p.isAlive && ['WEREWOLF', 'ALPHA_WOLF', 'TRAITOR'].includes(p.role)); const village = matchState.players.filter(p => p.isAlive && !['WEREWOLF', 'ALPHA_WOLF', 'TRAITOR'].includes(p.role)); const alives = matchState.players.filter(p => p.isAlive); if (alives.length === 3 && alives.some(p=>p.role==='CURSED_ONE') && alives.some(p=>p.role==='WEREWOLF') && alives.some(p=>p.role==='HUNTER')) { triggerMatchOver('WEREWOLF'); return true; } if (cupids.length >= alives.length && cupids.length > 0) { triggerMatchOver('CUPID'); return true; } if (wolves.length >= village.length) { triggerMatchOver('WEREWOLF'); return true; } if (wolves.length === 0 && cupids.length === 0) { triggerMatchOver('VILLAGE'); return true; } return false; }
-    function triggerMatchOver(winner) { matchState.status = 'OVER'; syncGameStateToServer(); const c = document.getElementById('gameplay-interactive-action'); let th="bg-emerald-950/40 border-emerald-500 text-emerald-400", ti="DÂN LÀNG CHIẾN THẮNG!", d="Bóng tối đã tan."; if(winner==='WEREWOLF'){ th="bg-rose-950/40 border-rose-500 text-rose-400"; ti="PHE SÓI CHIẾN THẮNG!", d="Ngôi làng bị cắn nuốt."; } else if(winner==='IDIOT_SOLO'){ th="bg-yellow-950/40 border-yellow-500 text-yellow-400"; ti="THẰNG NGỐC THẮNG!"; d="Thao túng phán quyết thành công."; } else if(winner==='CUPID'){ th="bg-pink-950/40 border-pink-500 text-pink-400 animate-pulse"; ti="CUPID THẮNG!"; d="Tình yêu vượt lên tất cả."; } c.innerHTML = `<div class="p-6 border rounded-2xl text-center space-y-4 ${th} glow-fire"><span class="text-5xl">🏆</span><h2 class="text-lg font-black heading-font tracking-widest uppercase">${ti}</h2><p class="text-xs">${d}</p><button onclick="triggerZippoOpen(); resetArena()" class="px-5 py-2.5 bg-[#FF4500] text-white font-extrabold rounded-xl text-xs uppercase">Trở về sảnh</button></div>`; document.getElementById('end-action-turn-btn').innerText = "Kết thúc"; document.getElementById('end-action-turn-btn').disabled = true; updateGameplay(); }
+    function confirmActionTurn() { matchState.currentNightStepIndex++; syncGameStateToServer(); runNightStep(); }
+    function resolveDeathScan() { const actions = matchState.actions; const deadTonight = []; matchState.players.forEach(p => { if(p.id===actions.protectedId) p.isProtected=true; if(p.id===actions.wolvesTarget1 && actions.witchHealUsed) p.isSaved=true; if(p.id===actions.witchPoisonTarget) p.isPoisoned=true; if(p.id===actions.lockedId) p.isLocked=true; if(p.id===actions.shamanRuinedId) p.isRuined=true; }); matchState.players.forEach(p => { if (!p.isAlive) return; if (p.isPoisoned) { p.isAlive = false; p.deathReason = 'POISON'; deadTonight.push(p.id); } else if ((p.id === actions.wolvesTarget1 || p.id === actions.wolvesTarget2) && !p.isProtected && !p.isSaved) { if (p.role === 'CURSED_ONE' && !p.isLocked) { p.role='WEREWOLF'; matchState.logs.push("🌙 Kẻ Bị Nguyền hóa Sói!"); } else { p.isAlive = false; p.deathReason = 'WOLF'; deadTonight.push(p.id); } } }); matchState.deadTonight = deadTonight; syncGameStateToServer(); startDayAnnouncement(); }
+    function startDayAnnouncement() { matchState.phase = 'DAY_ANNOUNCE'; document.getElementById('gameplay-day-badge').innerText = `BAN NGÀY`; document.getElementById('gameplay-phase-badge').innerText = `BÁO TỬ BÌNH MINH`; const c = document.getElementById('gameplay-interactive-action'); c.innerHTML = ''; if (matchState.deadTonight.length === 0) c.innerHTML = `<div class="p-4 bg-emerald-950/20 border border-emerald-500/20 text-emerald-400 rounded-xl text-center font-bold">Đêm bình yên không có tiếng thét.</div>`; else { matchState.deadTonight.forEach(id => { const p = matchState.players.find(x => x.id === id); c.innerHTML += `<div class="p-2.5 bg-[#FF4500]/10 text-[#FF4500] rounded-xl text-xs font-mono mb-1">💀 ${p.name} tử nạn</div>`; }); } if (checkWinConditions()) return; document.getElementById('end-action-turn-btn').innerText = "Vào Thảo Luận"; document.getElementById('end-action-turn-btn').onclick = () => { startDiscussionPhase(); syncGameStateToServer(); }; updateGameplay(); }
+    function startDiscussionPhase() { matchState.phase = 'DAY_DISCUSS'; document.getElementById('gameplay-phase-badge').innerText = `THẢO LUẬN LÀNG QUÊ`; document.getElementById('gameplay-interactive-action').innerHTML = `<p class="text-xs text-slate-400 italic text-center py-6">Kích hoạt hội thoại tự do...</p>`; document.getElementById('end-action-turn-btn').innerText = "Bắt đầu bỏ phiếu treo cổ"; document.getElementById('end-action-turn-btn').onclick = () => { startLockVotePhase(); syncGameStateToServer(); }; updateGameplay(); }
+    function startLockVotePhase() { matchState.phase = 'DAY_VOTE'; document.getElementById('gameplay-phase-badge').innerText = `BỎ PHIẾU TREO CỔ`; matchState.dayVotes = {}; renderLockVoteInterface(); }
+    function renderLockVoteInterface() { const c = document.getElementById('gameplay-interactive-action'); c.innerHTML = ''; const div = document.createElement('div'); div.className = "space-y-2"; matchState.players.filter(p => p.isAlive).forEach(t => { const sel = matchState.dayVotes[currentUserId] === t.id; const b = document.createElement('button'); b.className = `w-full p-2.5 rounded-xl text-left text-xs border ${sel ? 'bg-[#FF4500]/20 border-[#FF4500] text-[#FF4500]' : 'bg-black/20 border-moss'}`; b.innerHTML = `Biểu quyết treo: ${t.name}`; b.onclick = () => { matchState.dayVotes[currentUserId] = t.id; syncGameStateToServer(); renderLockVoteInterface(); }; div.appendChild(b); }); c.appendChild(div); document.getElementById('end-action-turn-btn').innerText = "Tally kết quả phiếu"; document.getElementById('end-action-turn-btn').onclick = () => tallyLockVotes(); }
+    function tallyLockVotes() { const alives = matchState.players.filter(p => p.isAlive); alives.forEach(p => p.votesRec = 0); Object.values(matchState.dayVotes).forEach(tid => { const p = matchState.players.find(x => x.id === tid); if (p) p.votesRec = (p.votesRec || 0) + 1; }); let max = 0; let target = null; alives.forEach(p => { if (p.votesRec > max) { max = p.votesRec; target = p; } }); if (target && max > 0) { target.isAlive = false; matchState.logs.push(`Làng biểu quyết treo cổ [${target.name}].`); } else { matchState.logs.push("Làng đồng thuận bỏ phiếu trắng."); } if (checkWinConditions()) return; matchState.day++; syncGameStateToServer(); startNightRuntime(); }
+    function checkWinConditions() { const wolves = matchState.players.filter(p => p.isAlive && ['WEREWOLF', 'ALPHA_WOLF', 'TRAITOR'].includes(p.role)); const village = matchState.players.filter(p => p.isAlive && !['WEREWOLF', 'ALPHA_WOLF', 'TRAITOR'].includes(p.role)); if (wolves.length >= village.length) { triggerMatchOver('WEREWOLF'); return true; } if (wolves.length === 0) { triggerMatchOver('VILLAGE'); return true; } return false; }
+    function triggerMatchOver(winner) { matchState.status = 'OVER'; syncGameStateToServer(); const c = document.getElementById('gameplay-interactive-action'); c.innerHTML = `<div class="p-6 border rounded-2xl text-center space-y-4 bg-emerald-950/40 border-emerald-500 text-emerald-400 font-bold uppercase">🏆 KẾT THÚC: ${winner === 'WEREWOLF' ? 'PHE SÓI THẮNG' : 'PHE DÂN THẮNG'}</div>`; document.getElementById('end-action-turn-btn').innerText = "Trở về sảnh"; document.getElementById('end-action-turn-btn').onclick = () => resetArena(); updateGameplay(); }
     function resetArena() { matchState = { status: 'WAITING', phase: 'PRE_GAME', day: 1, players: [], selectedRoles: matchState.selectedRoles, logs: [], dayVotes: {}, trialVotes: {}, actions: {} }; syncGameStateToServer(); document.getElementById('arena-setup').classList.remove('hidden'); document.getElementById('arena-gameplay').classList.add('hidden'); updateLobby(); }
-    function skipGameplayPhase() { if(matchState.phase==='NIGHT_TURN') { matchState.currentNightStepIndex++; syncGameStateToServer(); runNightStep(); } else if(matchState.phase==='DAY_DISCUSS') { startLockVotePhase(); syncGameStateToServer(); } else if(matchState.phase==='DAY_VOTE') tallyLockVotes(); else if(matchState.phase==='HANGING_DEFEND') { startPhanQuyetPhase(); syncGameStateToServer(); } else if(matchState.phase==='HANGING_VOTE') tallyPhanQuyetVotes(); }
-    function updateGameplay() { const me = matchState.players.find(p => p.id === currentUserId); const disp = document.getElementById('my-identity-display'); if (me) { const r = HARDCORE_ROLES[me.role]; disp.innerHTML = `<div class="w-11 h-11 rounded-full bg-black/40 border border-moss flex items-center justify-center text-2xl shadow-md">${r.emoji}</div><div><h4 class="text-xs font-extrabold text-slate-100">${r.name} (${me.isAlive ? '🟢 Sống' : '💀 Chết'})</h4><p class="text-[9px] text-slate-400 mt-0.5 line-clamp-2">${r.desc}</p></div>`; } else disp.innerHTML = `<div class="w-11 h-11 rounded-full bg-black/40 border border-moss flex items-center justify-center text-2xl">👀</div><div><h4 class="text-xs font-bold text-slate-200">Quan Sát / Admin</h4><p class="text-[9px] text-slate-400">Bạn đang điều phối vòng đấu.</p></div>`; const logs = document.getElementById('gameplay-logs'); logs.innerHTML = ''; matchState.logs.slice().reverse().forEach(l => logs.innerHTML += `<p class="py-1.5 border-b border-moss last:border-none text-slate-300">${l}</p>`); const sl = document.getElementById('gameplay-status-list'); sl.innerHTML = ''; matchState.players.forEach(p => { const isMe = p.id === currentUserId; const canSee = !p.isAlive || currentUserId === 'admin' || isMe; const r = canSee ? HARDCORE_ROLES[p.role] : { emoji: '❓', name: 'Bí ẩn' }; sl.innerHTML += `<div class="p-2.5 rounded-xl border flex justify-between items-center text-xs ${p.isAlive ? 'bg-black/40 border-moss text-slate-200' : 'bg-black/75 border-red-950 text-slate-600 line-through'} ${isMe ? 'border-[#FF4500]' : ''}"><div class="flex items-center space-x-2"><span class="text-base">${p.isAlive ? r.emoji : '💀'}</span><span class="font-extrabold">${p.name} ${isMe ? '(Ta)' : ''}</span></div><span class="text-[9px] text-slate-400">${canSee ? r.name : 'Ẩn danh'}</span></div>`; }); }
+    function updateGameplay() { const me = matchState.players.find(p => p.id === currentUserId); const disp = document.getElementById('my-identity-display'); if (me) { const r = HARDCORE_ROLES[me.role]; disp.innerHTML = `<div><h4 class="text-xs font-extrabold">${r.name} (${me.isAlive ? '🟢 SỐNG' : '💀 CHẾT'})</h4></div>`; } else { disp.innerHTML = `<div><h4 class="text-xs font-bold text-slate-400">Khán giả quan sát bàn chơi</h4></div>`; } const logs = document.getElementById('gameplay-logs'); logs.innerHTML = ''; matchState.logs.slice().reverse().forEach(l => logs.innerHTML += `<p class="py-1 border-b border-moss last:border-none text-slate-300">${l}</p>`); const sl = document.getElementById('gameplay-status-list'); sl.innerHTML = ''; matchState.players.forEach(p => { sl.innerHTML += `<div class="p-2 rounded-xl border text-xs ${p.isAlive ? 'bg-black/40 border-moss' : 'bg-black/75 border-red-950 text-slate-600 line-through'}">${p.name}</div>`; }); }
 
     init();
   </script>
