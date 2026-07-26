@@ -517,10 +517,21 @@ io.on('connection', (socket) => {
                 Object.values(votes).forEach(v => v === 'THA' ? tha++ : treo++);
                 
                 if (treo > tha) {
-                    processCascadingDeaths([serverGameState.trialTarget]);
+                    const targetPlayer = serverGameState.players.find(p => p.id === serverGameState.trialTarget);
+                    const effRole = targetPlayer ? (targetPlayer.cloneInheritedRole || targetPlayer.role) : null;
+                    if (effRole === 'FOOL') {
+                        serverGameState.winner = 'FOOL';
+                        serverGameState.status = 'GAME_OVER';
+                        io.emit('game_over_fool_win', targetPlayer.name);
+                    } else {
+                        processCascadingDeaths([serverGameState.trialTarget]);
+                    }
                 }
-                serverGameState.phase = 'DAY';
-                serverGameState.trialTarget = null;
+                if (serverGameState.status !== 'GAME_OVER') {
+                    serverGameState.phase = 'DAY';
+                    serverGameState.trialTarget = null;
+                    checkGameOver();
+                }
                 changed = true;
             }
         } else if (serverGameState.phase === 'NIGHT') {
@@ -755,6 +766,9 @@ io.on('connection', (socket) => {
             // Xóa trạng thái khóa chức năng của Nguyệt Nữ
             serverGameState.players.forEach(p => p.isLocked = false);
 
+            serverGameState.morningDead = [...deadTonight];
+            serverGameState.morningDay = serverGameState.day;
+            
             serverGameState.nightActions = {};
             serverGameState.phase = 'DAY';
             serverGameState.day++;
