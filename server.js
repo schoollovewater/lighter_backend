@@ -58,7 +58,7 @@ function getMaskedStateForUser(uId) {
             if (amIWolf && effFaction === 'Ma_Sói' && pEffRole !== 'HIDDEN_WOLF') {
                 showRole = true;
             }
-            if (maskedState.status === 'WAITING') {
+            if (maskedState.status === 'WAITING' || maskedState.status === 'GAME_OVER') {
                 showRole = true;
             }
             if (!showRole) {
@@ -236,13 +236,13 @@ io.on('connection', (socket) => {
     socket.on('start_night', () => {
         if (serverGameState.status !== 'PLAYING') return;
         
-        const alivePlayers = serverGameState.players.filter(p => p.status === 'Alive');
-        const effRoles = alivePlayers.map(p => p.cloneInheritedRole || p.role);
-        const hasCupidMode2Alive = alivePlayers.some(p => p.isCupid);
+        const allPlayers = serverGameState.players;
+        const effRoles = allPlayers.map(p => p.cloneInheritedRole || p.role);
+        const hasCupidMode2 = allPlayers.some(p => p.isCupid);
         
         let steps = [];
-        if (serverGameState.day === 1 && (effRoles.includes('CUPID') || hasCupidMode2Alive)) steps.push('CUPID');
-        if (alivePlayers.some(p => p.role === 'CLONE')) steps.push('CLONE');
+        if (serverGameState.day === 1 && (effRoles.includes('CUPID') || hasCupidMode2)) steps.push('CUPID');
+        if (allPlayers.some(p => p.role === 'CLONE')) steps.push('CLONE');
         if (effRoles.includes('MOON_LADY')) steps.push('MOON_LADY');
         if (effRoles.includes('CURSED_ONE')) steps.push('CURSED_ONE');
         if (effRoles.some(r => ['WEREWOLF', 'HIDDEN_WOLF', 'ENRAGED_WOLF', 'SHAMAN_WOLF', 'ALPHA_WOLF'].includes(r))) steps.push('WEREWOLF_TEAM');
@@ -453,21 +453,21 @@ io.on('connection', (socket) => {
         const cupidTeamCount = alive.filter(p => p.role === 'CUPID' || p.isCupid || (serverGameState.cupidLinks && serverGameState.cupidLinks.includes(p.id))).length;
         if (cupidTeamCount > 0 && cupidTeamCount >= alive.length / 2) {
             serverGameState.winner = 'CUPID';
-            serverGameState.status = 'WAITING';
+            serverGameState.status = 'GAME_OVER';
             io.emit('game_over_cupid_win');
             return true;
         }
 
         if (wolves >= alive.length - wolves) {
             serverGameState.winner = 'WOLVES';
-            serverGameState.status = 'WAITING';
+            serverGameState.status = 'GAME_OVER';
             io.emit('game_over_wolves_win');
             return true;
         }
 
         if (wolves === 0) {
             serverGameState.winner = 'VILLAGERS';
-            serverGameState.status = 'WAITING';
+            serverGameState.status = 'GAME_OVER';
             io.emit('game_over_villagers_win');
             return true;
         }
@@ -530,8 +530,8 @@ io.on('connection', (socket) => {
             const activePlayers = getActivePlayersForStep(currentStep);
             const submissions = serverGameState.nightSubmissions || [];
             
-            if (activePlayers.length === 0 || submissions.length >= activePlayers.length) {
-                if (currentStep === 'WEREWOLF_TEAM' && activePlayers.length > 0 && submissions.length >= activePlayers.length) {
+            if (activePlayers.length > 0 && submissions.length >= activePlayers.length) {
+                if (currentStep === 'WEREWOLF_TEAM') {
                     const votes = serverGameState.wolfVotes || {};
                     const counts = {};
                     Object.values(votes).forEach(t => { if (t) counts[t] = (counts[t] || 0) + 1; });
@@ -645,47 +645,52 @@ io.on('connection', (socket) => {
         
         while (serverGameState.currentNightStepIndex < serverGameState.nightActiveSteps.length) {
             const step = serverGameState.nightActiveSteps[serverGameState.currentNightStepIndex];
-            if (getActivePlayersForStep(step).length > 0) {
-                if (step === 'WEREWOLF_TEAM') {
-                    serverGameState.wolfVotes = {};
-                    serverGameState.wolfTempVotes = {};
+            const activePlayers = getActivePlayersForStep(step);
+            
+            if (step === 'WEREWOLF_TEAM') {
+                serverGameState.wolfVotes = {};
+                serverGameState.wolfTempVotes = {};
+            }
+            
+            // Đặt timeout 3 phút cho các Role thường, 5 phút cho Bầy Sói
+            // Nếu role đã chết hoặc không có người chơi (activePlayers.length === 0), đặt Fake Delay từ 10-15s
+            let timeoutMs = 15000;
+            if (activePlayers.length > 0) {
+                timeoutMs = step === 'WEREWOLF_TEAM' ? 300000 : 180000;
+            } else {
+                timeoutMs = Math.floor(Math.random() * 5000) + 10000;
+            }
+            
+            const currentNight = serverGameState.day;
+            const currentStepIndex = serverGameState.currentNightStepIndex;
+            
+            serverGameState.isNightPaused = false;
+            serverGameState.nightDeadline = Date.now() + timeoutMs;
+            
+            // Hàm đệ quy check timeout mỗi giây để hỗ trợ Pause
+            const checkTimeout = () => {
+                if (serverGameState.phase !== 'NIGHT' || serverGameState.day !== currentNight || serverGameState.currentNightStepIndex !== currentStepIndex) return;
+                
+                if (serverGameState.isNightPaused) {
+                    serverGameState.nightDeadline += 1000; // Đẩy lùi deadline nếu đang pause
                 }
                 
-                // Đặt timeout 3 phút cho các Role thường, 5 phút cho Bầy Sói
-                const currentNight = serverGameState.day;
-                const currentStepIndex = serverGameState.currentNightStepIndex;
-                const timeoutMs = step === 'WEREWOLF_TEAM' ? 300000 : 180000;
-                
-                serverGameState.isNightPaused = false;
-                serverGameState.nightDeadline = Date.now() + timeoutMs;
-                
-                // Hàm đệ quy check timeout mỗi giây để hỗ trợ Pause
-                const checkTimeout = () => {
-                    if (serverGameState.phase !== 'NIGHT' || serverGameState.day !== currentNight || serverGameState.currentNightStepIndex !== currentStepIndex) return;
-                    
-                    if (serverGameState.isNightPaused) {
-                        serverGameState.nightDeadline += 1000; // Đẩy lùi deadline nếu đang pause
+                if (Date.now() >= serverGameState.nightDeadline) {
+                    if (step === 'WEREWOLF_TEAM' && activePlayers.length > 0) {
+                        const aliveTargets = serverGameState.players.filter(p => p.status === 'Alive');
+                        const randomTarget = aliveTargets[Math.floor(Math.random() * aliveTargets.length)];
+                        serverGameState.nightActions['WEREWOLF_TEAM'] = randomTarget.id;
+                        activePlayers.forEach(p => io.to(p.id).emit('wolf_timeout_forced'));
                     }
-                    
-                    if (Date.now() >= serverGameState.nightDeadline) {
-                        if (step === 'WEREWOLF_TEAM') {
-                            const activeWolves = getActivePlayersForStep('WEREWOLF_TEAM');
-                            const aliveTargets = serverGameState.players.filter(p => p.status === 'Alive');
-                            const randomTarget = aliveTargets[Math.floor(Math.random() * aliveTargets.length)];
-                            serverGameState.nightActions['WEREWOLF_TEAM'] = randomTarget.id;
-                            activeWolves.forEach(p => io.to(p.id).emit('wolf_timeout_forced'));
-                        }
-                        advanceNightStep();
-                        broadcastGameState();
-                    } else {
-                        setTimeout(checkTimeout, 1000);
-                    }
-                };
-                setTimeout(checkTimeout, 1000);
-                
-                break;
-            }
-            serverGameState.currentNightStepIndex++;
+                    advanceNightStep();
+                    broadcastGameState();
+                } else {
+                    setTimeout(checkTimeout, 1000);
+                }
+            };
+            setTimeout(checkTimeout, 1000);
+            
+            break;
         }
         
         if (serverGameState.currentNightStepIndex >= serverGameState.nightActiveSteps.length) {
@@ -775,13 +780,13 @@ io.on('connection', (socket) => {
             const effRole = targetPlayer ? (targetPlayer.cloneInheritedRole || targetPlayer.role) : null;
             if (effRole === 'FOOL') {
                 serverGameState.winner = 'FOOL';
-                serverGameState.status = 'WAITING';
+                serverGameState.status = 'GAME_OVER';
                 io.emit('game_over_fool_win', targetPlayer.name);
             } else {
                 processCascadingDeaths([targetId]);
             }
         }
-        if (serverGameState.status !== 'WAITING') {
+        if (serverGameState.status !== 'WAITING' && serverGameState.status !== 'GAME_OVER') {
             serverGameState.phase = 'DAY';
             serverGameState.trialTarget = null;
             checkGameOver();
@@ -841,12 +846,40 @@ io.on('connection', (socket) => {
         io.emit('update_gartic_state', garticState);
     });
 
+    // --- WEBRTC VOICE SIGNALING ---
+    socket.on('join_voice_channel', () => {
+        const user = globalUsers[socket.id];
+        if (!user) return;
+        socket.broadcast.emit('user_joined_voice', user.id);
+    });
+
+    socket.on('voice_signal', (data) => {
+        const user = globalUsers[socket.id];
+        if (!user) return;
+        const targetSocketId = Object.keys(globalUsers).find(sid => globalUsers[sid].id === data.targetId);
+        if (targetSocketId) {
+            io.to(targetSocketId).emit('voice_signal', {
+                senderId: user.id,
+                signal: data.signal
+            });
+        }
+    });
+
+    socket.on('leave_voice_channel', () => {
+        const user = globalUsers[socket.id];
+        if (!user) return;
+        socket.broadcast.emit('user_left_voice', user.id);
+    });
+
     // Xử lý khi có người out app, đóng tab trình duyệt
     socket.on('disconnect', () => {
         const userLeaving = globalUsers[socket.id];
         if (userLeaving) {
             const sessionId = userLeaving.id;
             console.log(`🔌 User mất kết nối: ${userLeaving.name} (Chờ 15s để khôi phục...)`);
+            
+            // Xóa khỏi voice chat
+            socket.broadcast.emit('user_left_voice', sessionId);
             
             delete globalUsers[socket.id];
             io.emit('update_users_list', Object.values(globalUsers));
