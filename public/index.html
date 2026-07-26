@@ -924,38 +924,7 @@
     }
     
     function startNight() {
-      const alivePlayers = localWerewolfState.players.filter(p => p.status === 'Alive');
-      const effRoles = alivePlayers.map(p => p.cloneInheritedRole || p.role);
-      const hasCupidMode2Alive = alivePlayers.some(p => p.isCupid);
-      
-      let steps = [];
-      if (localWerewolfState.day === 1 && (effRoles.includes('CUPID') || hasCupidMode2Alive)) steps.push('CUPID');
-      
-      // Clone luôn thức dậy nếu còn sống (ngay cả khi đã kế thừa, để đọc thông báo)
-      if (alivePlayers.some(p => p.role === 'CLONE')) steps.push('CLONE');
-      
-      if (effRoles.includes('MOON_LADY')) steps.push('MOON_LADY');
-      if (effRoles.includes('CURSED_ONE')) steps.push('CURSED_ONE');
-      if (effRoles.some(r => ['WEREWOLF', 'HIDDEN_WOLF', 'ENRAGED_WOLF', 'SHAMAN_WOLF', 'ALPHA_WOLF'].includes(r))) steps.push('WEREWOLF_TEAM');
-      
-      if (effRoles.includes('ALPHA_WOLF')) steps.push('ALPHA_WOLF');
-      if (effRoles.includes('ENRAGED_WOLF')) steps.push('ENRAGED_WOLF');
-      
-      if (effRoles.includes('SHAMAN_WOLF')) steps.push('SHAMAN_WOLF');
-      if (effRoles.includes('BODYGUARD')) steps.push('BODYGUARD');
-      if (effRoles.includes('WITCH')) steps.push('WITCH');
-      if (effRoles.includes('BEAR_TAMER')) steps.push('BEAR_TAMER');
-      if (effRoles.includes('SEER')) steps.push('SEER');
-      if (effRoles.includes('DETECTIVE')) steps.push('DETECTIVE');
-      if (localWerewolfState.day === 1 && effRoles.includes('FOOL')) steps.push('FOOL');
-      if (effRoles.includes('HUNTER')) steps.push('HUNTER');
-      if (effRoles.includes('ENRAGED_WOLF') && localWerewolfState.enragedWolfStacks > 0) steps.push('ENRAGED_WOLF');
-      
-      localWerewolfState.nightActiveSteps = steps;
-      localWerewolfState.currentNightStepIndex = 0;
-      localWerewolfState.phase = 'NIGHT';
-      socket.emit('sync_game_state', localWerewolfState);
-      updateWerewolfUI();
+      socket.emit('start_night');
     }
     
     function confirmNightTurn() {
@@ -1301,10 +1270,7 @@
     }
     
     function startDayVoting() {
-      localWerewolfState.phase = 'DAY_VOTING';
-      localWerewolfState.dayVotes = {};
-      socket.emit('sync_game_state', localWerewolfState);
-      updateWerewolfUI();
+      socket.emit('start_day_voting');
     }
     
     function submitDayVote(event, targetId) {
@@ -1403,10 +1369,7 @@
     }
 
     function endWerewolfMatch() {
-      if (!localWerewolfState) return;
-      localWerewolfState.status = 'WAITING';
-      socket.emit('sync_game_state', localWerewolfState);
-      updateWerewolfUI();
+      socket.emit('end_werewolf_game');
     }
 
     // --- LOGIC GARTIC PHONE CHUYÊN SÂU ---

@@ -233,6 +233,52 @@ io.on('connection', (socket) => {
         broadcastGameState();
     });
 
+    socket.on('start_night', () => {
+        if (serverGameState.status !== 'PLAYING') return;
+        
+        const alivePlayers = serverGameState.players.filter(p => p.status === 'Alive');
+        const effRoles = alivePlayers.map(p => p.cloneInheritedRole || p.role);
+        const hasCupidMode2Alive = alivePlayers.some(p => p.isCupid);
+        
+        let steps = [];
+        if (serverGameState.day === 1 && (effRoles.includes('CUPID') || hasCupidMode2Alive)) steps.push('CUPID');
+        if (alivePlayers.some(p => p.role === 'CLONE')) steps.push('CLONE');
+        if (effRoles.includes('MOON_LADY')) steps.push('MOON_LADY');
+        if (effRoles.includes('CURSED_ONE')) steps.push('CURSED_ONE');
+        if (effRoles.some(r => ['WEREWOLF', 'HIDDEN_WOLF', 'ENRAGED_WOLF', 'SHAMAN_WOLF', 'ALPHA_WOLF'].includes(r))) steps.push('WEREWOLF_TEAM');
+        if (effRoles.includes('ALPHA_WOLF')) steps.push('ALPHA_WOLF');
+        if (effRoles.includes('ENRAGED_WOLF')) steps.push('ENRAGED_WOLF');
+        if (effRoles.includes('SHAMAN_WOLF')) steps.push('SHAMAN_WOLF');
+        if (effRoles.includes('BODYGUARD')) steps.push('BODYGUARD');
+        if (effRoles.includes('WITCH')) steps.push('WITCH');
+        if (effRoles.includes('BEAR_TAMER')) steps.push('BEAR_TAMER');
+        if (effRoles.includes('SEER')) steps.push('SEER');
+        if (effRoles.includes('DETECTIVE')) steps.push('DETECTIVE');
+        if (serverGameState.day === 1 && effRoles.includes('FOOL')) steps.push('FOOL');
+        if (effRoles.includes('HUNTER')) steps.push('HUNTER');
+        if (effRoles.includes('ENRAGED_WOLF') && serverGameState.enragedWolfStacks > 0) steps.push('ENRAGED_WOLF');
+        
+        serverGameState.nightActiveSteps = steps;
+        serverGameState.currentNightStepIndex = -1;
+        serverGameState.phase = 'NIGHT';
+        
+        advanceNightStep(); // Bắt đầu đếm thời gian và tìm role đầu tiên
+        broadcastGameState();
+    });
+
+    socket.on('start_day_voting', () => {
+        if (serverGameState.status !== 'PLAYING') return;
+        serverGameState.phase = 'DAY_VOTING';
+        serverGameState.dayVotes = {};
+        broadcastGameState();
+    });
+
+    socket.on('end_werewolf_game', () => {
+        if (!serverGameState) return;
+        serverGameState.status = 'WAITING';
+        broadcastGameState();
+    });
+
     socket.on('submit_werewolf_vote', ({ voterId, targetId }) => {
         if (!serverGameState.dayVotes) serverGameState.dayVotes = {};
         serverGameState.dayVotes[voterId] = targetId;
