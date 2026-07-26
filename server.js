@@ -18,6 +18,7 @@ const io = new Server(server, { cors: { origin: "*", methods: ["GET", "POST"] } 
 // --- BỘ NHỚ TRẠNG THÁI REAL-TIME ---
 let globalUsers = {}; // Lưu vết tất cả người dùng online: { socketId: { id, name, avatar, isHost } }
 let serverMessages = [];
+const disconnectTimeouts = {};
 let serverGameState = {
     status: 'WAITING', phase: 'PRE_GAME', day: 1, players: [], 
     selectedRoles: { 
