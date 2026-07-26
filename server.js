@@ -146,23 +146,40 @@ io.on('connection', (socket) => {
 
     // Khi người chơi đặt tên và tham gia vào hệ thống (Không dùng mật khẩu)
     socket.on('join_hub', (userData) => {
-        // Nếu là người đầu tiên vào phòng, tự động phong làm Chủ phòng (Host)
         const isFirst = Object.keys(globalUsers).length === 0;
-        
-        globalUsers[socket.id] = {
-            id: socket.id,
-            name: userData.name,
-            avatar: userData.avatar || '🥷',
-            isHost: isFirst
-        };
+        const sessionId = userData.sessionId || socket.id;
 
-        console.log(`👤 User nhập cuộc: ${userData.name} | Quyền Host: ${isFirst}`);
+        if (disconnectTimeouts[sessionId]) {
+            clearTimeout(disconnectTimeouts[sessionId]);
+            delete disconnectTimeouts[sessionId];
+        }
+
+        let oldSocketId = null;
+        for (const [sid, user] of Object.entries(globalUsers)) {
+            if (user.id === sessionId) {
+                oldSocketId = sid;
+                break;
+            }
+        }
+
+        if (oldSocketId && oldSocketId !== socket.id) {
+            globalUsers[socket.id] = globalUsers[oldSocketId];
+            delete globalUsers[oldSocketId];
+            console.log(`♻️ User Reconnected: ${userData.name}`);
+        } else {
+            globalUsers[socket.id] = {
+                id: sessionId,
+                name: userData.name,
+                avatar: userData.avatar || '🐰',
+                isHost: isFirst
+            };
+            console.log(`👋 User nhập cuộc: ${userData.name}`);
+        }
         
-        // Phát dữ liệu tổng quan về máy vừa đăng nhập
         socket.emit('initial_state', {
-            myId: socket.id,
+            myId: sessionId,
             messages: serverMessages,
-            gameState: getMaskedStateForUser(socket.id),
+            gameState: getMaskedStateForUser(sessionId),
             garticState: garticState,
             users: Object.values(globalUsers)
         });
@@ -234,7 +251,7 @@ io.on('connection', (socket) => {
         const user = globalUsers[socket.id];
         if (!user || serverGameState.status !== 'PLAYING') return;
         
-        const me = serverGameState.players.find(p => p.id === socket.id);
+        const me = serverGameState.players.find(p => p.id === (globalUsers[socket.id]?.id));
         const effFaction = me ? (me.cloneInheritedFaction || me.originFaction) : null;
         if (effFaction !== 'Ma_Sói') return;
 
@@ -255,12 +272,13 @@ io.on('connection', (socket) => {
         const user = globalUsers[socket.id];
         if (!user || serverGameState.status !== 'PLAYING') return;
         
-        const me = serverGameState.players.find(p => p.id === socket.id);
+        const me = serverGameState.players.find(p => p.id === (globalUsers[socket.id]?.id));
         const effFaction = me ? (me.cloneInheritedFaction || me.originFaction) : null;
         if (effFaction !== 'Ma_Sói') return;
 
         if (!serverGameState.wolfTempVotes) serverGameState.wolfTempVotes = {};
-        serverGameState.wolfTempVotes[socket.id] = targetId;
+        const voterId = globalUsers[socket.id]?.id;
+        if(voterId) serverGameState.wolfTempVotes[voterId] = targetId;
         
         serverGameState.players.forEach(p => {
             let pFaction = p.cloneInheritedFaction || p.originFaction;
@@ -780,35 +798,42 @@ io.on('connection', (socket) => {
     socket.on('disconnect', () => {
         const userLeaving = globalUsers[socket.id];
         if (userLeaving) {
-            console.log(`🔴 User thoát: ${userLeaving.name}`);
-            const wasHost = userLeaving.isHost;
+            const sessionId = userLeaving.id;
+            console.log(`🔌 User mất kết nối: ${userLeaving.name} (Chờ 15s để khôi phục...)`);
+            
             delete globalUsers[socket.id];
+            io.emit('update_users_list', Object.values(globalUsers));
 
-            const remainingUsers = Object.values(globalUsers);
-            // Nếu thằng rời đi là Chủ phòng, tự động chuyển quyền Chủ phòng cho người tiếp theo
-            if (wasHost && remainingUsers.length > 0) {
-                remainingUsers[0].isHost = true;
-                console.log(`👑 Quyền Chủ phòng tự động chuyển giao cho: ${remainingUsers[0].name}`);
-            }
-
-            // Xử lý rời game Ma Sói an toàn
-            if (serverGameState.status === 'PLAYING') {
-                const p = serverGameState.players.find(x => x.id === socket.id);
-                if (p && p.status === 'Alive') p.status = 'Dead';
-                if (serverGameState.phase === 'DAY_TRIAL' && serverGameState.trialTarget === socket.id) {
-                    serverGameState.phase = 'DAY';
-                    serverGameState.trialTarget = null;
-                    serverGameState.trialVotes = {};
+            disconnectTimeouts[sessionId] = setTimeout(() => {
+                const isStillHere = Object.values(globalUsers).some(u => u.id === sessionId);
+                if (!isStillHere) {
+                    console.log(`💀 User thoát hẳn: ${userLeaving.name}`);
+                    
+                    if (serverGameState.status === 'PLAYING') {
+                        const p = serverGameState.players.find(x => x.id === sessionId);
+                        if (p && p.status === 'Alive') p.status = 'Dead';
+                        if (serverGameState.phase === 'DAY_TRIAL' && serverGameState.trialTarget === sessionId) {
+                            serverGameState.phase = 'DAY';
+                            serverGameState.trialTarget = null;
+                            serverGameState.trialVotes = {};
+                        }
+                        if (!checkGameOver()) {
+                            checkAutoProgress();
+                        }
+                    } else {
+                        serverGameState.players = serverGameState.players.filter(p => p.id !== sessionId);
+                    }
+                    
+                    broadcastGameState();
+                    
+                    if (Object.keys(globalUsers).length > 0 && userLeaving.isHost) {
+                        const remainingUsers = Object.values(globalUsers);
+                        remainingUsers[0].isHost = true;
+                        console.log(`👑 Quyền Chủ phòng tự động chuyển giao cho: ${remainingUsers[0].name}`);
+                        io.emit('update_users_list', remainingUsers);
+                    }
                 }
-                if (!checkGameOver()) {
-                    checkAutoProgress();
-                }
-            } else {
-                serverGameState.players = serverGameState.players.filter(p => p.id !== socket.id);
-            }
-
-            io.emit('update_users_list', remainingUsers);
-            broadcastGameState();
+            }, 15000);
         }
     });
 });

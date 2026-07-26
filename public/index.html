@@ -224,6 +224,38 @@
     let backendUrl = localStorage.getItem('lighter_backend_url') || (window.location.hostname === 'localhost' ? 'http://localhost:3000' : '');
     const socket = backendUrl ? io(backendUrl) : io();
 
+    function getSessionId() {
+      let sid = localStorage.getItem('lighter_session_id');
+      if (!sid) {
+          sid = 'sid_' + Math.random().toString(36).substr(2, 9) + '_' + Date.now();
+          localStorage.setItem('lighter_session_id', sid);
+      }
+      return sid;
+    }
+
+    function connectToLighterHub() {
+      const name = document.getElementById('entrance-name-input').value.trim();
+      if (!name) { alert("Đặt tên giùm cái bạn ơi!"); return; }
+      
+      localStorage.setItem('lighter_last_name', name);
+      
+      document.getElementById('entrance-gate').classList.add('hidden');
+      document.getElementById('main-hub-interface').classList.remove('hidden');
+      
+      socket.emit('join_hub', { name: name, avatar: selectedAvatar, sessionId: getSessionId() });
+      initCanvasLogic();
+    }
+
+    socket.on('connect', () => {
+        if (document.getElementById('entrance-gate').classList.contains('hidden')) {
+            const name = document.getElementById('entrance-name-input').value.trim() || localStorage.getItem('lighter_last_name');
+            if (name) {
+                socket.emit('join_hub', { name: name, avatar: selectedAvatar, sessionId: getSessionId() });
+                console.log("Auto-reconnecting...");
+            }
+        }
+    });
+
     // RENDER AVATAR KHÔNG MẬT KHẨU Ở CỬA VÀO
     function initEntrance() {
       const container = document.getElementById('entrance-avatar-grid'); container.innerHTML = '';
