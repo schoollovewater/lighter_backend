@@ -42,7 +42,7 @@
           <label class="text-[10px] text-slate-400 block text-left mb-1.5 uppercase font-bold tracking-wider">Biệt danh của mi:</label>
           <input type="text" id="entrance-name-input" placeholder="Gõ tên vào đây bạn ơi..." class="w-full bg-black/40 border border-moss rounded-xl px-4 py-3 text-sm text-center text-slate-200 focus:outline-none focus:border-[#FF4500]" required>
         </div>
-        <button onclick="connectToSchoolHub()" class="w-full py-3.5 bg-[#FF4500] hover:bg-orange-500 text-white font-black rounded-xl text-sm transition uppercase tracking-wider glow-fire">Vào sảnh chờ chơi game</button>
+        <button id="btn-enter-hub" onclick="connectToSchoolHub()" class="w-full py-3.5 bg-[#FF4500] hover:bg-orange-500 text-white font-black rounded-xl text-sm transition uppercase tracking-wider glow-fire disabled:opacity-60">Vào sảnh chờ chơi game</button>
         <div class="pt-2 border-t border-moss">
           <a href="/gm/" class="w-full py-2.5 bg-indigo-950/60 hover:bg-indigo-900/70 border border-indigo-500/40 text-indigo-300 font-bold rounded-xl text-xs transition uppercase tracking-wider flex items-center justify-center gap-2">
             <i data-lucide="moon" class="w-3.5 h-3.5"></i> Mở Trợ Lý Quản Trò Offline (Chơi Bài Giấy)
@@ -302,6 +302,17 @@
         const data = await res.json();
         if (!res.ok || !data.ok) {
           if (data && data.error) showToast(`⚠️ ${data.error}`);
+        } else {
+          // Cập nhật giao diện ngay từ phản hồi API (không cần đợi thêm 1 vòng onSnapshot)
+          if (data.myId) myId = data.myId;
+          if (Array.isArray(data.users)) {
+            roomUsers = data.users;
+            renderUsersList();
+          }
+          if (data.gameState) {
+            localWerewolfState = data.gameState;
+            updateWerewolfUI();
+          }
         }
         return data;
       } catch (err) {
@@ -318,7 +329,13 @@
       localStorage.setItem('school_universe_last_name', name);
       localStorage.setItem('school_universe_last_avatar', selectedAvatar);
 
+      const enterBtn = document.getElementById('btn-enter-hub');
+      if (enterBtn) { enterBtn.disabled = true; enterBtn.innerText = 'Đang vào sảnh...'; }
+
+      // Mở kết nối Firestore song song luôn để đỡ tốn thời gian chờ
+      startRealtimeSubscriptions();
       const res = await callAction('join_hub', { name: name, avatar: selectedAvatar });
+      if (enterBtn) { enterBtn.disabled = false; enterBtn.innerText = 'Vào sảnh chờ chơi game'; }
       if (!res || !res.ok) return;
 
       myId = res.myId;
@@ -326,7 +343,6 @@
       document.getElementById('main-hub-interface').classList.remove('hidden');
 
       initCanvasLogic();
-      startRealtimeSubscriptions();
       startNightCountdownLoop();
       lucide.createIcons();
     }
@@ -636,13 +652,15 @@
       t.classList.remove('translate-y-[-150%]'); setTimeout(() => t.classList.add('translate-y-[-150%]'), 3000);
     }
 
-    // --- LOGIC CHAT VĂN PHÒNG ---
+    // --- LOGIC CHAT VĂN PHÒNG (OPTIMISTIC UI 0ms) ---
     function sendMessage(e) { 
         e.preventDefault(); 
         const input = document.getElementById('chat-msg-input'); 
         if(input && input.value.trim()) {
             const text = input.value.trim();
-            input.value = ''; 
+            input.value = '';
+            const me = roomUsers.find(u => u.id === myId);
+            if (me) appendChatMessage({ senderName: me.name, senderAvatar: me.avatar, text });
             callAction('send_chat_message', { text });
         }
     }
@@ -653,6 +671,8 @@
         if(input && input.value.trim()) {
             const text = input.value.trim();
             input.value = '';
+            const me = roomUsers.find(u => u.id === myId);
+            if (me) appendChatMessage({ senderName: me.name, senderAvatar: me.avatar, text });
             callAction('send_chat_message', { text });
         }
     }
@@ -842,14 +862,22 @@
         showToast("Bạn đã ở trong phòng chờ rồi!");
         return;
       }
-      const res = await callAction('join_werewolf_lobby');
-      if (res && res.ok) showToast("Đã ghi danh sảnh chờ Ma Sói!"); 
+      // Optimistic UI tức thì
+      const me = roomUsers.find(u => u.id === myId);
+      if (me) {
+        localWerewolfState.players.push({ id: me.id, name: me.name, avatar: me.avatar, status: 'Alive' });
+        updateWerewolfUI();
+        showToast("Đã ghi danh sảnh chờ Ma Sói!");
+      }
+      await callAction('join_werewolf_lobby');
     }
 
     async function leaveWerewolfLobby() {
       if (!localWerewolfState) return;
-      const res = await callAction('leave_werewolf_lobby');
-      if (res && res.ok) showToast("Đã rời khỏi danh sách chờ Ma Sói.");
+      localWerewolfState.players = localWerewolfState.players.filter(p => p.id !== myId);
+      updateWerewolfUI();
+      showToast("Đã rời khỏi danh sách chờ Ma Sói.");
+      await callAction('leave_werewolf_lobby');
     }
     
     async function startWerewolfMatch() { 
@@ -2014,6 +2042,8 @@
 
     initEntrance();
     lucide.createIcons();
+    // Làm nóng sẵn Vercel Function Singapore ngay khi mở trang để bấm Đăng nhập nhanh tức thì
+    fetch('/api/action').catch(() => {});
   </script>
 </body>
 </html>
