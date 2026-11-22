@@ -44,7 +44,7 @@
         <div class="w-12 h-12 rounded-2xl bg-[#FF4500]/20 border border-[#FF4500]/50 flex items-center justify-center text-2xl shrink-0">🚀</div>
         <div>
           <span id="update-modal-badge" class="text-[10px] font-black uppercase tracking-wider px-2 py-0.5 rounded-full bg-[#FF4500] text-white">Bản cập nhật mới</span>
-          <h3 id="update-modal-title" class="text-sm font-black text-white mt-1">v1.1.1 — Tự động hóa bản cập nhật</h3>
+          <h3 id="update-modal-title" class="text-sm font-black text-white mt-1">v1.2.0 — Đa Nhóm Độc Lập (Multi-Group)</h3>
         </div>
       </div>
       <p id="update-modal-message" class="text-xs text-orange-200 bg-[#FF4500]/10 border border-[#FF4500]/30 rounded-2xl p-3 leading-relaxed font-semibold">
@@ -58,6 +58,43 @@
       <div class="border-t border-moss pt-3 space-y-2">
         <p class="text-[10px] font-bold uppercase tracking-wider text-slate-400">📜 Lịch sử các bản cập nhật</p>
         <div id="update-modal-history" class="space-y-2 max-h-[160px] overflow-y-auto pr-1"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL QUẢN LÝ & CHUYỂN ĐỔI NHÓM (MULTI-GROUP) -->
+  <div id="groups-modal" class="hidden fixed inset-0 z-[95] bg-black/85 backdrop-blur-sm flex items-center justify-center p-4">
+    <div class="bg-moss-card border border-moss rounded-3xl max-w-md w-full max-h-[90dvh] overflow-y-auto p-6 shadow-2xl space-y-5 relative">
+      <button onclick="closeGroupsModal()" class="absolute top-4 right-4 w-8 h-8 rounded-full bg-white/5 hover:bg-white/10 flex items-center justify-center text-slate-400 hover:text-white">✕</button>
+      <div>
+        <h3 class="text-base font-black text-white heading-font">🏠 Nhóm Ma Sói của bạn</h3>
+        <p class="text-[11px] text-slate-400 mt-0.5">Mỗi nhóm có sảnh chờ, chat chung, Ma Sói & danh sách thành viên tách biệt hoàn toàn.</p>
+      </div>
+
+      <div id="groups-modal-current-box" class="hidden bg-[#FF4500]/10 border border-[#FF4500]/40 rounded-2xl p-3.5 space-y-2.5"></div>
+
+      <div class="space-y-2">
+        <p class="text-[10px] font-bold uppercase tracking-wider text-slate-400">Danh sách nhóm đã tham gia</p>
+        <div id="groups-modal-list" class="space-y-2 max-h-[180px] overflow-y-auto pr-1"></div>
+      </div>
+
+      <div class="border-t border-moss pt-4 space-y-3">
+        <form onsubmit="submitJoinGroupByCode(event)" class="space-y-2">
+          <p class="text-[10px] font-bold uppercase tracking-wider text-emerald-400">🔑 Tham gia nhóm bằng mã mời</p>
+          <div class="flex gap-2">
+            <input type="text" id="join-group-code-input" placeholder="Nhập mã 6 ký tự (VD: WLF82A)" class="flex-1 bg-black/40 border border-moss rounded-xl px-3 py-2 text-xs uppercase text-slate-200 focus:outline-none focus:border-emerald-500" required>
+            <button type="submit" class="px-4 py-2 bg-emerald-600 hover:bg-emerald-500 text-white font-bold rounded-xl text-xs shrink-0">Vào nhóm</button>
+          </div>
+        </form>
+
+        <form onsubmit="submitCreateGroup(event)" class="bg-black/30 border border-moss rounded-2xl p-3.5 space-y-2.5">
+          <p class="text-[10px] font-bold uppercase tracking-wider text-[#FF4500]">➕ Tạo nhóm mới tách biệt</p>
+          <div id="create-group-icon-grid" class="flex flex-wrap gap-1.5"></div>
+          <div class="flex gap-2">
+            <input type="text" id="create-group-name-input" placeholder="VD: Nhóm Đại Học, Hội Cấp 3..." class="flex-1 bg-black/40 border border-moss rounded-xl px-3 py-2 text-xs text-slate-200 focus:outline-none focus:border-[#FF4500]" required>
+            <button type="submit" class="px-4 py-2 bg-[#FF4500] hover:bg-orange-500 text-white font-bold rounded-xl text-xs shrink-0">Tạo</button>
+          </div>
+        </form>
       </div>
     </div>
   </div>
@@ -130,7 +167,7 @@
             <i data-lucide="moon" class="w-3.5 h-3.5"></i> Mở Trợ Lý Quản Trò Offline (Chơi Bài Giấy)
           </a>
           <button type="button" onclick="openUpdateModal()" class="w-full py-2 bg-white/5 hover:bg-white/10 border border-moss text-slate-300 font-bold rounded-xl text-[11px] transition flex items-center justify-center gap-1.5">
-            <span id="entrance-version-label">🚀 Phiên bản v1.1.1 — Kiểm tra & Cập nhật</span>
+            <span id="entrance-version-label">🚀 Phiên bản v1.2.0 — Kiểm tra & Cập nhật</span>
           </button>
         </div>
       </div>
@@ -141,18 +178,23 @@
     <header class="border-b border-moss bg-black/50 backdrop-blur-md px-3 py-2.5 sm:px-6 sm:py-3.5 sticky top-0 z-40">
       <div class="max-w-7xl mx-auto flex flex-col xl:flex-row xl:items-center xl:justify-between gap-2.5 xl:gap-4">
         <div class="flex items-center justify-between gap-2">
-          <div class="flex items-center gap-2.5 min-w-0">
-            <h1 class="text-base sm:text-xl font-black heading-font tracking-tight text-transparent bg-clip-text bg-gradient-to-r from-orange-400 via-[#FF4500] to-rose-400 truncate">SCHOOL UNIVERSE</h1>
+          <div class="flex items-center gap-2 min-w-0">
+            <h1 class="hidden sm:block text-xl font-black heading-font tracking-tight text-transparent bg-clip-text bg-gradient-to-r from-orange-400 via-[#FF4500] to-rose-400 shrink-0">SCHOOL UNIVERSE</h1>
+            <button id="header-group-btn" onclick="openGroupsModal()" class="flex items-center gap-1.5 bg-[#FF4500]/15 hover:bg-[#FF4500]/25 border border-[#FF4500]/50 px-2.5 py-1 rounded-full transition min-w-0 max-w-[155px] sm:max-w-[200px]" title="Đổi nhóm / Mời bạn vào nhóm">
+              <span class="text-sm shrink-0" id="header-group-icon">🏠</span>
+              <span class="text-[11px] sm:text-xs font-black text-orange-200 truncate" id="header-group-name">Chọn nhóm</span>
+              <span class="text-[10px] text-orange-300 shrink-0">▾</span>
+            </button>
             <button id="header-profile-btn" onclick="openProfileModal(myId)" class="flex items-center gap-1.5 bg-white/5 hover:bg-white/10 border border-moss px-2.5 py-1 rounded-full transition shrink-0">
               <span class="relative text-sm sm:text-base" id="header-avatar">😎</span>
               <span class="w-2 h-2 rounded-full bg-emerald-400"></span>
-              <span class="text-[11px] sm:text-xs font-bold text-slate-200 max-w-[85px] sm:max-w-[120px] truncate" id="header-display-name">Tài khoản</span>
+              <span class="hidden sm:inline text-xs font-bold text-slate-200 max-w-[110px] truncate" id="header-display-name">Tài khoản</span>
             </button>
           </div>
           <!-- Cụm nút nhanh cho Điện thoại (Update, Voice, Đăng xuất) -->
           <div class="flex md:hidden items-center gap-1.5 shrink-0">
             <button onclick="openUpdateModal()" class="relative px-2.5 py-1.5 rounded-xl text-[11px] font-bold bg-amber-500/15 border border-amber-500/40 text-amber-300 flex items-center gap-1" title="Cập nhật App">
-              <span>🚀</span><span id="mobile-version-tag">v1.1.1</span>
+              <span>🚀</span><span id="mobile-version-tag">v1.2.0</span>
               <span id="mobile-update-dot" class="hidden absolute -top-1 -right-1 w-2.5 h-2.5 rounded-full bg-[#FF4500] animate-ping"></span>
             </button>
             <button onclick="toggleVoiceChat()" id="btn-voice-chat-mobile" class="p-2 rounded-xl bg-slate-800 text-slate-300" title="Voice Chat">
@@ -183,7 +225,7 @@
           <div class="h-6 w-px bg-slate-700 mx-1"></div>
           
           <button onclick="openUpdateModal()" id="btn-app-update" class="relative px-3 py-2 rounded-xl text-xs font-bold transition flex items-center gap-1.5 bg-amber-500/15 hover:bg-amber-500/25 text-amber-300 border border-amber-500/40" title="Kiểm tra & Cập nhật App">
-            <span>🚀</span> <span id="desktop-version-tag">Cập nhật (v1.1.1)</span>
+            <span>🚀</span> <span id="desktop-version-tag">Cập nhật (v1.2.0)</span>
             <span id="desktop-update-dot" class="hidden absolute -top-1 -right-1 w-2.5 h-2.5 rounded-full bg-[#FF4500] animate-ping"></span>
           </button>
           <button onclick="toggleVoiceChat()" id="btn-voice-chat" class="px-3.5 py-2 rounded-xl text-xs font-bold transition flex items-center gap-1.5 bg-slate-800 text-slate-300 hover:bg-slate-700">
@@ -199,15 +241,39 @@
     <!-- Container ẩn chứa các thẻ audio của những người khác -->
     <div id="audio-elements-container" class="hidden"></div>
 
+    <!-- MÀN HÌNH CHƯA CÓ NHÓM (HIỆN KHI TÀI KHOẢN MỚI CHƯA THAM GIA NHÓM NÀO) -->
+    <div id="no-group-gate" class="hidden flex-1 flex items-center justify-center p-4">
+      <div class="bg-moss-card border border-moss rounded-3xl max-w-md w-full p-6 shadow-2xl space-y-5 text-center">
+        <div>
+          <span class="text-5xl inline-block">🐺</span>
+          <h2 class="text-lg font-black text-white heading-font mt-2">Bạn chưa tham gia nhóm nào!</h2>
+          <p class="text-xs text-slate-400 mt-1">Tạo nhóm riêng cho hội bạn của mình hoặc nhập mã mời 6 ký tự từ bạn bè để vào chơi tách biệt hoàn toàn.</p>
+        </div>
+        <form onsubmit="submitJoinGroupOnboarding(event)" class="space-y-2 text-left">
+          <label class="text-[10px] font-bold uppercase tracking-wider text-emerald-400">🔑 Có mã mời từ bạn bè?</label>
+          <div class="flex gap-2">
+            <input type="text" id="onboarding-join-code" placeholder="Nhập mã nhóm (VD: WLF82A)" class="flex-1 bg-black/40 border border-moss rounded-xl px-3.5 py-2.5 text-xs uppercase text-slate-200 focus:outline-none focus:border-emerald-500" required>
+            <button type="submit" class="px-4 py-2.5 bg-emerald-600 hover:bg-emerald-500 text-white font-bold rounded-xl text-xs shrink-0">Tham gia</button>
+          </div>
+        </form>
+        <div class="flex items-center gap-3 text-[10px] text-slate-500 uppercase font-bold"><div class="flex-1 h-px bg-moss"></div><span>Hoặc</span><div class="flex-1 h-px bg-moss"></div></div>
+        <form onsubmit="submitCreateGroupOnboarding(event)" class="space-y-2.5 text-left">
+          <label class="text-[10px] font-bold uppercase tracking-wider text-[#FF4500]">➕ Tạo nhóm Ma Sói mới</label>
+          <input type="text" id="onboarding-create-name" placeholder="VD: Hội Ma Sói Đại Học..." class="w-full bg-black/40 border border-moss rounded-xl px-3.5 py-2.5 text-xs text-slate-200 focus:outline-none focus:border-[#FF4500]" required>
+          <button type="submit" class="w-full py-3 bg-[#FF4500] hover:bg-orange-500 text-white font-black rounded-xl text-xs uppercase tracking-wider glow-fire">Tạo nhóm & Lấy mã mời</button>
+        </form>
+      </div>
+    </div>
+
     <!-- Dải Online cuộn ngang siêu gọn cho Điện thoại / Tablet nhỏ -->
-    <div class="lg:hidden px-3 pt-2.5">
+    <div id="hub-mobile-online-bar" class="lg:hidden px-3 pt-2.5">
       <div class="bg-moss-card border border-moss rounded-2xl px-3 py-2 flex items-center gap-2 overflow-x-auto no-scrollbar">
         <span class="text-[10px] font-black uppercase tracking-wider text-slate-400 shrink-0">Online:</span>
         <div id="mobile-room-users-strip" class="flex items-center gap-2"></div>
       </div>
     </div>
 
-    <div class="max-w-7xl w-full mx-auto p-3 sm:p-4 md:p-6 grid grid-cols-1 lg:grid-cols-12 gap-4 md:gap-6 flex-1">
+    <div id="hub-main-grid" class="max-w-7xl w-full mx-auto p-3 sm:p-4 md:p-6 grid grid-cols-1 lg:grid-cols-12 gap-4 md:gap-6 flex-1">
       <section class="hidden lg:block lg:col-span-3 bg-moss-card border border-moss rounded-3xl p-5 shadow-xl h-fit space-y-4">
         <h3 class="text-xs font-bold text-slate-300 uppercase tracking-widest flex items-center gap-1.5 border-b border-moss pb-2.5">
           <i data-lucide="users" class="w-4 h-4 text-[#FF4500]"></i> Đang ở sảnh chờ
@@ -460,9 +526,16 @@
     let seerLockedTurn = { key: '', targetId: '', html: '' };
     let detectiveLockedTurn = { key: '', t1: '', t2: '', html: '' };
 
-    // --- TRẠNG THÁI TÀI KHOẢN & MESSENGER ---
+    // --- TRẠNG THÁI TÀI KHOẢN, ĐA NHÓM (MULTI-GROUP) & MESSENGER ---
+    const GROUP_ICONS = ['🐺', '🔥', '🎭', '🍻', '🎓', '🏡', '🎮', '👑', '🌙', '⚡'];
+    let selectedGroupIcon = '🐺';
     let myProfile = null;
-    let myInbox = { friends: [], friendRequestsIn: [], friendRequestsOut: [], dmConversations: {} };
+    let myInbox = { friends: [], friendRequestsIn: [], friendRequestsOut: [], dmConversations: {}, rooms: [], activeRoomId: null };
+    let currentRoomId = null;
+    let currentRoomMeta = null;
+    let activeRoomMemberUids = new Set();
+    let roomRealtimeUnsubs = [];
+    let profileUnsubs = new Map();
     let allProfiles = {};
     let globalMessagesCache = [];
     let matchHistoryCache = [];
@@ -473,6 +546,19 @@
     let activeDmMessages = [];
     let viewingProfileUid = null;
     let editProfileAvatar = '😎';
+
+    // Bắt link mời nhóm (?join=CODE) ngay khi mở trang
+    (function captureInviteFromUrl() {
+      try {
+        const params = new URLSearchParams(window.location.search);
+        const code = (params.get('join') || '').trim().toUpperCase();
+        if (code) {
+          sessionStorage.setItem('school_universe_pending_join', code);
+          const cleanUrl = window.location.pathname;
+          window.history.replaceState({}, '', cleanUrl);
+        }
+      } catch (_) {}
+    })();
 
     function escapeHtml(str) {
       return String(str || '')
@@ -508,7 +594,12 @@
         const res = await fetch('/api/action', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ token: overrideToken !== null ? overrideToken : getSecretToken(), action, payload })
+          body: JSON.stringify({
+            token: overrideToken !== null ? overrideToken : getSecretToken(),
+            roomId: currentRoomId,
+            action,
+            payload
+          })
         });
         const data = await res.json();
         if (!res.ok || !data.ok) {
@@ -522,6 +613,7 @@
           }
           if (data.inbox) {
             myInbox = data.inbox;
+            updateHeaderGroupUI();
             renderMessengerSidebar();
           }
           if (Array.isArray(data.users)) {
@@ -559,7 +651,7 @@
       }
     }
 
-    function enterHubAfterAuth(res) {
+    async function enterHubAfterAuth(res) {
       if (res.sessionToken) setSecretToken(res.sessionToken);
       myId = res.myId;
       if (res.profile) {
@@ -569,14 +661,28 @@
       if (res.inbox) myInbox = res.inbox;
       updateHeaderProfileUI();
 
-      startRealtimeSubscriptions();
+      startAccountSubscriptions();
       document.getElementById('entrance-gate').classList.add('hidden');
       document.getElementById('main-hub-interface').classList.remove('hidden');
 
       initCanvasLogic();
       startNightCountdownLoop();
-      renderMessengerSidebar();
       lucide.createIcons();
+
+      // Nếu người dùng mở qua link mời ?join=CODE → tự động vào nhóm đó luôn!
+      const pendingCode = sessionStorage.getItem('school_universe_pending_join');
+      if (pendingCode) {
+        sessionStorage.removeItem('school_universe_pending_join');
+        const joinRes = await callAction('join_room_by_code', { code: pendingCode });
+        if (joinRes && joinRes.ok && joinRes.roomId) {
+          activateRoomUI(joinRes.roomId, joinRes.room);
+          showToast(`🎉 Đã gia nhập nhóm "${joinRes.room?.name || pendingCode}"!`);
+          return;
+        }
+      }
+
+      const targetRoomId = res.activeRoomId || myInbox.activeRoomId || myInbox.rooms?.[0]?.roomId || null;
+      activateRoomUI(targetRoomId, null);
     }
 
     async function submitLogin(e) {
@@ -591,7 +697,7 @@
       if (!res || !res.ok) return;
 
       document.getElementById('login-password').value = '';
-      enterHubAfterAuth(res);
+      await enterHubAfterAuth(res);
       showToast(`👋 Chào mừng trở lại, ${res.profile?.displayName || username}!`);
     }
 
@@ -608,7 +714,7 @@
       if (!res || !res.ok) return;
 
       document.getElementById('reg-password').value = '';
-      enterHubAfterAuth(res);
+      await enterHubAfterAuth(res);
       showToast(`🎉 Tạo tài khoản @${res.profile?.username} thành công!`);
     }
 
@@ -620,7 +726,7 @@
 
       const res = await callAction('restore_session', {}, savedToken);
       if (res && res.ok && res.authenticated) {
-        enterHubAfterAuth(res);
+        await enterHubAfterAuth(res);
       } else {
         setSecretToken('');
         document.getElementById('auth-restoring-box').classList.add('hidden');
@@ -635,8 +741,15 @@
       setSecretToken('');
       myProfile = null;
       myId = null;
-      myInbox = { friends: [], friendRequestsIn: [], friendRequestsOut: [], dmConversations: {} };
+      currentRoomId = null;
+      currentRoomMeta = null;
+      activeRoomMemberUids = new Set();
+      myInbox = { friends: [], friendRequestsIn: [], friendRequestsOut: [], dmConversations: {}, rooms: [], activeRoomId: null };
       if (activeDmUnsub) { try { activeDmUnsub(); } catch (_) {} activeDmUnsub = null; }
+      roomRealtimeUnsubs.forEach(u => { try { u(); } catch (_) {} });
+      roomRealtimeUnsubs = [];
+      profileUnsubs.forEach(u => { try { u(); } catch (_) {} });
+      profileUnsubs.clear();
       realtimeUnsubs.forEach(u => { try { u(); } catch (_) {} });
       realtimeUnsubs = [];
       if (nightTickerInterval) { clearInterval(nightTickerInterval); nightTickerInterval = null; }
@@ -655,16 +768,148 @@
       if (nameEl) nameEl.innerText = myProfile.displayName || myProfile.username;
     }
 
-    function startRealtimeSubscriptions() {
+    function updateHeaderGroupUI() {
+      const iconEl = document.getElementById('header-group-icon');
+      const nameEl = document.getElementById('header-group-name');
+      const rooms = myInbox.rooms || [];
+      const activeSummary = rooms.find(r => r.roomId === currentRoomId) || currentRoomMeta;
+      if (iconEl) iconEl.innerText = activeSummary?.icon || '🏠';
+      if (nameEl) nameEl.innerText = activeSummary?.name || 'Chọn nhóm';
+    }
+
+    function syncProfileSubscriptions() {
+      const wanted = new Set();
+      if (myId) wanted.add(myId);
+      activeRoomMemberUids.forEach(u => wanted.add(u));
+      (myInbox.friends || []).forEach(u => wanted.add(u));
+      (myInbox.friendRequestsIn || []).forEach(u => wanted.add(u));
+      Object.keys(myInbox.dmConversations || {}).forEach(u => wanted.add(u));
+
+      // Hủy đăng ký các profile không còn liên quan
+      for (const [uid, unsub] of profileUnsubs.entries()) {
+        if (!wanted.has(uid)) {
+          try { unsub(); } catch (_) {}
+          profileUnsubs.delete(uid);
+        }
+      }
+      // Đăng ký nghe lẻ từng user_profiles/{uid} (không bao giờ list toàn bộ DB)
+      wanted.forEach(uid => {
+        if (!uid || profileUnsubs.has(uid)) return;
+        const unsub = db.collection('user_profiles').doc(uid).onSnapshot((snap) => {
+          if (!snap.exists) return;
+          allProfiles[uid] = snap.data();
+          if (uid === myId) {
+            myProfile = allProfiles[uid];
+            updateHeaderProfileUI();
+          }
+          renderMessengerSidebar();
+          if (activeChatMode === 'dm') renderActiveChatHeader();
+          if (viewingProfileUid === uid && !document.getElementById('profile-modal').classList.contains('hidden')) {
+            renderProfileModalContent(uid);
+          }
+        }, (err) => console.warn('profile listener:', uid, err.code));
+        profileUnsubs.set(uid, unsub);
+      });
+    }
+
+    function startAccountSubscriptions() {
       realtimeUnsubs.forEach(u => { try { u(); } catch (_) {} });
       realtimeUnsubs = [];
       const token = getSecretToken();
       if (!token) return;
 
-      // 1. Sảnh chờ, danh sách online, trạng thái Voice và Gartic Phone
+      // 1. Hộp thư cá nhân (nhóm của tôi, bạn bè, lời mời kết bạn, DM)
       realtimeUnsubs.push(
-        db.collection('hub').doc('meta').onSnapshot((snap) => {
+        db.collection('user_inbox').doc(token).onSnapshot((snap) => {
           if (!snap.exists) return;
+          myInbox = snap.data();
+          updateHeaderGroupUI();
+          syncProfileSubscriptions();
+          renderMessengerSidebar();
+          if (!document.getElementById('groups-modal').classList.contains('hidden')) {
+            renderGroupsModal();
+          }
+          if (viewingProfileUid && !document.getElementById('profile-modal').classList.contains('hidden')) {
+            renderProfileModalContent(viewingProfileUid);
+          }
+        }, (err) => console.error('user_inbox listener error:', err))
+      );
+
+      // 2. Hộp thư tín hiệu WebRTC Voice Chat (lọc đúng nhóm đang ở)
+      realtimeUnsubs.push(
+        db.collection('voice_inbox').doc(token).onSnapshot((snap) => {
+          if (!snap.exists) return;
+          const signals = snap.data().signals || [];
+          signals.forEach(item => {
+            if (!item || !item.id || seenVoiceSignalIds.has(item.id)) return;
+            if (item.roomId && currentRoomId && item.roomId !== currentRoomId) return;
+            seenVoiceSignalIds.add(item.id);
+            handleIncomingVoiceSignal(item);
+          });
+        }, (err) => console.error('voice_inbox listener error:', err))
+      );
+
+      syncProfileSubscriptions();
+    }
+
+    function activateRoomUI(roomId, initialMeta = null) {
+      roomRealtimeUnsubs.forEach(u => { try { u(); } catch (_) {} });
+      roomRealtimeUnsubs = [];
+
+      currentRoomId = roomId || null;
+      currentRoomMeta = initialMeta || (myInbox.rooms || []).find(r => r.roomId === roomId) || null;
+      roomUsers = [];
+      globalMessagesCache = [];
+      matchHistoryCache = [];
+      localWerewolfState = null;
+      activeRoomMemberUids = new Set();
+      lastSeenMorningDay = 0;
+
+      const noGroupGate = document.getElementById('no-group-gate');
+      const mainGrid = document.getElementById('hub-main-grid');
+      const mobileOnline = document.getElementById('hub-mobile-online-bar');
+
+      updateHeaderGroupUI();
+
+      if (!currentRoomId) {
+        if (noGroupGate) noGroupGate.classList.remove('hidden');
+        if (mainGrid) mainGrid.classList.add('hidden');
+        if (mobileOnline) mobileOnline.classList.add('hidden');
+        return;
+      }
+
+      if (noGroupGate) noGroupGate.classList.add('hidden');
+      if (mainGrid) mainGrid.classList.remove('hidden');
+      if (mobileOnline) mobileOnline.classList.remove('hidden');
+
+      selectGlobalChat(false);
+      startRoomSubscriptions(currentRoomId);
+    }
+
+    function startRoomSubscriptions(roomId) {
+      const token = getSecretToken();
+      if (!token || !roomId) return;
+
+      // 1. Thông tin & danh sách thành viên riêng của nhóm
+      roomRealtimeUnsubs.push(
+        db.collection('rooms').doc(roomId).onSnapshot((snap) => {
+          if (!snap.exists || currentRoomId !== roomId) return;
+          currentRoomMeta = snap.data();
+          activeRoomMemberUids = new Set(currentRoomMeta.members || []);
+          updateHeaderGroupUI();
+          syncProfileSubscriptions();
+          renderMessengerSidebar();
+          if (activeChatMode === 'global') renderActiveChatHeader();
+          if (!document.getElementById('groups-modal').classList.contains('hidden')) {
+            renderGroupsModal();
+          }
+        }, (err) => console.error('rooms listener error:', err))
+      );
+
+      // 2. Sảnh chờ, danh sách online & Gartic Phone riêng của nhóm
+      roomRealtimeUnsubs.push(
+        db.collection('room_hubs').doc(roomId).onSnapshot((snap) => {
+          if (!snap.exists || currentRoomId !== roomId) return;
           const data = snap.data();
           roomUsers = Array.isArray(data.users) ? data.users : [];
           renderUsersList();
@@ -672,52 +917,23 @@
           if (data.garticState) updateGarticUI(data.garticState);
           if (localWerewolfState) updateWerewolfUI();
           syncVoicePeersWithHub();
-        }, (err) => console.error('hub/meta listener error:', err))
+        }, (err) => console.error('room_hubs listener error:', err))
       );
 
-      // 2. Tin nhắn Phòng Chat Chung lưu vĩnh viễn trên Firestore
-      realtimeUnsubs.push(
-        db.collection('messages').orderBy('createdAt', 'desc').limit(100).onSnapshot((snap) => {
-          globalMessagesCache = snap.docs.map(d => d.data()).reverse();
+      // 3. Phòng Chat Chung riêng của nhóm
+      roomRealtimeUnsubs.push(
+        db.collection('room_chats').doc(roomId).onSnapshot((snap) => {
+          if (currentRoomId !== roomId) return;
+          globalMessagesCache = snap.exists && Array.isArray(snap.data().messages) ? snap.data().messages : [];
           renderDayChatMessages(globalMessagesCache);
           if (activeChatMode === 'global') renderWorkspaceMessages(globalMessagesCache);
-        }, (err) => console.error('messages listener error:', err))
+        }, (err) => console.error('room_chats listener error:', err))
       );
 
-      // 3. Hồ sơ tất cả tài khoản (chấm xanh online, tên, avatar, thống kê)
-      realtimeUnsubs.push(
-        db.collection('user_profiles').onSnapshot((snap) => {
-          const next = {};
-          snap.forEach(doc => { next[doc.id] = doc.data(); });
-          allProfiles = next;
-          if (myId && allProfiles[myId]) {
-            myProfile = allProfiles[myId];
-            updateHeaderProfileUI();
-          }
-          renderMessengerSidebar();
-          if (activeChatMode === 'dm') renderActiveChatHeader();
-          if (viewingProfileUid && !document.getElementById('profile-modal').classList.contains('hidden')) {
-            renderProfileModalContent(viewingProfileUid);
-          }
-        }, (err) => console.error('user_profiles listener error:', err))
-      );
-
-      // 4. Hộp thư cá nhân (bạn bè, lời mời kết bạn, danh sách DM & số tin chưa đọc)
-      realtimeUnsubs.push(
-        db.collection('user_inbox').doc(token).onSnapshot((snap) => {
-          if (!snap.exists) return;
-          myInbox = snap.data();
-          renderMessengerSidebar();
-          if (viewingProfileUid && !document.getElementById('profile-modal').classList.contains('hidden')) {
-            renderProfileModalContent(viewingProfileUid);
-          }
-        }, (err) => console.error('user_inbox listener error:', err))
-      );
-
-      // 5. Trạng thái Ma Sói đã che (masked) riêng cho từng người chơi
-      realtimeUnsubs.push(
-        db.collection('werewolf_views').doc(token).onSnapshot((snap) => {
-          if (!snap.exists) return;
+      // 4. Trạng thái Ma Sói đã che (masked) riêng của mình trong nhóm này
+      roomRealtimeUnsubs.push(
+        db.collection('werewolf_views').doc(`${roomId}__${token}`).onSnapshot((snap) => {
+          if (!snap.exists || currentRoomId !== roomId) return;
           const data = snap.data();
           if (data.myId) myId = data.myId;
           localWerewolfState = data.gameState;
@@ -741,29 +957,185 @@
         }, (err) => console.error('werewolf_views listener error:', err))
       );
 
-      // 6. Hộp thư tín hiệu WebRTC Voice Chat
-      realtimeUnsubs.push(
-        db.collection('voice_inbox').doc(token).onSnapshot((snap) => {
-          if (!snap.exists) return;
-          const signals = snap.data().signals || [];
-          signals.forEach(item => {
-            if (!item || !item.id || seenVoiceSignalIds.has(item.id)) return;
-            seenVoiceSignalIds.add(item.id);
-            handleIncomingVoiceSignal(item);
-          });
-        }, (err) => console.error('voice_inbox listener error:', err))
-      );
-
-      // 7. Lịch sử các trận Ma Sói đã hoàn thành
-      realtimeUnsubs.push(
-        db.collection('match_history').orderBy('endedAt', 'desc').limit(20).onSnapshot((snap) => {
-          matchHistoryCache = snap.docs.map(d => d.data());
+      // 5. Lịch sử các trận Ma Sói riêng của nhóm
+      roomRealtimeUnsubs.push(
+        db.collection('room_histories').doc(roomId).onSnapshot((snap) => {
+          if (currentRoomId !== roomId) return;
+          matchHistoryCache = snap.exists && Array.isArray(snap.data().matches) ? snap.data().matches : [];
           renderMatchHistory(matchHistoryCache.slice(0, 8));
           if (viewingProfileUid && !document.getElementById('profile-modal').classList.contains('hidden')) {
             renderProfileModalContent(viewingProfileUid);
           }
-        }, (err) => console.error('match_history listener error:', err))
+        }, (err) => console.error('room_histories listener error:', err))
       );
+    }
+
+    // --- UI QUẢN LÝ & CHUYỂN ĐỔI NHÓM ---
+    function openGroupsModal() {
+      renderGroupsModal();
+      document.getElementById('groups-modal').classList.remove('hidden');
+    }
+
+    function closeGroupsModal() {
+      document.getElementById('groups-modal').classList.add('hidden');
+    }
+
+    function renderGroupsModal() {
+      const iconGrid = document.getElementById('create-group-icon-grid');
+      if (iconGrid) {
+        iconGrid.innerHTML = GROUP_ICONS.map(ic => `
+          <button type="button" onclick="selectedGroupIcon='${ic}'; renderGroupsModal();" class="w-8 h-8 rounded-lg text-base flex items-center justify-center border ${selectedGroupIcon === ic ? 'bg-[#FF4500]/25 border-[#FF4500]' : 'bg-black/30 border-transparent hover:bg-black/50'}">${ic}</button>
+        `).join('');
+      }
+
+      const curBox = document.getElementById('groups-modal-current-box');
+      const listEl = document.getElementById('groups-modal-list');
+      const rooms = myInbox.rooms || [];
+
+      if (curBox) {
+        const cur = currentRoomMeta || rooms.find(r => r.roomId === currentRoomId);
+        if (cur && currentRoomId) {
+          const inviteUrl = `${window.location.origin}/?join=${cur.code}`;
+          const memberCount = Array.isArray(currentRoomMeta?.members) ? currentRoomMeta.members.length : null;
+          curBox.classList.remove('hidden');
+          curBox.innerHTML = `
+            <div class="flex items-center justify-between gap-2">
+              <div class="flex items-center gap-2 min-w-0">
+                <span class="text-2xl">${cur.icon || '🐺'}</span>
+                <div class="min-w-0">
+                  <p class="text-xs font-black text-white truncate">${escapeHtml(cur.name)}</p>
+                  <p class="text-[10px] text-orange-200">Mã mời: <b class="tracking-widest text-white">${escapeHtml(cur.code)}</b>${memberCount ? ` · ${memberCount} thành viên` : ''}</p>
+                </div>
+              </div>
+              <button onclick="leaveCurrentGroup('${cur.roomId}')" class="px-2.5 py-1 rounded-lg bg-rose-950/80 hover:bg-rose-900 text-rose-300 text-[10px] font-bold border border-rose-500/30 shrink-0">Rời nhóm</button>
+            </div>
+            <div class="flex gap-2">
+              <button onclick="copyInviteLink('${cur.code}')" class="flex-1 py-2 bg-[#FF4500] hover:bg-orange-500 text-white font-bold rounded-xl text-[11px]">🔗 Copy Link Mời</button>
+              <button onclick="copyInviteCode('${cur.code}')" class="px-3 py-2 bg-black/40 hover:bg-black/60 text-slate-200 font-bold rounded-xl text-[11px] border border-moss">📋 Copy Mã</button>
+            </div>
+          `;
+        } else {
+          curBox.classList.add('hidden');
+        }
+      }
+
+      if (listEl) {
+        if (rooms.length === 0) {
+          listEl.innerHTML = '<p class="text-xs text-slate-500 text-center py-3">Bạn chưa tham gia nhóm nào.</p>';
+        } else {
+          listEl.innerHTML = rooms.map(r => {
+            const isAct = r.roomId === currentRoomId;
+            return `<div onclick="switchActiveGroup('${r.roomId}')" class="cursor-pointer p-2.5 rounded-2xl border transition flex items-center justify-between gap-2 ${isAct ? 'bg-[#FF4500]/15 border-[#FF4500]' : 'bg-black/25 hover:bg-white/5 border-moss'}">
+              <div class="flex items-center gap-2.5 min-w-0">
+                <span class="text-xl">${r.icon || '🐺'}</span>
+                <div class="min-w-0">
+                  <p class="text-xs font-bold text-white truncate">${escapeHtml(r.name)}</p>
+                  <p class="text-[10px] text-slate-400">Mã: ${escapeHtml(r.code)}</p>
+                </div>
+              </div>
+              ${isAct ? '<span class="text-[9px] bg-[#FF4500] text-white px-2 py-0.5 rounded-full font-black shrink-0">Đang ở đây</span>' : '<span class="text-[10px] text-slate-400 shrink-0">Chuyển ›</span>'}
+            </div>`;
+          }).join('');
+        }
+      }
+    }
+
+    async function copyInviteLink(code) {
+      const link = `${window.location.origin}/?join=${code}`;
+      try {
+        await navigator.clipboard.writeText(link);
+        showToast(`🔗 Đã copy link mời! Gửi cho bạn bè bấm là vào thẳng nhóm.`);
+      } catch (_) {
+        prompt('Copy link mời nhóm này gửi cho bạn bè:', link);
+      }
+    }
+
+    async function copyInviteCode(code) {
+      try {
+        await navigator.clipboard.writeText(code);
+        showToast(`📋 Đã copy mã mời: ${code}`);
+      } catch (_) {
+        prompt('Mã mời nhóm của bạn:', code);
+      }
+    }
+
+    async function submitCreateGroup(e) {
+      e.preventDefault();
+      const input = document.getElementById('create-group-name-input');
+      const name = input.value.trim();
+      if (!name) return;
+      const res = await callAction('create_room', { name, icon: selectedGroupIcon });
+      if (res && res.ok && res.roomId) {
+        input.value = '';
+        activateRoomUI(res.roomId, res.room);
+        renderGroupsModal();
+        showToast(`🎉 Đã tạo nhóm "${res.room.name}" (Mã: ${res.room.code})!`);
+      }
+    }
+
+    async function submitCreateGroupOnboarding(e) {
+      e.preventDefault();
+      const input = document.getElementById('onboarding-create-name');
+      const name = input.value.trim();
+      if (!name) return;
+      const res = await callAction('create_room', { name, icon: '🐺' });
+      if (res && res.ok && res.roomId) {
+        input.value = '';
+        activateRoomUI(res.roomId, res.room);
+        showToast(`🎉 Đã tạo nhóm "${res.room.name}"! Bấm vào tên nhóm trên thanh trên để lấy link mời bạn bè.`);
+      }
+    }
+
+    async function submitJoinGroupByCode(e) {
+      e.preventDefault();
+      const input = document.getElementById('join-group-code-input');
+      const code = input.value.trim();
+      if (!code) return;
+      const res = await callAction('join_room_by_code', { code });
+      if (res && res.ok && res.roomId) {
+        input.value = '';
+        activateRoomUI(res.roomId, res.room);
+        closeGroupsModal();
+        showToast(`🎉 Đã vào nhóm "${res.room.name}"!`);
+      }
+    }
+
+    async function submitJoinGroupOnboarding(e) {
+      e.preventDefault();
+      const input = document.getElementById('onboarding-join-code');
+      const code = input.value.trim();
+      if (!code) return;
+      const res = await callAction('join_room_by_code', { code });
+      if (res && res.ok && res.roomId) {
+        input.value = '';
+        activateRoomUI(res.roomId, res.room);
+        showToast(`🎉 Đã vào nhóm "${res.room.name}"!`);
+      }
+    }
+
+    async function switchActiveGroup(targetRoomId) {
+      if (!targetRoomId || targetRoomId === currentRoomId) {
+        closeGroupsModal();
+        return;
+      }
+      if (isVoiceActive) await toggleVoiceChat();
+      const res = await callAction('switch_room', { prevRoomId: currentRoomId, targetRoomId });
+      if (res && res.ok && res.roomId) {
+        activateRoomUI(res.roomId, res.room);
+        closeGroupsModal();
+        showToast(`🏠 Đã chuyển sang nhóm "${res.room?.name || ''}"`);
+      }
+    }
+
+    async function leaveCurrentGroup(roomId) {
+      if (!confirm('Bạn có chắc muốn rời khỏi nhóm này? Bạn sẽ cần mã mời nếu muốn vào lại.')) return;
+      if (isVoiceActive) await toggleVoiceChat();
+      const res = await callAction('leave_room', { roomId });
+      if (res && res.ok) {
+        activateRoomUI(res.activeRoomId || null, null);
+        closeGroupsModal();
+        showToast('Đã rời khỏi nhóm.');
+      }
     }
 
     function renderMatchHistory(items) {
@@ -1006,8 +1378,8 @@
     }
 
     // --- HỆ THỐNG PHÁT HIỆN & CẬP NHẬT PHIÊN BẢN APP ---
-    const APP_VERSION = '1.1.1';
-    const APP_RELEASE_NAME = 'v1.1.1 — Tự động hóa bản cập nhật';
+    const APP_VERSION = '1.2.0';
+    const APP_RELEASE_NAME = 'v1.2.0 — Đa Nhóm Độc Lập (Multi-Group)';
     let latestVersionInfo = null;
     let hasPendingUpdate = false;
 
@@ -1326,13 +1698,15 @@
 
       const query = (document.getElementById('messenger-search-input')?.value || '').trim().toLowerCase();
       if (query) {
-        if (titleEl) titleEl.innerText = 'Kết quả tìm kiếm tài khoản';
-        const matches = Object.values(allProfiles).filter(p =>
-          p.uid !== myId &&
-          ((p.displayName || '').toLowerCase().includes(query) || (p.username || '').toLowerCase().includes(query))
-        );
+        if (titleEl) titleEl.innerText = 'Thành viên trong nhóm hiện tại';
+        const matches = Array.from(activeRoomMemberUids)
+          .map(uid => allProfiles[uid])
+          .filter(p =>
+            p && p.uid !== myId &&
+            ((p.displayName || '').toLowerCase().includes(query) || (p.username || '').toLowerCase().includes(query))
+          );
         if (matches.length === 0) {
-          threadsList.innerHTML = '<p class="text-[11px] text-slate-500 text-center py-4">Không tìm thấy ai khớp từ khóa.</p>';
+          threadsList.innerHTML = '<p class="text-[11px] text-slate-500 text-center py-4">Không tìm thấy thành viên nào trong nhóm này khớp từ khóa.</p>';
           return;
         }
         threadsList.innerHTML = matches.map(u => {
@@ -1474,15 +1848,18 @@
       if (!header) return;
       const backBtn = `<button onclick="backToMessengerList()" class="md:hidden px-2.5 py-1.5 rounded-xl bg-white/5 hover:bg-white/10 text-slate-200 text-xs font-bold shrink-0">←</button>`;
       if (activeChatMode === 'global') {
+        const gName = currentRoomMeta?.name || 'Phòng Chat Chung';
+        const gIcon = currentRoomMeta?.icon || '🔥';
         header.innerHTML = `
-          <div class="flex items-center gap-2">
+          <div class="flex items-center gap-2 min-w-0">
             ${backBtn}
-            <div class="w-9 h-9 rounded-full bg-[#FF4500]/20 flex items-center justify-center text-base shrink-0">🔥</div>
-            <div>
-              <h4 class="text-xs font-black text-white"># Phòng Chat Chung</h4>
-              <p class="text-[10px] text-slate-400">Tin nhắn đồng bộ mọi thiết bị</p>
+            <div class="w-9 h-9 rounded-full bg-[#FF4500]/20 flex items-center justify-center text-base shrink-0">${gIcon}</div>
+            <div class="min-w-0">
+              <h4 class="text-xs font-black text-white truncate"># ${escapeHtml(gName)}</h4>
+              <p class="text-[10px] text-slate-400">Chat chung riêng của nhóm</p>
             </div>
-          </div>`;
+          </div>
+          <button onclick="openGroupsModal()" class="px-2.5 py-1.5 rounded-xl bg-white/5 hover:bg-white/10 text-[10px] font-bold text-orange-300 border border-moss shrink-0">🔗 Mời bạn</button>`;
         return;
       }
       const peer = allProfiles[activeDmPeerUid] || { displayName: 'Người dùng', username: '', avatar: '😎', online: false, lastSeen: 0 };

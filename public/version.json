@@ -1,13 +1,24 @@
 {
-  "version": "1.1.1",
-  "releaseName": "v1.1.1 — Tự động hóa bản cập nhật",
+  "version": "1.2.0",
+  "releaseName": "v1.2.0 — Đa Nhóm Độc Lập (Multi-Group)",
   "releasedAt": "2026-11-22",
   "message": "Bạn ơi Trường vừa đẩy bản cập nhật lên, bạn cập nhật luôn cho nóng hổi nhé! 🔥",
   "highlights": [
-    "Thêm công cụ npm run release đồng bộ phiên bản tự động",
-    "Tự động báo cập nhật nóng hổi mỗi khi Trường đẩy bản mới"
+    "Tạo nhiều nhóm Ma Sói tách biệt hoàn toàn (sảnh, chat, ván đấu, lịch sử riêng)",
+    "Mời bạn bè bằng mã 6 ký tự hoặc link mời 1 chạm (?join=CODE)",
+    "Chuyển đổi qua lại giữa các nhóm chỉ bằng 1 bấm, bảo mật tách riêng danh sách thành viên"
   ],
   "history": [
+    {
+      "version": "1.2.0",
+      "name": "Đa Nhóm Độc Lập (Multi-Group)",
+      "date": "2026-11-22",
+      "notes": [
+        "Tạo nhiều nhóm Ma Sói tách biệt hoàn toàn (sảnh, chat, ván đấu, lịch sử riêng)",
+        "Mời bạn bè bằng mã 6 ký tự hoặc link mời 1 chạm (?join=CODE)",
+        "Chuyển đổi qua lại giữa các nhóm chỉ bằng 1 bấm, bảo mật tách riêng danh sách thành viên"
+      ]
+    },
     {
       "version": "1.1.1",
       "name": "Tự động hóa bản cập nhật",

@@ -1,6 +1,7 @@
 const { executeAction } = require('../lib/gameEngine');
 const { getDb } = require('../lib/firebaseAdmin');
 const accountService = require('../lib/accountService');
+const roomService = require('../lib/roomService');
 
 function parseBody(req) {
     if (req.body && typeof req.body === 'object') return req.body;
@@ -12,6 +13,25 @@ function parseBody(req) {
         }
     }
     return {};
+}
+
+async function joinRoomHubSafe(token, profile, roomId) {
+    if (!roomId || !profile) return {};
+    try {
+        return await executeAction(
+            token,
+            'join_hub',
+            {
+                uid: profile.uid,
+                username: profile.username,
+                name: profile.displayName,
+                avatar: profile.avatar
+            },
+            roomId
+        );
+    } catch (_) {
+        return {};
+    }
 }
 
 module.exports = async function handler(req, res) {
@@ -29,7 +49,7 @@ module.exports = async function handler(req, res) {
             return res.status(200).json({
                 ok: true,
                 app: 'SCHOOL UNIVERSE',
-                mode: 'vercel-firestore',
+                mode: 'vercel-firestore-multiroom',
                 projectId: db.projectId || 'schooluniverse-4cde5'
             });
         } catch (err) {
@@ -45,41 +65,33 @@ module.exports = async function handler(req, res) {
         const body = parseBody(req);
         const { token, action } = body;
         const payload = body.payload || {};
+        const roomId = body.roomId || payload.roomId || null;
 
         // --- LUỒNG TÀI KHOẢN & MESSENGER ---
         if (action === 'register') {
             const acc = await accountService.registerAccount(payload);
-            const hubRes = await executeAction(acc.sessionToken, 'join_hub', {
-                uid: acc.uid,
-                username: acc.profile.username,
-                name: acc.profile.displayName,
-                avatar: acc.profile.avatar
-            });
             return res.status(200).json({
-                ...hubRes,
                 ok: true,
                 sessionToken: acc.sessionToken,
                 myId: acc.uid,
                 profile: acc.profile,
-                inbox: acc.inbox
+                inbox: acc.inbox,
+                activeRoomId: null
             });
         }
 
         if (action === 'login') {
             const acc = await accountService.loginAccount(payload);
-            const hubRes = await executeAction(acc.sessionToken, 'join_hub', {
-                uid: acc.uid,
-                username: acc.profile.username,
-                name: acc.profile.displayName,
-                avatar: acc.profile.avatar
-            });
+            const activeRoomId = acc.inbox?.activeRoomId || acc.inbox?.rooms?.[0]?.roomId || null;
+            const hubRes = activeRoomId ? await joinRoomHubSafe(acc.sessionToken, acc.profile, activeRoomId) : {};
             return res.status(200).json({
                 ...hubRes,
                 ok: true,
                 sessionToken: acc.sessionToken,
                 myId: acc.uid,
                 profile: acc.profile,
-                inbox: acc.inbox
+                inbox: acc.inbox,
+                activeRoomId
             });
         }
 
@@ -88,12 +100,8 @@ module.exports = async function handler(req, res) {
             if (!acc) {
                 return res.status(200).json({ ok: false, authenticated: false, error: 'Phiên đăng nhập không hợp lệ.' });
             }
-            const hubRes = await executeAction(acc.sessionToken, 'join_hub', {
-                uid: acc.uid,
-                username: acc.profile.username,
-                name: acc.profile.displayName,
-                avatar: acc.profile.avatar
-            });
+            const activeRoomId = acc.inbox?.activeRoomId || acc.inbox?.rooms?.[0]?.roomId || null;
+            const hubRes = activeRoomId ? await joinRoomHubSafe(acc.sessionToken, acc.profile, activeRoomId) : {};
             return res.status(200).json({
                 ...hubRes,
                 ok: true,
@@ -101,32 +109,90 @@ module.exports = async function handler(req, res) {
                 sessionToken: acc.sessionToken,
                 myId: acc.uid,
                 profile: acc.profile,
-                inbox: acc.inbox
+                inbox: acc.inbox,
+                activeRoomId
             });
         }
 
         if (action === 'logout') {
             await accountService.markOffline(token);
-            try {
-                await executeAction(token, 'leave_hub', {});
-            } catch (_) {
-                // Bỏ qua nếu đã rời sảnh trước đó
+            if (roomId) {
+                try { await executeAction(token, 'leave_hub', {}, roomId); } catch (_) {}
             }
             return res.status(200).json({ ok: true });
         }
 
         if (action === 'update_profile') {
             const updated = await accountService.updateProfile(token, payload);
-            let hubRes = {};
-            try {
-                hubRes = await executeAction(token, 'join_hub', {
-                    uid: updated.uid,
-                    username: updated.profile.username,
-                    name: updated.profile.displayName,
-                    avatar: updated.profile.avatar
-                });
-            } catch (_) {}
+            const hubRes = roomId ? await joinRoomHubSafe(token, updated.profile, roomId) : {};
             return res.status(200).json({ ...hubRes, ok: true, profile: updated.profile });
+        }
+
+        // --- LUỒNG QUẢN LÝ NHÓM ĐỘC LẬP (MULTI-GROUP) ---
+        if (action === 'create_room') {
+            const created = await roomService.createRoom(token, payload);
+            const acc = await accountService.restoreSession(token);
+            const hubRes = await joinRoomHubSafe(token, acc?.profile, created.roomId);
+            return res.status(200).json({
+                ...hubRes,
+                ok: true,
+                room: created.room,
+                roomId: created.roomId,
+                activeRoomId: created.roomId,
+                inbox: created.inbox
+            });
+        }
+
+        if (action === 'join_room_by_code') {
+            const joined = await roomService.joinRoomByCode(token, payload);
+            const acc = await accountService.restoreSession(token);
+            const hubRes = await joinRoomHubSafe(token, acc?.profile, joined.roomId);
+            return res.status(200).json({
+                ...hubRes,
+                ok: true,
+                room: joined.room,
+                roomId: joined.roomId,
+                activeRoomId: joined.roomId,
+                inbox: joined.inbox
+            });
+        }
+
+        if (action === 'switch_room') {
+            const prevRoomId = payload.prevRoomId || roomId;
+            const targetRoomId = payload.targetRoomId || payload.roomId;
+            if (prevRoomId && prevRoomId !== targetRoomId) {
+                try { await executeAction(token, 'leave_hub', {}, prevRoomId); } catch (_) {}
+            }
+            const switched = await roomService.switchRoom(token, { roomId: targetRoomId });
+            const acc = await accountService.restoreSession(token);
+            const hubRes = await joinRoomHubSafe(token, acc?.profile, switched.roomId);
+            return res.status(200).json({
+                ...hubRes,
+                ok: true,
+                room: switched.room,
+                roomId: switched.roomId,
+                activeRoomId: switched.roomId,
+                inbox: switched.inbox
+            });
+        }
+
+        if (action === 'leave_room') {
+            const targetRoomId = payload.roomId || roomId;
+            if (targetRoomId) {
+                try { await executeAction(token, 'leave_hub', {}, targetRoomId); } catch (_) {}
+            }
+            const left = await roomService.leaveRoom(token, { roomId: targetRoomId });
+            let hubRes = {};
+            if (left.nextRoomId) {
+                const acc = await accountService.restoreSession(token);
+                hubRes = await joinRoomHubSafe(token, acc?.profile, left.nextRoomId);
+            }
+            return res.status(200).json({
+                ...hubRes,
+                ok: true,
+                inbox: left.inbox,
+                activeRoomId: left.nextRoomId
+            });
         }
 
         if (action === 'send_friend_request') {
@@ -151,8 +217,8 @@ module.exports = async function handler(req, res) {
             return res.status(200).json(await accountService.markDmRead(token, payload));
         }
 
-        // --- LUỒNG GAME & HUB CŨ ---
-        const result = await executeAction(token, action, payload);
+        // --- LUỒNG GAME & HUB THEO NHÓM (ROOM-SCOPED) ---
+        const result = await executeAction(token, action, payload, roomId);
         return res.status(200).json(result);
     } catch (err) {
         console.error('[API /api/action error]', err);

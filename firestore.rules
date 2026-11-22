@@ -5,6 +5,12 @@ service cloud.firestore {
     match /werewolf_server/{doc} {
       allow read, write: if false;
     }
+    match /room_servers/{roomId} {
+      allow read, write: if false;
+    }
+    match /room_codes/{code} {
+      allow read, write: if false;
+    }
     match /accounts/{username} {
       allow read, write: if false;
     }
@@ -18,8 +24,24 @@ service cloud.firestore {
       allow read, write: if false;
     }
 
-    // Mỗi người chỉ đọc đúng view / inbox / DM của mình theo token/key bí mật, cấm liệt kê
-    match /werewolf_views/{token} {
+    // Dữ liệu tách biệt theo nhóm & theo token/key bí mật: chỉ cho get đúng doc, CẤM list & write
+    match /rooms/{roomId} {
+      allow get: if true;
+      allow list, write: if false;
+    }
+    match /room_hubs/{roomId} {
+      allow get: if true;
+      allow list, write: if false;
+    }
+    match /room_chats/{roomId} {
+      allow get: if true;
+      allow list, write: if false;
+    }
+    match /room_histories/{roomId} {
+      allow get: if true;
+      allow list, write: if false;
+    }
+    match /werewolf_views/{viewKey} {
       allow get: if true;
       allow list, write: if false;
     }
@@ -36,11 +58,13 @@ service cloud.firestore {
       allow list, write: if false;
     }
 
-    // Dữ liệu công khai (hồ sơ, sảnh, chat chung, lịch sử ván) chỉ đọc; mọi thao tác ghi qua API
+    // Hồ sơ người dùng: chỉ cho get theo uid (cấm list để nhóm A không quét được thành viên nhóm B)
     match /user_profiles/{uid} {
-      allow read: if true;
-      allow write: if false;
+      allow get: if true;
+      allow list, write: if false;
     }
+
+    // Dữ liệu cũ (legacy) khóa ghi
     match /hub/{doc} {
       allow read: if true;
       allow write: if false;
