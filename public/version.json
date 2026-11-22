@@ -1,0 +1,45 @@
+{
+  "version": "1.1.0",
+  "releaseName": "v1.1.0 — Messenger, Tài Khoản & Giao Diện Mobile",
+  "releasedAt": "2026-11-22",
+  "message": "Bạn ơi Trường vừa đẩy bản cập nhật lên, bạn cập nhật luôn cho nóng hổi nhé! 🔥",
+  "highlights": [
+    "Đăng nhập tài khoản + mật khẩu, tự giữ phiên xuyên thiết bị như Messenger",
+    "Hồ sơ cá nhân, chấm xanh Online/Offline & thống kê thắng thua Ma Sói",
+    "Messenger Chat riêng 1-1, tìm bạn theo @username & lời mời kết bạn",
+    "Tối ưu trải nghiệm mượt mà trên cả Máy tính & Điện thoại (Bottom Nav, trượt khung chat, không zoom iOS)",
+    "Cơ chế thông báo bản cập nhật mới & nút Cập nhật App tức thì"
+  ],
+  "history": [
+    {
+      "version": "1.1.0",
+      "name": "Messenger, Tài Khoản & Giao Diện Mobile",
+      "date": "2026-11-22",
+      "notes": [
+        "Thêm đăng ký/đăng nhập tài khoản & tự động giữ phiên",
+        "Thêm chat riêng 1-1, kết bạn, hồ sơ & thống kê Ma Sói",
+        "Hoàn thiện giao diện cho cả Máy tính và Điện thoại",
+        "Thêm thông báo & nút Cập nhật ứng dụng theo phiên bản"
+      ]
+    },
+    {
+      "version": "1.0.0",
+      "name": "SCHOOL UNIVERSE Serverless + Firestore Real-time",
+      "date": "2026-11-22",
+      "notes": [
+        "Chuyển đổi 100% sang Vercel Serverless (sin1) + Firebase Firestore",
+        "Bảo mật Anti-Meta Gaming bằng masked view riêng từng người chơi",
+        "Lưu lịch sử các trận Ma Sói & tin nhắn vĩnh viễn"
+      ]
+    },
+    {
+      "version": "0.2.0",
+      "name": "Đấu Trường Ma Sói & Quản Trò Offline",
+      "date": "2026-11-22",
+      "notes": [
+        "Hoàn thiện luồng Đêm/Ngày Ma Sói Online & 17 thẻ bài",
+        "Tích hợp Trợ Lý Quản Trò Offline tại /gm/"
+      ]
+    }
+  ]
+}

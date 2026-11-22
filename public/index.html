@@ -2,7 +2,11 @@
 <html lang="vi">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, viewport-fit=cover">
+  <meta name="theme-color" content="#1A2421">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="SCHOOL UNIVERSE">
   <title>SCHOOL UNIVERSE</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://unpkg.com/lucide@latest"></script>
@@ -10,20 +14,52 @@
   <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore-compat.js"></script>
   <style>
     @import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700&family=Plus+Jakarta+Sans:wght@400;600;800&display=swap');
-    body { font-family: 'Plus Jakarta Sans', sans-serif; background-color: #1A2421; }
+    body { font-family: 'Plus Jakarta Sans', sans-serif; background-color: #1A2421; -webkit-tap-highlight-color: transparent; }
     .heading-font { font-family: 'Space Grotesk', sans-serif; }
     .bg-moss-card { background-color: rgba(14, 21, 18, 0.96); }
     .border-moss { border-color: rgba(45, 61, 56, 0.7); }
     .glow-fire { box-shadow: 0 0 15px rgba(255, 69, 0, 0.35); }
-    ::-webkit-scrollbar { width: 4px; }
+    .safe-pb { padding-bottom: max(0.5rem, env(safe-area-inset-bottom)); }
+    .no-scrollbar::-webkit-scrollbar { display: none; }
+    .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+    ::-webkit-scrollbar { width: 4px; height: 4px; }
     ::-webkit-scrollbar-thumb { background: #FF4500; border-radius: 99px; }
+    @media (max-width: 767px) {
+      input, textarea, select { font-size: 16px !important; }
+    }
   </style>
 </head>
-<body class="text-slate-200 min-h-screen flex flex-col relative overflow-x-hidden">
+<body class="text-slate-200 min-h-[100dvh] flex flex-col relative overflow-x-hidden">
 
-  <div id="app-toast" class="fixed top-6 right-6 z-50 transform translate-y-[-150%] transition-transform duration-300 bg-[#0d1412]/95 border-l-4 border-[#FF4500] p-4 rounded-xl shadow-2xl flex items-center space-x-3 max-w-sm glow-fire">
-    <div class="text-[#FF4500]"><i data-lucide="bell" class="w-5 h-5 animate-bounce"></i></div>
+  <div id="app-toast" class="fixed top-4 right-4 left-4 sm:left-auto z-[120] transform translate-y-[-180%] transition-transform duration-300 bg-[#0d1412]/95 border-l-4 border-[#FF4500] p-3.5 rounded-xl shadow-2xl flex items-center space-x-3 sm:max-w-sm glow-fire">
+    <div class="text-[#FF4500] shrink-0"><i data-lucide="bell" class="w-5 h-5 animate-bounce"></i></div>
     <div class="text-xs font-semibold" id="toast-message">Thông báo hệ thống</div>
+  </div>
+
+  <!-- MODAL THÔNG BÁO & CẬP NHẬT PHIÊN BẢN -->
+  <div id="update-modal" class="hidden fixed inset-0 z-[110] bg-black/85 backdrop-blur-sm flex items-center justify-center p-4">
+    <div class="bg-moss-card border border-[#FF4500]/60 rounded-3xl max-w-md w-full max-h-[88dvh] overflow-y-auto p-6 shadow-2xl space-y-4 relative glow-fire">
+      <button onclick="closeUpdateModal()" class="absolute top-4 right-4 w-8 h-8 rounded-full bg-white/5 hover:bg-white/10 flex items-center justify-center text-slate-400 hover:text-white">✕</button>
+      <div class="flex items-center gap-3">
+        <div class="w-12 h-12 rounded-2xl bg-[#FF4500]/20 border border-[#FF4500]/50 flex items-center justify-center text-2xl shrink-0">🚀</div>
+        <div>
+          <span id="update-modal-badge" class="text-[10px] font-black uppercase tracking-wider px-2 py-0.5 rounded-full bg-[#FF4500] text-white">Bản cập nhật mới</span>
+          <h3 id="update-modal-title" class="text-sm font-black text-white mt-1">v1.1.0 — Messenger, Tài Khoản & Giao Diện Mobile</h3>
+        </div>
+      </div>
+      <p id="update-modal-message" class="text-xs text-orange-200 bg-[#FF4500]/10 border border-[#FF4500]/30 rounded-2xl p-3 leading-relaxed font-semibold">
+        Bạn ơi Trường vừa đẩy bản cập nhật lên, bạn cập nhật luôn cho nóng hổi nhé! 🔥
+      </p>
+      <div id="update-modal-highlights" class="space-y-1.5 text-xs text-slate-300"></div>
+      <div class="flex flex-col sm:flex-row gap-2 pt-1">
+        <button id="btn-apply-update-now" onclick="applyAppUpdate()" class="flex-1 py-3 bg-[#FF4500] hover:bg-orange-500 text-white font-black rounded-xl text-xs uppercase tracking-wider glow-fire transition">🔄 Cập nhật ngay</button>
+        <button onclick="checkForAppUpdate({ showModalIfNew: true, manual: true })" class="py-3 px-4 bg-white/5 hover:bg-white/10 text-slate-200 font-bold rounded-xl text-xs border border-moss transition">Kiểm tra lại</button>
+      </div>
+      <div class="border-t border-moss pt-3 space-y-2">
+        <p class="text-[10px] font-bold uppercase tracking-wider text-slate-400">📜 Lịch sử các bản cập nhật</p>
+        <div id="update-modal-history" class="space-y-2 max-h-[160px] overflow-y-auto pr-1"></div>
+      </div>
+    </div>
   </div>
 
   <!-- MODAL HỒ SƠ CÁ NHÂN & THỐNG KÊ -->
@@ -89,27 +125,47 @@
           <button type="submit" id="btn-register-submit" class="w-full py-3 bg-emerald-600 hover:bg-emerald-500 text-white font-black rounded-xl text-sm transition uppercase tracking-wider disabled:opacity-60">Tạo tài khoản & Vào sảnh</button>
         </form>
 
-        <div class="pt-2 border-t border-moss">
+        <div class="pt-2 border-t border-moss space-y-2">
           <a href="/gm/" class="w-full py-2.5 bg-indigo-950/60 hover:bg-indigo-900/70 border border-indigo-500/40 text-indigo-300 font-bold rounded-xl text-xs transition uppercase tracking-wider flex items-center justify-center gap-2">
             <i data-lucide="moon" class="w-3.5 h-3.5"></i> Mở Trợ Lý Quản Trò Offline (Chơi Bài Giấy)
           </a>
+          <button type="button" onclick="openUpdateModal()" class="w-full py-2 bg-white/5 hover:bg-white/10 border border-moss text-slate-300 font-bold rounded-xl text-[11px] transition flex items-center justify-center gap-1.5">
+            <span id="entrance-version-label">🚀 Phiên bản v1.1.0 — Kiểm tra & Cập nhật</span>
+          </button>
         </div>
       </div>
     </div>
   </div>
 
-  <div id="main-hub-interface" class="hidden flex-1 flex flex-col">
-    <header class="border-b border-moss bg-black/40 backdrop-blur-md px-6 py-4 sticky top-0 z-40">
-      <div class="max-w-7xl mx-auto flex flex-col xl:flex-row xl:items-center xl:justify-between gap-4">
-        <div class="flex items-center justify-between xl:justify-start gap-4">
-          <h1 class="text-xl font-black heading-font tracking-tight text-transparent bg-clip-text bg-gradient-to-r from-orange-400 via-[#FF4500] to-rose-400">SCHOOL UNIVERSE</h1>
-          <button id="header-profile-btn" onclick="openProfileModal(myId)" class="flex items-center gap-2 bg-white/5 hover:bg-white/10 border border-moss px-3 py-1.5 rounded-full transition">
-            <span class="relative text-base" id="header-avatar">😎</span>
-            <span class="w-2 h-2 rounded-full bg-emerald-400"></span>
-            <span class="text-xs font-bold text-slate-200 max-w-[110px] truncate" id="header-display-name">Tài khoản</span>
-          </button>
+  <div id="main-hub-interface" class="hidden flex-1 flex flex-col pb-20 md:pb-0">
+    <header class="border-b border-moss bg-black/50 backdrop-blur-md px-3 py-2.5 sm:px-6 sm:py-3.5 sticky top-0 z-40">
+      <div class="max-w-7xl mx-auto flex flex-col xl:flex-row xl:items-center xl:justify-between gap-2.5 xl:gap-4">
+        <div class="flex items-center justify-between gap-2">
+          <div class="flex items-center gap-2.5 min-w-0">
+            <h1 class="text-base sm:text-xl font-black heading-font tracking-tight text-transparent bg-clip-text bg-gradient-to-r from-orange-400 via-[#FF4500] to-rose-400 truncate">SCHOOL UNIVERSE</h1>
+            <button id="header-profile-btn" onclick="openProfileModal(myId)" class="flex items-center gap-1.5 bg-white/5 hover:bg-white/10 border border-moss px-2.5 py-1 rounded-full transition shrink-0">
+              <span class="relative text-sm sm:text-base" id="header-avatar">😎</span>
+              <span class="w-2 h-2 rounded-full bg-emerald-400"></span>
+              <span class="text-[11px] sm:text-xs font-bold text-slate-200 max-w-[85px] sm:max-w-[120px] truncate" id="header-display-name">Tài khoản</span>
+            </button>
+          </div>
+          <!-- Cụm nút nhanh cho Điện thoại (Update, Voice, Đăng xuất) -->
+          <div class="flex md:hidden items-center gap-1.5 shrink-0">
+            <button onclick="openUpdateModal()" class="relative px-2.5 py-1.5 rounded-xl text-[11px] font-bold bg-amber-500/15 border border-amber-500/40 text-amber-300 flex items-center gap-1" title="Cập nhật App">
+              <span>🚀</span><span id="mobile-version-tag">v1.1.0</span>
+              <span id="mobile-update-dot" class="hidden absolute -top-1 -right-1 w-2.5 h-2.5 rounded-full bg-[#FF4500] animate-ping"></span>
+            </button>
+            <button onclick="toggleVoiceChat()" id="btn-voice-chat-mobile" class="p-2 rounded-xl bg-slate-800 text-slate-300" title="Voice Chat">
+              <i data-lucide="mic-off" id="icon-voice-chat-mobile" class="w-4 h-4"></i>
+            </button>
+            <button onclick="logoutSchoolHub()" class="p-2 rounded-xl bg-rose-950/70 text-rose-300 border border-rose-500/30" title="Đăng xuất">
+              <i data-lucide="log-out" class="w-4 h-4"></i>
+            </button>
+          </div>
         </div>
-        <div class="flex flex-wrap items-center gap-2">
+
+        <!-- Thanh điều hướng đầy đủ cho Máy tính / Tablet -->
+        <div class="hidden md:flex flex-wrap items-center gap-2">
           <button onclick="switchTab('workspace')" id="btn-tab-workspace" class="relative px-4 py-2 rounded-xl text-xs font-bold transition flex items-center gap-1.5 bg-[#FF4500] text-white shadow-md">
             <i data-lucide="message-square" class="w-3.5 h-3.5"></i> Messenger & Chat
             <span id="workspace-unread-badge" class="hidden ml-1 px-1.5 py-0.5 text-[9px] font-black bg-rose-500 text-white rounded-full">0</span>
@@ -126,8 +182,12 @@
           
           <div class="h-6 w-px bg-slate-700 mx-1"></div>
           
-          <button onclick="toggleVoiceChat()" id="btn-voice-chat" class="px-4 py-2 rounded-xl text-xs font-bold transition flex items-center gap-1.5 bg-slate-800 text-slate-300 hover:bg-slate-700">
-            <i data-lucide="mic-off" id="icon-voice-chat" class="w-3.5 h-3.5"></i> <span id="text-voice-chat">Voice Chat: Tắt</span>
+          <button onclick="openUpdateModal()" id="btn-app-update" class="relative px-3 py-2 rounded-xl text-xs font-bold transition flex items-center gap-1.5 bg-amber-500/15 hover:bg-amber-500/25 text-amber-300 border border-amber-500/40" title="Kiểm tra & Cập nhật App">
+            <span>🚀</span> <span id="desktop-version-tag">Cập nhật (v1.1.0)</span>
+            <span id="desktop-update-dot" class="hidden absolute -top-1 -right-1 w-2.5 h-2.5 rounded-full bg-[#FF4500] animate-ping"></span>
+          </button>
+          <button onclick="toggleVoiceChat()" id="btn-voice-chat" class="px-3.5 py-2 rounded-xl text-xs font-bold transition flex items-center gap-1.5 bg-slate-800 text-slate-300 hover:bg-slate-700">
+            <i data-lucide="mic-off" id="icon-voice-chat" class="w-3.5 h-3.5"></i> <span id="text-voice-chat">Voice: Tắt</span>
           </button>
           <button onclick="logoutSchoolHub()" class="px-3 py-2 rounded-xl text-xs font-bold transition flex items-center gap-1.5 bg-rose-950/70 hover:bg-rose-900 text-rose-300 border border-rose-500/30" title="Đăng xuất tài khoản">
             <i data-lucide="log-out" class="w-3.5 h-3.5"></i> Đăng xuất
@@ -139,29 +199,38 @@
     <!-- Container ẩn chứa các thẻ audio của những người khác -->
     <div id="audio-elements-container" class="hidden"></div>
 
-    <div class="max-w-7xl w-full mx-auto p-4 md:p-6 grid grid-cols-1 lg:grid-cols-12 gap-6 flex-1">
-      <section class="lg:col-span-3 bg-moss-card border border-moss rounded-3xl p-5 shadow-xl h-fit space-y-4">
+    <!-- Dải Online cuộn ngang siêu gọn cho Điện thoại / Tablet nhỏ -->
+    <div class="lg:hidden px-3 pt-2.5">
+      <div class="bg-moss-card border border-moss rounded-2xl px-3 py-2 flex items-center gap-2 overflow-x-auto no-scrollbar">
+        <span class="text-[10px] font-black uppercase tracking-wider text-slate-400 shrink-0">Online:</span>
+        <div id="mobile-room-users-strip" class="flex items-center gap-2"></div>
+      </div>
+    </div>
+
+    <div class="max-w-7xl w-full mx-auto p-3 sm:p-4 md:p-6 grid grid-cols-1 lg:grid-cols-12 gap-4 md:gap-6 flex-1">
+      <section class="hidden lg:block lg:col-span-3 bg-moss-card border border-moss rounded-3xl p-5 shadow-xl h-fit space-y-4">
         <h3 class="text-xs font-bold text-slate-300 uppercase tracking-widest flex items-center gap-1.5 border-b border-moss pb-2.5">
           <i data-lucide="users" class="w-4 h-4 text-[#FF4500]"></i> Đang ở sảnh chờ
         </h3>
-        <div id="room-users-list" class="space-y-2 max-h-[340px] overflow-y-auto"></div>
+        <div id="room-users-list" class="space-y-2 max-h-[380px] overflow-y-auto"></div>
       </section>
 
-      <section class="lg:col-span-9 flex flex-col">
+      <section class="lg:col-span-9 flex flex-col min-w-0">
         
         <div id="pane-workspace" class="flex-1 grid grid-cols-1 md:grid-cols-12 gap-4">
           <!-- Cột trái Messenger: Chat chung, Tìm bạn, Lời mời, Danh sách DM -->
-          <div class="md:col-span-4 bg-moss-card border border-moss rounded-3xl p-4 shadow-xl flex flex-col h-[520px] space-y-3">
+          <div id="messenger-sidebar-col" class="md:col-span-4 bg-moss-card border border-moss rounded-3xl p-3.5 sm:p-4 shadow-xl flex flex-col h-[calc(100dvh-215px)] md:h-[calc(100vh-195px)] min-h-[420px] space-y-3">
             <div class="relative">
               <input type="text" id="messenger-search-input" oninput="renderMessengerSidebar()" placeholder="Tìm bạn theo tên hoặc @username..." class="w-full bg-black/40 border border-moss rounded-xl px-3.5 py-2 text-xs text-slate-200 focus:outline-none focus:border-[#FF4500]">
             </div>
 
-            <button onclick="selectGlobalChat()" id="btn-select-global-chat" class="w-full p-2.5 rounded-2xl border transition flex items-center gap-2.5 text-left bg-[#FF4500]/15 border-[#FF4500]">
+            <button onclick="selectGlobalChat(true)" id="btn-select-global-chat" class="w-full p-2.5 rounded-2xl border transition flex items-center gap-2.5 text-left bg-[#FF4500]/15 border-[#FF4500]">
               <div class="w-9 h-9 rounded-full bg-[#FF4500]/20 flex items-center justify-center text-base shrink-0">🔥</div>
               <div class="min-w-0 flex-1">
                 <p class="text-xs font-bold text-white truncate"># Phòng Chat Chung</p>
                 <p class="text-[10px] text-slate-400 truncate">Trò chuyện cùng toàn sảnh</p>
               </div>
+              <span class="md:hidden text-slate-400 text-xs">›</span>
             </button>
 
             <div id="friend-requests-section" class="hidden space-y-1.5 border-t border-moss pt-2">
@@ -176,9 +245,10 @@
           </div>
 
           <!-- Cột phải Messenger: Khung chat -->
-          <div class="md:col-span-8 bg-moss-card border border-moss rounded-3xl p-4 shadow-xl flex flex-col h-[520px]">
-            <div id="active-chat-header" class="flex items-center justify-between border-b border-moss pb-3 mb-3">
-              <div class="flex items-center gap-2.5">
+          <div id="messenger-chat-col" class="hidden md:flex md:col-span-8 bg-moss-card border border-moss rounded-3xl p-3.5 sm:p-4 shadow-xl flex-col h-[calc(100dvh-215px)] md:h-[calc(100vh-195px)] min-h-[420px]">
+            <div id="active-chat-header" class="flex items-center justify-between border-b border-moss pb-2.5 mb-2.5 gap-2">
+              <div class="flex items-center gap-2">
+                <button onclick="backToMessengerList()" class="md:hidden px-2 py-1 rounded-lg bg-white/5 text-slate-200 text-xs font-bold">←</button>
                 <div class="w-9 h-9 rounded-full bg-[#FF4500]/20 flex items-center justify-center text-base">🔥</div>
                 <div>
                   <h4 class="text-xs font-black text-white"># Phòng Chat Chung</h4>
@@ -186,10 +256,10 @@
                 </div>
               </div>
             </div>
-            <div id="chat-messages-container" class="flex-1 overflow-y-auto space-y-3 pr-2"></div>
-            <form onsubmit="sendMessage(event)" class="mt-3 flex gap-2 pt-3 border-t border-moss">
-              <input type="text" id="chat-msg-input" placeholder="Nhập tin nhắn..." class="flex-1 bg-black/40 border border-moss rounded-xl px-4 py-2.5 text-xs text-slate-200 focus:outline-none focus:border-[#FF4500]">
-              <button type="submit" class="bg-[#FF4500] hover:bg-orange-500 text-white px-5 py-2.5 rounded-xl text-xs font-bold transition">Gửi</button>
+            <div id="chat-messages-container" class="flex-1 overflow-y-auto space-y-3 pr-1.5"></div>
+            <form onsubmit="sendMessage(event)" class="mt-2.5 flex gap-2 pt-2.5 border-t border-moss">
+              <input type="text" id="chat-msg-input" placeholder="Nhập tin nhắn..." class="flex-1 bg-black/40 border border-moss rounded-xl px-3.5 py-2.5 text-xs text-slate-200 focus:outline-none focus:border-[#FF4500]">
+              <button type="submit" class="bg-[#FF4500] hover:bg-orange-500 text-white px-4 sm:px-5 py-2.5 rounded-xl text-xs font-bold transition shrink-0">Gửi</button>
             </form>
           </div>
         </div>
@@ -301,6 +371,29 @@
         </div>
       </section>
     </div>
+
+    <!-- THANH ĐIỀU HƯỚNG DƯỚI ĐÁY CHO ĐIỆN THOẠI (MOBILE BOTTOM NAV) -->
+    <nav id="mobile-bottom-nav" class="md:hidden fixed bottom-0 left-0 right-0 z-40 bg-[#0d1412]/95 backdrop-blur-md border-t border-moss px-2 pt-1.5 safe-pb">
+      <div class="grid grid-cols-4 gap-1">
+        <button onclick="switchTab('workspace')" id="mobile-tab-workspace" class="relative flex flex-col items-center justify-center py-1.5 rounded-xl text-[#FF4500] bg-[#FF4500]/10 font-bold">
+          <i data-lucide="message-square" class="w-4 h-4"></i>
+          <span class="text-[10px] mt-0.5">Chat</span>
+          <span id="mobile-unread-badge" class="hidden absolute top-1 right-3 px-1.5 py-0.2 text-[9px] font-black bg-rose-500 text-white rounded-full">0</span>
+        </button>
+        <button onclick="switchTab('arena')" id="mobile-tab-arena" class="flex flex-col items-center justify-center py-1.5 rounded-xl text-slate-400 font-bold">
+          <i data-lucide="swords" class="w-4 h-4"></i>
+          <span class="text-[10px] mt-0.5">Ma Sói</span>
+        </button>
+        <button onclick="switchTab('gartic')" id="mobile-tab-gartic" class="flex flex-col items-center justify-center py-1.5 rounded-xl text-slate-400 font-bold">
+          <i data-lucide="palette" class="w-4 h-4"></i>
+          <span class="text-[10px] mt-0.5">Gartic</span>
+        </button>
+        <a href="/gm/" class="flex flex-col items-center justify-center py-1.5 rounded-xl text-indigo-300 font-bold">
+          <i data-lucide="moon" class="w-4 h-4"></i>
+          <span class="text-[10px] mt-0.5">Quản Trò</span>
+        </a>
+      </div>
+    </nav>
   </div>
 
   <script>
@@ -854,22 +947,34 @@
     }
 
     function renderUsersList() {
-      const container = document.getElementById('room-users-list'); container.innerHTML = '';
+      const container = document.getElementById('room-users-list');
+      if (container) container.innerHTML = '';
+      const mobileStrip = document.getElementById('mobile-room-users-strip');
+      if (mobileStrip) mobileStrip.innerHTML = '';
+
       roomUsers.forEach(u => {
         const isMe = u.id === myId;
-        container.innerHTML += `<div onclick="openProfileModal('${u.id}')" class="cursor-pointer p-3 bg-black/20 hover:bg-white/5 border border-moss rounded-2xl flex items-center justify-between transition ${isMe ? 'border-[#FF4500] bg-[#FF4500]/5' : ''}">
-          <div class="flex items-center space-x-2.5 min-w-0">
-            <div class="relative shrink-0">
-              <span class="text-lg">${u.avatar}</span>
-              <span class="absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 rounded-full bg-emerald-400 border-2 border-[#0e1512]"></span>
+        if (container) {
+          container.innerHTML += `<div onclick="openProfileModal('${u.id}')" class="cursor-pointer p-3 bg-black/20 hover:bg-white/5 border border-moss rounded-2xl flex items-center justify-between transition ${isMe ? 'border-[#FF4500] bg-[#FF4500]/5' : ''}">
+            <div class="flex items-center space-x-2.5 min-w-0">
+              <div class="relative shrink-0">
+                <span class="text-lg">${u.avatar}</span>
+                <span class="absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 rounded-full bg-emerald-400 border-2 border-[#0e1512]"></span>
+              </div>
+              <div class="min-w-0">
+                <h4 class="text-xs font-bold text-slate-200 truncate max-w-[115px]">${escapeHtml(u.name)}</h4>
+                <p class="text-[8px] uppercase tracking-wider text-slate-500 font-bold">${u.isHost ? '👑 Chủ phòng' : (u.username ? '@' + escapeHtml(u.username) : 'Thành viên')}</p>
+              </div>
             </div>
-            <div class="min-w-0">
-              <h4 class="text-xs font-bold text-slate-200 truncate max-w-[115px]">${escapeHtml(u.name)}</h4>
-              <p class="text-[8px] uppercase tracking-wider text-slate-500 font-bold">${u.isHost ? '👑 Chủ phòng' : (u.username ? '@' + escapeHtml(u.username) : 'Thành viên')}</p>
-            </div>
-          </div>
-          ${isMe ? '<span class="text-[8px] bg-[#FF4500] text-white px-1.5 py-0.5 rounded font-black">TA</span>' : '<span class="text-[10px] text-slate-400">💬</span>'}
-        </div>`;
+            ${isMe ? '<span class="text-[8px] bg-[#FF4500] text-white px-1.5 py-0.5 rounded font-black">TA</span>' : '<span class="text-[10px] text-slate-400">💬</span>'}
+          </div>`;
+        }
+        if (mobileStrip) {
+          mobileStrip.innerHTML += `<button onclick="openProfileModal('${u.id}')" class="shrink-0 flex items-center gap-1.5 px-2.5 py-1 rounded-full border ${isMe ? 'border-[#FF4500] bg-[#FF4500]/15' : 'border-moss bg-black/30'}">
+            <span class="relative text-sm">${u.avatar}<span class="absolute -bottom-0.5 -right-0.5 w-2 h-2 rounded-full bg-emerald-400 border border-[#0e1512]"></span></span>
+            <span class="text-[11px] font-bold text-slate-200 max-w-[72px] truncate">${escapeHtml(u.name)}</span>
+          </button>`;
+        }
       });
       const amIHost = roomUsers.find(u => u.id === myId)?.isHost;
       const gBtn = document.getElementById('gartic-start-btn');
@@ -879,16 +984,153 @@
     function switchTab(tab) {
       currentTab = tab;
       ['workspace', 'arena', 'gartic'].forEach(t => {
-        document.getElementById(`pane-${t}`).classList.add('hidden');
-        document.getElementById(`btn-tab-${t}`).className = "relative px-4 py-2 rounded-xl text-xs font-bold transition flex items-center gap-1.5 bg-white/5 text-slate-300";
+        const pane = document.getElementById(`pane-${t}`);
+        if (pane) pane.classList.add('hidden');
+        const btn = document.getElementById(`btn-tab-${t}`);
+        if (btn) btn.className = "relative px-4 py-2 rounded-xl text-xs font-bold transition flex items-center gap-1.5 bg-white/5 text-slate-300";
+        const mBtn = document.getElementById(`mobile-tab-${t}`);
+        if (mBtn) mBtn.className = "relative flex flex-col items-center justify-center py-1.5 rounded-xl text-slate-400 font-bold";
       });
-      document.getElementById(`pane-${tab}`).classList.remove('hidden');
-      document.getElementById(`btn-tab-${tab}`).className = "relative px-4 py-2 rounded-xl text-xs font-bold transition flex items-center gap-1.5 bg-[#FF4500] text-white shadow-lg glow-fire";
+      const activePane = document.getElementById(`pane-${tab}`);
+      if (activePane) activePane.classList.remove('hidden');
+      const activeBtn = document.getElementById(`btn-tab-${tab}`);
+      if (activeBtn) activeBtn.className = "relative px-4 py-2 rounded-xl text-xs font-bold transition flex items-center gap-1.5 bg-[#FF4500] text-white shadow-lg glow-fire";
+      const activeMBtn = document.getElementById(`mobile-tab-${tab}`);
+      if (activeMBtn) activeMBtn.className = "relative flex flex-col items-center justify-center py-1.5 rounded-xl text-[#FF4500] bg-[#FF4500]/10 font-bold";
+      window.scrollTo({ top: 0, behavior: 'smooth' });
     }
 
     function showToast(text) {
       const t = document.getElementById('app-toast'); document.getElementById('toast-message').innerText = text;
-      t.classList.remove('translate-y-[-150%]'); setTimeout(() => t.classList.add('translate-y-[-150%]'), 3000);
+      t.classList.remove('translate-y-[-180%]'); setTimeout(() => t.classList.add('translate-y-[-180%]'), 3200);
+    }
+
+    // --- HỆ THỐNG PHÁT HIỆN & CẬP NHẬT PHIÊN BẢN APP ---
+    const APP_VERSION = '1.1.0';
+    const APP_RELEASE_NAME = 'v1.1.0 — Messenger, Tài Khoản & Giao Diện Mobile';
+    let latestVersionInfo = null;
+    let hasPendingUpdate = false;
+
+    function setUpdateIndicators(hasNew, versionStr) {
+      hasPendingUpdate = hasNew;
+      const dDot = document.getElementById('desktop-update-dot');
+      const mDot = document.getElementById('mobile-update-dot');
+      const dTag = document.getElementById('desktop-version-tag');
+      const mTag = document.getElementById('mobile-version-tag');
+      const eLabel = document.getElementById('entrance-version-label');
+      if (dDot) dDot.classList.toggle('hidden', !hasNew);
+      if (mDot) mDot.classList.toggle('hidden', !hasNew);
+      if (dTag) dTag.innerText = hasNew ? `Có bản mới (v${versionStr})!` : `Cập nhật (v${APP_VERSION})`;
+      if (mTag) mTag.innerText = hasNew ? `v${versionStr}!` : `v${APP_VERSION}`;
+      if (eLabel) eLabel.innerText = hasNew
+        ? `🔥 Có bản mới v${versionStr} — Bấm để cập nhật ngay!`
+        : `🚀 Phiên bản v${APP_VERSION} — Kiểm tra & Cập nhật`;
+    }
+
+    function renderUpdateModal(info, isNew) {
+      const badge = document.getElementById('update-modal-badge');
+      const title = document.getElementById('update-modal-title');
+      const msg = document.getElementById('update-modal-message');
+      const hiBox = document.getElementById('update-modal-highlights');
+      const histBox = document.getElementById('update-modal-history');
+      const applyBtn = document.getElementById('btn-apply-update-now');
+
+      const ver = info?.version || APP_VERSION;
+      const relName = info?.releaseName || APP_RELEASE_NAME;
+      const customMsg = info?.message || 'Bạn ơi Trường vừa đẩy bản cập nhật lên, bạn cập nhật luôn cho nóng hổi nhé! 🔥';
+
+      if (badge) {
+        badge.innerText = isNew ? `Bản mới v${ver}` : `Đang ở bản mới nhất v${APP_VERSION}`;
+        badge.className = isNew
+          ? 'text-[10px] font-black uppercase tracking-wider px-2 py-0.5 rounded-full bg-[#FF4500] text-white'
+          : 'text-[10px] font-black uppercase tracking-wider px-2 py-0.5 rounded-full bg-emerald-600 text-white';
+      }
+      if (title) title.innerText = relName;
+      if (msg) {
+        msg.innerText = isNew
+          ? customMsg
+          : `App của bạn đang chạy phiên bản mới nhất (${relName}). Bạn vẫn có thể bấm nút bên dưới để làm mới sạch cache bất cứ lúc nào!`;
+      }
+      if (applyBtn) {
+        applyBtn.innerText = isNew ? `🔄 Cập nhật lên v${ver} ngay` : '🔄 Làm mới & Tải lại App';
+      }
+      if (hiBox) {
+        const highlights = Array.isArray(info?.highlights) ? info.highlights : [];
+        hiBox.innerHTML = highlights.map(item => `<div class="flex items-start gap-2"><span class="text-[#FF4500]">✦</span><span>${escapeHtml(item)}</span></div>`).join('');
+      }
+      if (histBox) {
+        const history = Array.isArray(info?.history) ? info.history : [];
+        histBox.innerHTML = history.map(h => `
+          <div class="bg-black/35 border border-moss rounded-xl p-2.5 space-y-1">
+            <div class="flex items-center justify-between gap-2">
+              <span class="text-[11px] font-black text-white">v${escapeHtml(h.version)} — ${escapeHtml(h.name)}</span>
+              <span class="text-[9px] text-slate-500 shrink-0">${escapeHtml(h.date || '')}</span>
+            </div>
+            <ul class="text-[10px] text-slate-400 space-y-0.5 pl-3 list-disc">
+              ${(h.notes || []).map(n => `<li>${escapeHtml(n)}</li>`).join('')}
+            </ul>
+          </div>
+        `).join('');
+      }
+    }
+
+    async function checkForAppUpdate({ showModalIfNew = true, manual = false } = {}) {
+      try {
+        const res = await fetch('/version.json?t=' + Date.now(), { cache: 'no-store' });
+        if (!res.ok) throw new Error('Không tải được thông tin phiên bản');
+        const info = await res.json();
+        latestVersionInfo = info;
+
+        const remoteVer = String(info.version || APP_VERSION);
+        const seenVer = localStorage.getItem('school_universe_seen_version');
+        const isCodeOutdated = remoteVer !== APP_VERSION;
+        const isFirstTimeSeeingThisRelease = seenVer !== remoteVer;
+        const shouldNotify = isCodeOutdated || isFirstTimeSeeingThisRelease;
+
+        setUpdateIndicators(isCodeOutdated, remoteVer);
+        renderUpdateModal(info, shouldNotify);
+
+        if (manual) {
+          document.getElementById('update-modal').classList.remove('hidden');
+          if (!isCodeOutdated) showToast(`✅ Bạn đang ở bản mới nhất v${APP_VERSION}!`);
+        } else if (showModalIfNew && shouldNotify) {
+          document.getElementById('update-modal').classList.remove('hidden');
+        }
+      } catch (err) {
+        console.warn('Update check skipped:', err);
+        if (manual) showToast('⚠️ Không thể kiểm tra cập nhật lúc này.');
+      }
+    }
+
+    async function openUpdateModal() {
+      renderUpdateModal(latestVersionInfo, hasPendingUpdate);
+      document.getElementById('update-modal').classList.remove('hidden');
+      await checkForAppUpdate({ showModalIfNew: false, manual: false });
+    }
+
+    function closeUpdateModal() {
+      if (latestVersionInfo?.version && latestVersionInfo.version === APP_VERSION) {
+        localStorage.setItem('school_universe_seen_version', latestVersionInfo.version);
+      }
+      document.getElementById('update-modal').classList.add('hidden');
+    }
+
+    async function applyAppUpdate() {
+      const targetVer = latestVersionInfo?.version || APP_VERSION;
+      localStorage.setItem('school_universe_seen_version', targetVer);
+      showToast('🔄 Đang tải bản cập nhật mới nhất...');
+      try {
+        if ('caches' in window) {
+          const keys = await caches.keys();
+          await Promise.all(keys.map(k => caches.delete(k)));
+        }
+        if ('serviceWorker' in navigator) {
+          const regs = await navigator.serviceWorker.getRegistrations();
+          await Promise.all(regs.map(r => r.unregister()));
+        }
+      } catch (_) {}
+      const cleanPath = window.location.pathname || '/';
+      window.location.replace(`${cleanPath}?v=${encodeURIComponent(targetVer)}&t=${Date.now()}`);
     }
 
     // --- HỒ SƠ CÁ NHÂN & THỐNG KÊ MA SÓI ---
@@ -1040,14 +1282,16 @@
       // Tính tổng badge chưa đọc + lời mời kết bạn
       let totalUnread = reqIn.length;
       Object.values(dmMap).forEach(c => { totalUnread += (c.unreadCount || 0); });
-      if (badgeEl) {
+      const mobileBadgeEl = document.getElementById('mobile-unread-badge');
+      [badgeEl, mobileBadgeEl].forEach(el => {
+        if (!el) return;
         if (totalUnread > 0) {
-          badgeEl.innerText = totalUnread > 99 ? '99+' : totalUnread;
-          badgeEl.classList.remove('hidden');
+          el.innerText = totalUnread > 99 ? '99+' : totalUnread;
+          el.classList.remove('hidden');
         } else {
-          badgeEl.classList.add('hidden');
+          el.classList.add('hidden');
         }
-      }
+      });
 
       if (globalBtn) {
         globalBtn.className = activeChatMode === 'global'
@@ -1154,7 +1398,26 @@
       }).join('');
     }
 
-    function selectGlobalChat() {
+    function openMobileChatView() {
+      const sidebar = document.getElementById('messenger-sidebar-col');
+      const chatCol = document.getElementById('messenger-chat-col');
+      if (sidebar) sidebar.classList.add('hidden', 'md:flex');
+      if (chatCol) {
+        chatCol.classList.remove('hidden');
+        chatCol.classList.add('flex');
+      }
+    }
+
+    function backToMessengerList() {
+      const sidebar = document.getElementById('messenger-sidebar-col');
+      const chatCol = document.getElementById('messenger-chat-col');
+      if (sidebar) sidebar.classList.remove('hidden');
+      if (chatCol) {
+        chatCol.classList.add('hidden', 'md:flex');
+      }
+    }
+
+    function selectGlobalChat(openMobile = false) {
       activeChatMode = 'global';
       activeDmPeerUid = null;
       activeDmSecretId = null;
@@ -1162,6 +1425,7 @@
       renderActiveChatHeader();
       renderMessengerSidebar();
       renderWorkspaceMessages(globalMessagesCache);
+      if (openMobile) openMobileChatView();
     }
 
     async function openDmWith(peerUid) {
@@ -1170,6 +1434,7 @@
       activeChatMode = 'dm';
       activeDmPeerUid = peerUid;
       activeDmMessages = [];
+      openMobileChatView();
       renderActiveChatHeader();
       renderMessengerSidebar();
 
@@ -1207,10 +1472,12 @@
     function renderActiveChatHeader() {
       const header = document.getElementById('active-chat-header');
       if (!header) return;
+      const backBtn = `<button onclick="backToMessengerList()" class="md:hidden px-2.5 py-1.5 rounded-xl bg-white/5 hover:bg-white/10 text-slate-200 text-xs font-bold shrink-0">←</button>`;
       if (activeChatMode === 'global') {
         header.innerHTML = `
-          <div class="flex items-center gap-2.5">
-            <div class="w-9 h-9 rounded-full bg-[#FF4500]/20 flex items-center justify-center text-base">🔥</div>
+          <div class="flex items-center gap-2">
+            ${backBtn}
+            <div class="w-9 h-9 rounded-full bg-[#FF4500]/20 flex items-center justify-center text-base shrink-0">🔥</div>
             <div>
               <h4 class="text-xs font-black text-white"># Phòng Chat Chung</h4>
               <p class="text-[10px] text-slate-400">Tin nhắn đồng bộ mọi thiết bị</p>
@@ -1221,17 +1488,18 @@
       const peer = allProfiles[activeDmPeerUid] || { displayName: 'Người dùng', username: '', avatar: '😎', online: false, lastSeen: 0 };
       const isOnline = Boolean(peer.online || roomUsers.some(u => u.id === activeDmPeerUid));
       header.innerHTML = `
-        <div class="flex items-center gap-2.5">
-          <div class="relative">
+        <div class="flex items-center gap-2 min-w-0">
+          ${backBtn}
+          <div class="relative shrink-0">
             <span class="text-2xl">${peer.avatar || '😎'}</span>
             <span class="absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 rounded-full border-2 border-[#0e1512] ${isOnline ? 'bg-emerald-400' : 'bg-slate-500'}"></span>
           </div>
-          <div>
-            <h4 class="text-xs font-black text-white">${escapeHtml(peer.displayName)}</h4>
+          <div class="min-w-0">
+            <h4 class="text-xs font-black text-white truncate">${escapeHtml(peer.displayName)}</h4>
             <p class="text-[10px] ${isOnline ? 'text-emerald-400' : 'text-slate-400'}">${isOnline ? 'Đang hoạt động' : formatRelativeTime(peer.lastSeen)}</p>
           </div>
         </div>
-        <button onclick="openProfileModal('${activeDmPeerUid}')" class="px-3 py-1.5 rounded-xl bg-white/5 hover:bg-white/10 text-[10px] font-bold text-slate-300 border border-moss">Xem hồ sơ</button>
+        <button onclick="openProfileModal('${activeDmPeerUid}')" class="px-3 py-1.5 rounded-xl bg-white/5 hover:bg-white/10 text-[10px] font-bold text-slate-300 border border-moss shrink-0">Hồ sơ</button>
       `;
     }
 
@@ -2502,13 +2770,20 @@
     };
 
     async function toggleVoiceChat() {
+        const mBtn = document.getElementById('btn-voice-chat-mobile');
+        const mIcon = document.getElementById('icon-voice-chat-mobile');
         if (isVoiceActive) {
             isVoiceActive = false;
             document.getElementById('icon-voice-chat').setAttribute('data-lucide', 'mic-off');
-            document.getElementById('text-voice-chat').innerText = 'Voice Chat: Tắt';
+            if (mIcon) mIcon.setAttribute('data-lucide', 'mic-off');
+            document.getElementById('text-voice-chat').innerText = 'Voice: Tắt';
             const btn = document.getElementById('btn-voice-chat');
             btn.classList.remove('bg-emerald-600', 'bg-orange-600', 'text-white', 'hover:bg-emerald-500', 'hover:bg-orange-500');
             btn.classList.add('bg-slate-800', 'text-slate-300', 'hover:bg-slate-700');
+            if (mBtn) {
+                mBtn.classList.remove('bg-emerald-600', 'bg-orange-600', 'text-white');
+                mBtn.classList.add('bg-slate-800', 'text-slate-300');
+            }
             lucide.createIcons();
 
             if (localAudioStream) {
@@ -2530,9 +2805,14 @@
                 isVoiceActive = true;
                 
                 document.getElementById('icon-voice-chat').setAttribute('data-lucide', 'mic');
+                if (mIcon) mIcon.setAttribute('data-lucide', 'mic');
                 const btn = document.getElementById('btn-voice-chat');
                 btn.classList.remove('bg-slate-800', 'text-slate-300', 'hover:bg-slate-700');
                 btn.classList.add('text-white');
+                if (mBtn) {
+                    mBtn.classList.remove('bg-slate-800', 'text-slate-300');
+                    mBtn.classList.add('text-white');
+                }
                 lucide.createIcons();
                 
                 syncVoiceStateWithGame();
@@ -2566,14 +2846,17 @@
         
         const textEl = document.getElementById('text-voice-chat');
         const btn = document.getElementById('btn-voice-chat');
+        const mBtn = document.getElementById('btn-voice-chat-mobile');
         if (shouldMute) {
-            textEl.innerText = 'Voice Chat: Khóa (Game)';
+            textEl.innerText = 'Voice: Khóa (Game)';
             btn.classList.remove('bg-emerald-600', 'hover:bg-emerald-500');
             btn.classList.add('bg-orange-600', 'hover:bg-orange-500');
+            if (mBtn) { mBtn.classList.remove('bg-emerald-600'); mBtn.classList.add('bg-orange-600'); }
         } else {
-            textEl.innerText = 'Voice Chat: Đang Bật';
+            textEl.innerText = 'Voice: Đang Bật';
             btn.classList.remove('bg-orange-600', 'hover:bg-orange-500');
             btn.classList.add('bg-emerald-600', 'hover:bg-emerald-500');
+            if (mBtn) { mBtn.classList.remove('bg-orange-600'); mBtn.classList.add('bg-emerald-600'); }
         }
     }
 
@@ -2678,6 +2961,14 @@
     lucide.createIcons();
     // Tự động khôi phục phiên đăng nhập giống Messenger nếu đã đăng nhập trước đó
     tryAutoRestoreSession();
+    // Kiểm tra bản cập nhật mới ngay khi mở app + định kỳ mỗi 60s + khi quay lại tab
+    checkForAppUpdate({ showModalIfNew: true, manual: false });
+    setInterval(() => checkForAppUpdate({ showModalIfNew: true, manual: false }), 60000);
+    document.addEventListener('visibilitychange', () => {
+      if (document.visibilityState === 'visible') {
+        checkForAppUpdate({ showModalIfNew: true, manual: false });
+      }
+    });
     // Làm nóng sẵn Vercel Function Singapore nếu chưa có phiên
     if (!getSecretToken()) fetch('/api/action').catch(() => {});
   </script>

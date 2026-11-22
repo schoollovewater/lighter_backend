@@ -1,6 +1,6 @@
 {
   "name": "school-universe",
-  "version": "0.0.3",
+  "version": "1.1.0",
   "description": "SCHOOL UNIVERSE — Online Werewolf Arena, Offline GM Assistant & Gartic Phone",
   "main": "server.js",
   "scripts": {
