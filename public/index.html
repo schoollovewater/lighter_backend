@@ -3,10 +3,11 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>SCHOOL Universe</title>
+  <title>SCHOOL UNIVERSE</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://unpkg.com/lucide@latest"></script>
-  <script src="https://cdn.socket.io/4.8.1/socket.io.min.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore-compat.js"></script>
   <style>
     @import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700&family=Plus+Jakarta+Sans:wght@400;600;800&display=swap');
     body { font-family: 'Plus Jakarta Sans', sans-serif; background-color: #1A2421; }
@@ -77,6 +78,9 @@
           <button onclick="toggleVoiceChat()" id="btn-voice-chat" class="px-4 py-2 rounded-xl text-xs font-bold transition flex items-center gap-1.5 bg-slate-800 text-slate-300 hover:bg-slate-700">
             <i data-lucide="mic-off" id="icon-voice-chat" class="w-3.5 h-3.5"></i> <span id="text-voice-chat">Voice Chat: Tắt</span>
           </button>
+          <button onclick="leaveSchoolHub()" class="px-3 py-2 rounded-xl text-xs font-bold transition flex items-center gap-1.5 bg-rose-950/70 hover:bg-rose-900 text-rose-300 border border-rose-500/30" title="Rời khỏi phòng">
+            <i data-lucide="log-out" class="w-3.5 h-3.5"></i> Rời phòng
+          </button>
         </div>
       </div>
     </header>
@@ -112,7 +116,10 @@
               <div>
                 <div class="flex items-center justify-between border-b border-moss pb-2 mb-2">
                     <h4 class="text-xs font-bold text-slate-300">Đăng ký tham gia</h4>
-                    <button onclick="joinWerewolfLobby()" class="px-3 py-1 bg-emerald-600 text-white rounded-lg text-xs font-bold hover:bg-emerald-500">Vào phòng chờ</button>
+                    <div class="flex gap-2">
+                      <button onclick="joinWerewolfLobby()" class="px-3 py-1 bg-emerald-600 text-white rounded-lg text-xs font-bold hover:bg-emerald-500">Vào phòng chờ</button>
+                      <button onclick="leaveWerewolfLobby()" class="px-3 py-1 bg-slate-700 text-slate-200 rounded-lg text-xs font-bold hover:bg-slate-600">Rời ghế</button>
+                    </div>
                 </div>
                 <div id="werewolf-lobby-list" class="flex flex-wrap gap-2 pt-1 mb-3 min-h-[40px]"></div>
               </div>
@@ -132,6 +139,14 @@
             <div class="bg-black/30 border border-moss p-4 rounded-2xl">
               <h4 class="text-xs font-bold text-slate-300 border-b border-moss pb-2 mb-3">Danh Sách Thẻ Bài</h4>
               <div id="werewolf-sliders" class="space-y-2"></div>
+            </div>
+
+            <div class="bg-black/30 border border-moss p-4 rounded-2xl">
+              <h4 class="text-xs font-bold text-slate-300 border-b border-moss pb-2 mb-3 flex items-center justify-between">
+                <span>🏆 Lịch Sử Đấu Gần Đây</span>
+                <span class="text-[10px] text-emerald-400 font-normal">Đồng bộ Firebase Firestore</span>
+              </h4>
+              <div id="werewolf-history-list" class="space-y-2 text-xs text-slate-400">Chưa có trận đấu nào được lưu.</div>
             </div>
           </div>
           
@@ -244,79 +259,281 @@
     };
 
 
-    // KẾT NỐI SOCKET
-    let backendUrl = localStorage.getItem('school_universe_backend_url') || localStorage.getItem('lighter_backend_url') || (window.location.hostname === 'localhost' ? 'http://localhost:3000' : '');
-    const socket = backendUrl ? io(backendUrl) : io();
+    // KẾT NỐI FIREBASE FIRESTORE (REAL-TIME) + VERCEL API (/api/action)
+    const firebaseConfig = {
+      apiKey: "AIzaSyAbp16ph_U6mrj8DnqJSYoy5cLRu0Py5zA",
+      authDomain: "schooluniverse-4cde5.firebaseapp.com",
+      projectId: "schooluniverse-4cde5",
+      storageBucket: "schooluniverse-4cde5.firebasestorage.app",
+      messagingSenderId: "659025700241",
+      appId: "1:659025700241:web:583466f708273a9f8ee630",
+      measurementId: "G-LJ1QPG29PP"
+    };
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.firestore();
 
-    function getSessionId() {
-      let sid = localStorage.getItem('school_universe_session_id') || localStorage.getItem('lighter_session_id');
-      if (!sid) {
-          sid = 'sid_' + Math.random().toString(36).substr(2, 9) + '_' + Date.now();
+    let realtimeUnsubs = [];
+    let nightTickerInterval = null;
+    let lastTimeoutTriggeredKey = '';
+    let lastNightRenderKey = '';
+    const seenEventNonces = new Set();
+    const seenVoiceSignalIds = new Set();
+    let seerLockedTurn = { key: '', targetId: '', html: '' };
+    let detectiveLockedTurn = { key: '', t1: '', t2: '', html: '' };
+
+    function getSecretToken() {
+      let tok = localStorage.getItem('school_universe_secret_token');
+      if (!tok) {
+          tok = (window.crypto && crypto.randomUUID)
+            ? crypto.randomUUID()
+            : ('tok_' + Math.random().toString(36).slice(2) + '_' + Date.now() + '_' + Math.random().toString(36).slice(2));
+          localStorage.setItem('school_universe_secret_token', tok);
       }
-      localStorage.setItem('school_universe_session_id', sid);
-      return sid;
+      return tok;
     }
 
-    function connectToSchoolHub() {
+    async function callAction(action, payload = {}) {
+      try {
+        const res = await fetch('/api/action', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ token: getSecretToken(), action, payload })
+        });
+        const data = await res.json();
+        if (!res.ok || !data.ok) {
+          if (data && data.error) showToast(`⚠️ ${data.error}`);
+        }
+        return data;
+      } catch (err) {
+        console.error('API error:', action, err);
+        showToast('⚠️ Lỗi kết nối tới máy chủ!');
+        return { ok: false };
+      }
+    }
+
+    async function connectToSchoolHub() {
       const name = document.getElementById('entrance-name-input').value.trim();
       if (!name) { alert("Đặt tên giùm cái bạn ơi!"); return; }
       
       localStorage.setItem('school_universe_last_name', name);
-      
+      localStorage.setItem('school_universe_last_avatar', selectedAvatar);
+
+      const res = await callAction('join_hub', { name: name, avatar: selectedAvatar });
+      if (!res || !res.ok) return;
+
+      myId = res.myId;
       document.getElementById('entrance-gate').classList.add('hidden');
       document.getElementById('main-hub-interface').classList.remove('hidden');
-      
-      socket.emit('join_hub', { name: name, avatar: selectedAvatar, sessionId: getSessionId() });
+
       initCanvasLogic();
+      startRealtimeSubscriptions();
+      startNightCountdownLoop();
+      lucide.createIcons();
     }
 
-    socket.on('connect', () => {
-        if (document.getElementById('entrance-gate').classList.contains('hidden')) {
-            const name = document.getElementById('entrance-name-input').value.trim() || localStorage.getItem('school_universe_last_name') || localStorage.getItem('lighter_last_name');
-            if (name) {
-                socket.emit('join_hub', { name: name, avatar: selectedAvatar, sessionId: getSessionId() });
-                console.log("Auto-reconnecting...");
-            }
+    async function leaveSchoolHub() {
+      if (!confirm('Bạn có chắc muốn rời khỏi phòng SCHOOL UNIVERSE không?')) return;
+      if (isVoiceActive) await toggleVoiceChat();
+      await callAction('leave_hub');
+      realtimeUnsubs.forEach(u => { try { u(); } catch (_) {} });
+      realtimeUnsubs = [];
+      if (nightTickerInterval) { clearInterval(nightTickerInterval); nightTickerInterval = null; }
+      document.getElementById('main-hub-interface').classList.add('hidden');
+      document.getElementById('entrance-gate').classList.remove('hidden');
+    }
+
+    function startRealtimeSubscriptions() {
+      realtimeUnsubs.forEach(u => { try { u(); } catch (_) {} });
+      realtimeUnsubs = [];
+
+      // 1. Sảnh chờ, danh sách online, trạng thái Voice và Gartic Phone
+      realtimeUnsubs.push(
+        db.collection('hub').doc('meta').onSnapshot((snap) => {
+          if (!snap.exists) return;
+          const data = snap.data();
+          roomUsers = Array.isArray(data.users) ? data.users : [];
+          renderUsersList();
+          if (data.garticState) updateGarticUI(data.garticState);
+          if (localWerewolfState) updateWerewolfUI();
+          syncVoicePeersWithHub();
+        }, (err) => console.error('hub/meta listener error:', err))
+      );
+
+      // 2. Tin nhắn Văn Phòng Chat lưu vĩnh viễn trên Firestore
+      realtimeUnsubs.push(
+        db.collection('messages').orderBy('createdAt', 'desc').limit(100).onSnapshot((snap) => {
+          const msgs = snap.docs.map(d => d.data()).reverse();
+          renderWorkspaceMessages(msgs);
+        }, (err) => console.error('messages listener error:', err))
+      );
+
+      // 3. Trạng thái Ma Sói đã che (masked) riêng cho từng người chơi
+      realtimeUnsubs.push(
+        db.collection('werewolf_views').doc(getSecretToken()).onSnapshot((snap) => {
+          if (!snap.exists) return;
+          const data = snap.data();
+          if (data.myId) myId = data.myId;
+          localWerewolfState = data.gameState;
+
+          const modal = document.getElementById('cupid-reveal-modal');
+          if (modal && !localWerewolfState.cupidAwaitingConfirm) modal.remove();
+
+          if (
+            localWerewolfState &&
+            localWerewolfState.status === 'PLAYING' &&
+            localWerewolfState.phase === 'DAY' &&
+            localWerewolfState.morningDay &&
+            localWerewolfState.morningDay !== lastSeenMorningDay
+          ) {
+            lastSeenMorningDay = localWerewolfState.morningDay;
+            showMorningAnnouncement(localWerewolfState.morningDead);
+          }
+
+          handlePrivateEvents(data.userEvents || {}, data.globalEvent || {});
+          updateWerewolfUI();
+        }, (err) => console.error('werewolf_views listener error:', err))
+      );
+
+      // 4. Hộp thư tín hiệu WebRTC Voice Chat
+      realtimeUnsubs.push(
+        db.collection('voice_inbox').doc(getSecretToken()).onSnapshot((snap) => {
+          if (!snap.exists) return;
+          const signals = snap.data().signals || [];
+          signals.forEach(item => {
+            if (!item || !item.id || seenVoiceSignalIds.has(item.id)) return;
+            seenVoiceSignalIds.add(item.id);
+            handleIncomingVoiceSignal(item);
+          });
+        }, (err) => console.error('voice_inbox listener error:', err))
+      );
+
+      // 5. Lịch sử các trận Ma Sói đã hoàn thành
+      realtimeUnsubs.push(
+        db.collection('match_history').orderBy('endedAt', 'desc').limit(8).onSnapshot((snap) => {
+          const items = snap.docs.map(d => d.data());
+          renderMatchHistory(items);
+        }, (err) => console.error('match_history listener error:', err))
+      );
+    }
+
+    function renderMatchHistory(items) {
+      const box = document.getElementById('werewolf-history-list');
+      if (!box) return;
+      if (!items || items.length === 0) {
+        box.innerHTML = '<p class="text-slate-500 text-[11px]">Chưa có trận đấu nào được lưu.</p>';
+        return;
+      }
+      const winnerLabel = {
+        VILLAGERS: '🛡️ Dân Làng thắng',
+        WOLVES: '🐺 Ma Sói thắng',
+        CUPID: '💘 Phe Cupid thắng',
+        FOOL: '🤡 Thằng Ngốc thắng',
+        DRAW: '⚖️ Hòa (không ai sống sót)'
+      };
+      box.innerHTML = items.map(m => {
+        const dt = m.endedAt ? new Date(m.endedAt).toLocaleString('vi-VN') : '';
+        const playersStr = (m.players || []).map(p => `${p.avatar} ${p.name} (${ROLE_NAMES[p.finalRole || p.role] || p.role})`).join(' · ');
+        return `
+          <div class="bg-black/40 border border-moss rounded-xl p-2.5 space-y-1">
+            <div class="flex items-center justify-between">
+              <span class="font-bold text-slate-200">${winnerLabel[m.winner] || m.winner}</span>
+              <span class="text-[10px] text-slate-500">${dt}</span>
+            </div>
+            <p class="text-[10px] text-slate-400 leading-relaxed">${playersStr}</p>
+          </div>
+        `;
+      }).join('');
+    }
+
+    function handlePrivateEvents(userEvents, globalEvent) {
+      if (userEvents.kicked && !seenEventNonces.has(userEvents.kicked.nonce)) {
+        seenEventNonces.add(userEvents.kicked.nonce);
+        alert('Bạn đã bị Chủ phòng trục xuất khỏi phòng!');
+        window.location.reload();
+        return;
+      }
+      if (userEvents.cupidReveal && !seenEventNonces.has(userEvents.cupidReveal.nonce)) {
+        seenEventNonces.add(userEvents.cupidReveal.nonce);
+        if (localWerewolfState && localWerewolfState.cupidAwaitingConfirm) {
+          showCupidIdentitiesModal(userEvents.cupidReveal.members || []);
         }
-    });
+      }
+      if (userEvents.cloneInherited && !seenEventNonces.has(userEvents.cloneInherited.nonce)) {
+        seenEventNonces.add(userEvents.cloneInherited.nonce);
+        showCloneInheritedModal(userEvents.cloneInherited.role);
+      }
+      if (userEvents.cursedTransformed && !seenEventNonces.has(userEvents.cursedTransformed.nonce)) {
+        seenEventNonces.add(userEvents.cursedTransformed.nonce);
+        showCursedTransformedModal();
+      }
+      if (userEvents.wolfVoteTie && !seenEventNonces.has(userEvents.wolfVoteTie.nonce)) {
+        seenEventNonces.add(userEvents.wolfVoteTie.nonce);
+        showToast("Hòa phiếu! Lũ Sói chưa thống nhất được mục tiêu. Hãy bàn bạc lại và XÁC NHẬN lại!");
+      }
+      if (userEvents.wolfTimeoutForced && !seenEventNonces.has(userEvents.wolfTimeoutForced.nonce)) {
+        seenEventNonces.add(userEvents.wolfTimeoutForced.nonce);
+        showToast("Đã hết giờ! Hệ thống tự động chọn ngẫu nhiên nạn nhân cho bầy Sói.");
+      }
+      if (globalEvent.gameOver && !seenEventNonces.has(globalEvent.gameOver.nonce)) {
+        seenEventNonces.add(globalEvent.gameOver.nonce);
+        if (globalEvent.gameOver.winner === 'FOOL') {
+          const foolName = globalEvent.gameOver.foolName || 'Thằng Ngốc';
+          showToast(`🤡 Hahaha! Kẻ chán đời ${foolName} đã lừa được Làng và CHIẾN THẮNG!`);
+          alert(`🤡 KẾT THÚC GAME: Thằng Ngốc (${foolName}) đã lừa cả Làng và Thắng Cuộc!`);
+        }
+      }
+    }
+
+    function startNightCountdownLoop() {
+      if (nightTickerInterval) clearInterval(nightTickerInterval);
+      nightTickerInterval = setInterval(() => {
+        const timerEl = document.getElementById('night-countdown-timer');
+        if (!localWerewolfState || localWerewolfState.status !== 'PLAYING' || localWerewolfState.phase !== 'NIGHT') {
+          if (timerEl) timerEl.innerText = '';
+          return;
+        }
+        if (localWerewolfState.isNightPaused) {
+          if (timerEl) timerEl.innerText = '⏸ Đang tạm dừng';
+          return;
+        }
+        const deadline = localWerewolfState.nightDeadline || 0;
+        const remainSec = Math.max(0, Math.ceil((deadline - Date.now()) / 1000));
+        if (timerEl) {
+          const mins = Math.floor(remainSec / 60);
+          const secs = String(remainSec % 60).padStart(2, '0');
+          timerEl.innerText = `⏱ ${mins}:${secs}`;
+        }
+        if (deadline > 0 && Date.now() >= deadline) {
+          const triggerKey = `${localWerewolfState.id}_${localWerewolfState.day}_${localWerewolfState.currentNightStepIndex}`;
+          if (lastTimeoutTriggeredKey !== triggerKey) {
+            lastTimeoutTriggeredKey = triggerKey;
+            callAction('check_night_timeout', {
+              expectedDay: localWerewolfState.day,
+              expectedStepIndex: localWerewolfState.currentNightStepIndex
+            });
+          }
+        }
+      }, 1000);
+    }
 
     // RENDER AVATAR KHÔNG MẬT KHẨU Ở CỬA VÀO
     function initEntrance() {
+      const savedName = localStorage.getItem('school_universe_last_name') || localStorage.getItem('lighter_last_name');
+      const savedAvatar = localStorage.getItem('school_universe_last_avatar');
+      const nameInput = document.getElementById('entrance-name-input');
+      if (nameInput && !nameInput.value && savedName) nameInput.value = savedName;
+      if (savedAvatar && AVATAR_POOL.includes(savedAvatar) && !window._avatarUserPicked) {
+        selectedAvatar = savedAvatar;
+      }
+
       const container = document.getElementById('entrance-avatar-grid'); container.innerHTML = '';
       AVATAR_POOL.forEach(av => {
         const b = document.createElement('button');
         b.className = `w-8 h-8 rounded-xl text-sm flex items-center justify-center transition border ${selectedAvatar === av ? 'bg-[#FF4500]/20 border-[#FF4500]' : 'bg-black/30 border-transparent hover:bg-black/50'}`;
-        b.innerText = av; b.onclick = () => { selectedAvatar = av; initEntrance(); };
+        b.innerText = av; b.onclick = () => { window._avatarUserPicked = true; selectedAvatar = av; initEntrance(); };
         container.appendChild(b);
       });
     }
-
-    // ĐỒNG BỘ TRẠNG THÁI TỪ SERVER
-    socket.on('initial_state', (data) => {
-        myId = data.myId;
-        roomUsers = data.users;
-        renderUsersList();
-        renderWorkspaceMessages(data.messages);
-        updateGarticUI(data.garticState);
-        localWerewolfState = data.gameState;
-        updateWerewolfUI();
-    });
-
-    socket.on('update_users_list', (users) => { roomUsers = users; renderUsersList(); updateWerewolfUI(); });
-    socket.on('receive_chat_message', (msg) => { appendChatMessage(msg); });
-    socket.on('update_gartic_state', (state) => { updateGarticUI(state); });
-    socket.on('update_game_state', (state) => { 
-        localWerewolfState = state; 
-        const modal = document.getElementById('cupid-reveal-modal');
-        if (modal && !localWerewolfState.cupidAwaitingConfirm) modal.remove();
-        
-        if (localWerewolfState.status === 'PLAYING' && localWerewolfState.phase === 'DAY' && localWerewolfState.morningDay && localWerewolfState.morningDay !== lastSeenMorningDay) {
-            lastSeenMorningDay = localWerewolfState.morningDay;
-            showMorningAnnouncement(localWerewolfState.morningDead);
-        }
-        
-        updateWerewolfUI(); 
-    });
 
     function showMorningAnnouncement(deadIds) {
         let msgHtml = "";
@@ -347,35 +564,7 @@
         document.body.appendChild(modal);
     }
 
-    socket.on('update_wolf_temp_votes', (votes) => {
-        if (!localWerewolfState) return;
-        localWerewolfState.wolfTempVotes = votes;
-        const container = document.getElementById('wolf-realtime-votes');
-        if (container) {
-            let html = '';
-            Object.entries(votes).forEach(([voterId, tId]) => {
-                const voter = localWerewolfState.players.find(p => p.id === voterId);
-                const target = localWerewolfState.players.find(p => p.id === tId);
-                if (voter && target) {
-                    html += `<span class="text-[10px] bg-red-900 px-2 py-1 rounded border border-red-500 m-1 inline-block">${voter.avatar} ➡️ ${target.name}</span>`;
-                }
-            });
-            container.innerHTML = html || '<span class="text-[10px] text-slate-500">Chưa có ai chọn...</span>';
-        }
-    });
-
-    socket.on('receive_wolf_chat', (msg) => {
-        if (!localWerewolfState) return;
-        if (!localWerewolfState.wolfChatHistory) localWerewolfState.wolfChatHistory = [];
-        localWerewolfState.wolfChatHistory.push(msg);
-        const box = document.getElementById('wolf-chat-messages');
-        if (box) {
-            box.innerHTML += `<div class="text-left mb-1"><span class="text-xs text-red-300 font-bold">${msg.senderName}:</span> <span class="text-xs text-slate-200">${msg.text}</span></div>`;
-            box.scrollTop = box.scrollHeight;
-        }
-    });
-
-    socket.on('clone_inherited', ({ role }) => {
+    function showCloneInheritedModal(role) {
         const roleDetail = ROLE_DETAILS[role] || {};
         const roleName = ROLE_NAMES[role] || role;
         const existing = document.getElementById('clone-reveal-modal');
@@ -393,18 +582,9 @@
             </div>
         `;
         document.body.insertAdjacentHTML('beforeend', modalHtml);
-    });
+    }
 
-    socket.on('wolf_vote_tie', () => {
-        showToast("Hòa phiếu! Lũ Sói chưa thống nhất được mục tiêu. Hãy bàn bạc lại và XÁC NHẬN lại!", 5000);
-        updateWerewolfUI();
-    });
-
-    socket.on('wolf_timeout_forced', () => {
-        showToast("Đã hết 5 phút! Hệ thống tự động chọn ngẫu nhiên nạn nhân cho bầy Sói.", 5000);
-    });
-
-    socket.on('cursed_transformed', () => {
+    function showCursedTransformedModal() {
         const modalHtml = `
             <div id="cursed-transform-modal" class="fixed inset-0 z-50 flex items-center justify-center bg-black/90 backdrop-blur-md animate-in zoom-in duration-500">
                 <div class="bg-red-950/50 border-2 border-red-600 p-8 rounded-3xl max-w-md w-full mx-4 text-center space-y-6 shadow-[0_0_100px_rgba(220,38,38,0.5)]">
@@ -419,7 +599,7 @@
         const existingCursedModal = document.getElementById('cursed-transform-modal');
         if (existingCursedModal) existingCursedModal.remove();
         document.body.insertAdjacentHTML('beforeend', modalHtml);
-    });
+    }
 
     function renderUsersList() {
       const container = document.getElementById('room-users-list'); container.innerHTML = '';
@@ -461,8 +641,9 @@
         e.preventDefault(); 
         const input = document.getElementById('chat-msg-input'); 
         if(input && input.value.trim()) {
-            socket.emit('send_chat_message', input.value.trim()); 
+            const text = input.value.trim();
             input.value = ''; 
+            callAction('send_chat_message', { text });
         }
     }
     
@@ -470,8 +651,9 @@
         e.preventDefault();
         const input = document.getElementById('day-chat-input');
         if(input && input.value.trim()) {
-            socket.emit('send_chat_message', input.value.trim());
+            const text = input.value.trim();
             input.value = '';
+            callAction('send_chat_message', { text });
         }
     }
 
@@ -632,8 +814,9 @@
 
     function changeCupidMode(mode) {
       if (!localWerewolfState) return;
-      localWerewolfState.cupidMode = parseInt(mode);
-      socket.emit('sync_game_state', localWerewolfState);
+      const cupidMode = parseInt(mode, 10);
+      localWerewolfState.cupidMode = cupidMode;
+      callAction('update_werewolf_settings', { cupidMode });
       updateWerewolfUI();
     }
 
@@ -647,25 +830,29 @@
           return;
       }
       
-      localWerewolfState.selectedRoles[role] = Math.max(0, count + delta);
-      socket.emit('sync_game_state', localWerewolfState);
+      const nextCount = Math.max(0, count + delta);
+      localWerewolfState.selectedRoles[role] = nextCount;
+      callAction('update_werewolf_settings', { selectedRoles: { [role]: nextCount } });
       updateWerewolfUI();
     }
 
-    function joinWerewolfLobby() { 
-      const me = roomUsers.find(u => u.id === myId);
-      if (!me) return;
+    async function joinWerewolfLobby() { 
+      if (!localWerewolfState) return;
       if (localWerewolfState.players.find(p => p.id === myId)) {
         showToast("Bạn đã ở trong phòng chờ rồi!");
         return;
       }
-      localWerewolfState.players.push(me);
-      socket.emit('sync_game_state', localWerewolfState);
-      updateWerewolfUI();
-      showToast("Đã ghi danh sảnh chờ Ma Sói!"); 
+      const res = await callAction('join_werewolf_lobby');
+      if (res && res.ok) showToast("Đã ghi danh sảnh chờ Ma Sói!"); 
+    }
+
+    async function leaveWerewolfLobby() {
+      if (!localWerewolfState) return;
+      const res = await callAction('leave_werewolf_lobby');
+      if (res && res.ok) showToast("Đã rời khỏi danh sách chờ Ma Sói.");
     }
     
-    function startWerewolfMatch() { 
+    async function startWerewolfMatch() { 
       const amIHost = roomUsers.find(u => u.id === myId)?.isHost;
       if (!amIHost) { showToast("Chỉ Chủ phòng mới có thể bắt đầu!"); return; }
       
@@ -683,77 +870,13 @@
       }
 
       lastSeenMorningDay = 0;
-      
-      // SHUFFLE ROLES
-      let rolesDeck = [];
-      Object.entries(localWerewolfState.selectedRoles).forEach(([role, count]) => {
-        if (role === 'CUPID' && localWerewolfState.cupidMode === 2) {
-            for (let i = 0; i < count; i++) rolesDeck.push('VILLAGER');
-        } else {
-            for (let i = 0; i < count; i++) rolesDeck.push(role);
-        }
-      });
-      for (let i = rolesDeck.length - 1; i > 0; i--) {
-        const j = Math.floor(Math.random() * (i + 1));
-        [rolesDeck[i], rolesDeck[j]] = [rolesDeck[j], rolesDeck[i]];
-      }
-      
-      // ASSIGN ROLES
-      localWerewolfState.players.forEach((p, idx) => {
-        const role = rolesDeck[idx];
-        p.role = role;
-        p.status = 'Alive';
-        p.originFaction = ['WEREWOLF', 'HIDDEN_WOLF', 'ENRAGED_WOLF', 'SHAMAN_WOLF', 'ALPHA_WOLF'].includes(role) ? 'Ma_Sói' : 'Dân_Làng';
-        p.isTargetedByWolves = false;
-        p.isProtected = false;
-        p.isSaved = false;
-        p.isPoisoned = false;
-        p.isLocked = false;
-        p.isHunted = false;
-        p.isShamanRuined = false;
-        p.isCupid = false;
-        delete p.cloneInheritedRole;
-        delete p.cloneInheritedFaction;
-        delete p.transformedRole;
-        delete p.abilityRemoved;
-        delete p.foolRevealed;
-        delete p.isWolfForSeer;
-      });
-      
-      if (localWerewolfState.cupidMode === 2 && localWerewolfState.selectedRoles['CUPID'] > 0) {
-          const alive = localWerewolfState.players;
-          const randomIdx = Math.floor(Math.random() * alive.length);
-          alive[randomIdx].isCupid = true;
-      }
-      
-      // RESET TOÀN BỘ BIẾN GAME ĐỂ KHÔNG BỊ TRÙNG VỚI VÁN TRƯỚC
-      localWerewolfState.day = 1;
-      localWerewolfState.phase = 'PRE_GAME';
-      localWerewolfState.nightActiveSteps = [];
-      localWerewolfState.currentNightStepIndex = 0;
-      localWerewolfState.dayVotes = {};
-      localWerewolfState.trialVotes = {};
-      localWerewolfState.trialTarget = null;
-      localWerewolfState.nightActions = {};
-      localWerewolfState.witchState = { usedSave: false, usedPoison: false };
-      localWerewolfState.cupidLinks = [];
-      localWerewolfState.cupidAwaitingConfirm = false;
-      localWerewolfState.hunterTargets = {};
-      localWerewolfState.cloneTarget = null;
-      localWerewolfState.cursedOneBitten = false;
-      localWerewolfState.moonLadyLastTarget = null;
-      localWerewolfState.bodyguardLastTarget = null;
-      localWerewolfState.morningDead = [];
-      localWerewolfState.morningDay = 0;
-      localWerewolfState.wolfChatHistory = [];
-      localWerewolfState.wolfTempVotes = {};
-      localWerewolfState.enragedWolfStacks = 0;
-      delete localWerewolfState.winner;
-      
-      localWerewolfState.status = 'PLAYING';
-      socket.emit('sync_game_state', localWerewolfState);
-      updateWerewolfUI();
-      showToast("Khởi chạy trận đấu thành công!"); 
+      lastNightRenderKey = '';
+      seerLockedTurn = { key: '', targetId: '', html: '' };
+      detectiveLockedTurn = { key: '', t1: '', t2: '', html: '' };
+
+      // Chia bài 100% ở Server (Vercel API + Firestore) để chống lộ bài kể cả với Chủ phòng
+      const res = await callAction('start_werewolf_match');
+      if (res && res.ok) showToast("Khởi chạy trận đấu thành công!"); 
     }
 
     function renderWerewolfDashboard() {
@@ -807,15 +930,42 @@
         });
         progressHtml += '</div>';
         
+        // Nếu vẫn đang ở cùng 1 lượt đêm Sói thì chỉ cập nhật chat & phiếu nháp để không làm mất chữ đang gõ
+        const currentStep = localWerewolfState.nightActiveSteps[localWerewolfState.currentNightStepIndex];
+        const nightKey = `${localWerewolfState.id}_${localWerewolfState.day}_${localWerewolfState.currentNightStepIndex}_${localWerewolfState.isNightPaused}_${(localWerewolfState.nightSubmissions || []).includes(myId)}`;
+        if (currentStep === 'WEREWOLF_TEAM' && nightKey === lastNightRenderKey && document.getElementById('wolf-chat-messages')) {
+            const votesBox = document.getElementById('wolf-realtime-votes');
+            if (votesBox) {
+                let vHtml = '';
+                Object.entries(localWerewolfState.wolfTempVotes || {}).forEach(([voterId, tId]) => {
+                    const voter = localWerewolfState.players.find(p => p.id === voterId);
+                    const target = localWerewolfState.players.find(p => p.id === tId);
+                    if (voter && target) vHtml += `<span class="text-[10px] bg-red-900 px-2 py-1 rounded border border-red-500 m-1 inline-block">${voter.avatar} ➡️ ${target.name}</span>`;
+                });
+                votesBox.innerHTML = vHtml || '<span class="text-[10px] text-slate-500">Chưa có ai chọn...</span>';
+            }
+            const chatBox = document.getElementById('wolf-chat-messages');
+            if (chatBox) {
+                chatBox.innerHTML = (localWerewolfState.wolfChatHistory || []).map(m =>
+                    `<div class="text-left mb-1"><span class="text-xs text-red-300 font-bold">${m.senderName}:</span> <span class="text-xs text-slate-200">${m.text}</span></div>`
+                ).join('');
+                chatBox.scrollTop = chatBox.scrollHeight;
+            }
+            return;
+        }
+        lastNightRenderKey = nightKey;
+
         html += `
           <div class="bg-black/40 border border-purple-900/50 p-4 rounded-2xl mb-6 shadow-lg">
-            <h4 class="text-[10px] font-bold text-purple-400 uppercase tracking-widest text-center mb-3">Tiến trình Màn Đêm</h4>
+            <div class="flex items-center justify-between mb-3">
+              <h4 class="text-[10px] font-bold text-purple-400 uppercase tracking-widest">Tiến trình Màn Đêm (Đêm ${localWerewolfState.day})</h4>
+              <span id="night-countdown-timer" class="text-[11px] font-mono font-bold text-amber-300"></span>
+            </div>
             ${progressHtml}
           </div>
         `;
         // --------------------------
 
-        const currentStep = localWerewolfState.nightActiveSteps[localWerewolfState.currentNightStepIndex];
         const baseRole = mePlayer?.cloneInheritedRole || mePlayer?.role;
         const effRoleWithTransform = mePlayer?.transformedRole || baseRole;
         const isMyTurn = mePlayer && mePlayer.status === 'Alive' && !mePlayer.isLocked && (
@@ -1052,11 +1202,12 @@
     }
     
     function startNight() {
-      socket.emit('start_night');
+      lastNightRenderKey = '';
+      callAction('start_night');
     }
     
     function confirmNightTurn() {
-      socket.emit('finish_night_step');
+      callAction('finish_night_step');
     }
     
     function getNightActionHTML(currentStep, mePlayer) {
@@ -1309,7 +1460,7 @@
             if (targetSelect) actionData.target = targetSelect.value || null;
         }
         
-        socket.emit('submit_night_action', { role, actionData, playerId: myId });
+        callAction('submit_night_action', { role, actionData });
         
         if (role === 'CUPID') {
             document.getElementById('werewolf-gameplay-zone').innerHTML = '<div class="text-center p-6 bg-black/40 rounded-3xl mt-6 border border-pink-900 shadow-[0_0_30px_rgba(236,72,153,0.3)]"><p class="text-pink-400 font-bold animate-pulse text-lg">Đang truyền tải liên kết sinh mệnh...</p></div>';
@@ -1320,18 +1471,19 @@
 
     function sendWolfTempVote(targetId) {
         if (!targetId) return;
-        socket.emit('send_wolf_temp_vote', targetId);
+        callAction('send_wolf_temp_vote', { targetId });
     }
 
     function submitWolfChat(e) {
         e.preventDefault();
         const input = document.getElementById('wolf-chat-input');
         if (!input.value.trim()) return;
-        socket.emit('send_wolf_chat', input.value.trim());
+        const text = input.value.trim();
         input.value = '';
+        callAction('send_wolf_chat', { text });
     }
     
-    socket.on('show_cupid_identities', (members) => {
+    function showCupidIdentitiesModal(members) {
         let membersHtml = members.map(m => `
             <div class="bg-black/50 p-4 rounded-xl border border-pink-900/50 flex flex-col items-center gap-2">
                 <span class="text-4xl">${ROLE_DETAILS[m.role]?.icon || '❓'}</span>
@@ -1358,17 +1510,24 @@
         const existingCupidModal = document.getElementById('cupid-reveal-modal');
         if (existingCupidModal) existingCupidModal.remove();
         document.body.insertAdjacentHTML('beforeend', modalHtml);
-    });
+    }
 
     function confirmCupidDone() {
         const modal = document.getElementById('cupid-reveal-modal');
         if (modal) modal.remove();
-        socket.emit('finish_night_step');
+        callAction('finish_night_step');
     }
 
     function checkSeerResult(targetId) {
         const resultDiv = document.getElementById('seerResult');
         if (!resultDiv) return;
+        const turnKey = `${localWerewolfState.id}_${localWerewolfState.day}_${localWerewolfState.currentNightStepIndex}`;
+        if (seerLockedTurn.key === turnKey && seerLockedTurn.targetId) {
+            document.getElementById('nightTarget').value = seerLockedTurn.targetId;
+            document.getElementById('nightTarget').disabled = true;
+            resultDiv.innerHTML = seerLockedTurn.html;
+            return;
+        }
         if (!targetId) {
             resultDiv.innerHTML = '';
             return;
@@ -1376,7 +1535,9 @@
         const target = localWerewolfState.players.find(p => p.id === targetId);
         if (target) {
             let isWolf = target.isWolfForSeer;
-            resultDiv.innerHTML = isWolf ? '<span class="text-red-500">🐺 LÀ MA SÓI!</span>' : '<span class="text-emerald-500">👍 NGƯỜI LƯƠNG THIỆN</span>';
+            const resHtml = isWolf ? '<span class="text-red-500">🐺 LÀ MA SÓI!</span>' : '<span class="text-emerald-500">👍 NGƯỜI LƯƠNG THIỆN</span>';
+            resultDiv.innerHTML = resHtml;
+            seerLockedTurn = { key: turnKey, targetId, html: resHtml };
             // Khóa cứng dropdown không cho phép đổi mục tiêu, chống cheat soi cả làng
             document.getElementById('nightTarget').disabled = true;
         }
@@ -1387,6 +1548,15 @@
         const t2 = document.getElementById('detectiveTarget2').value;
         const resultDiv = document.getElementById('detectiveResult');
         if (!resultDiv) return;
+        const turnKey = `${localWerewolfState.id}_${localWerewolfState.day}_${localWerewolfState.currentNightStepIndex}`;
+        if (detectiveLockedTurn.key === turnKey && detectiveLockedTurn.t1) {
+            document.getElementById('detectiveTarget1').value = detectiveLockedTurn.t1;
+            document.getElementById('detectiveTarget2').value = detectiveLockedTurn.t2;
+            document.getElementById('detectiveTarget1').disabled = true;
+            document.getElementById('detectiveTarget2').disabled = true;
+            resultDiv.innerHTML = detectiveLockedTurn.html;
+            return;
+        }
         if (!t1 || !t2 || t1 === t2) {
             resultDiv.innerHTML = '';
             return;
@@ -1395,7 +1565,9 @@
         const p2 = localWerewolfState.players.find(p => p.id === t2);
         if (p1 && p2) {
             const sameTeam = p1.isWolfForSeer === p2.isWolfForSeer;
-            resultDiv.innerHTML = sameTeam ? '<span class="text-emerald-500">🤝 CÙNG PHE</span>' : '<span class="text-red-500">⚔️ KHÁC PHE</span>';
+            const resHtml = sameTeam ? '<span class="text-emerald-500">🤝 CÙNG PHE</span>' : '<span class="text-red-500">⚔️ KHÁC PHE</span>';
+            resultDiv.innerHTML = resHtml;
+            detectiveLockedTurn = { key: turnKey, t1, t2, html: resHtml };
             document.getElementById('detectiveTarget1').disabled = true;
             document.getElementById('detectiveTarget2').disabled = true;
         }
@@ -1403,16 +1575,16 @@
 
     // UI Event Handlers
     function togglePlayerStatus(playerId) {
-        socket.emit('host_kill_player', playerId);
+        callAction('host_kill_player', { playerId });
     }
     
     function startDayVoting() {
-      socket.emit('start_day_voting');
+      callAction('start_day_voting');
     }
     
     function submitDayVote(event, targetId) {
       event.stopPropagation(); // Ngăn sự kiện click của Host
-      socket.emit('submit_werewolf_vote', { voterId: myId, targetId });
+      callAction('submit_werewolf_vote', { targetId });
     }
     
     function lockVotes() {
@@ -1427,7 +1599,7 @@
       }
 
       // Gửi yêu cầu lên server tự chốt (không ghi đè state đã bị mask!)
-      socket.emit('host_lock_day_votes');
+      callAction('host_lock_day_votes');
     }
     
     function submitTrial(vote) {
@@ -1436,15 +1608,15 @@
           alert("Bạn đã bị lột mặt nạ Thằng Ngốc nên không còn quyền bỏ phiếu nữa!");
           return;
       }
-      socket.emit('submit_werewolf_trial', { voterId: myId, vote });
+      callAction('submit_werewolf_trial', { vote });
     }
     
     function forceSkipNightStep() {
-      socket.emit('force_skip_night_step');
+      callAction('force_skip_night_step');
     }
     
     function toggleNightPause() {
-      socket.emit('toggle_night_pause');
+      callAction('toggle_night_pause');
     }
     
     function finalizeTrial() {
@@ -1458,13 +1630,13 @@
       }
 
       // Gửi yêu cầu lên server tự xử lý phán quyết (chống ghi đè state đã mask)
-      socket.emit('host_finalize_trial');
+      callAction('host_finalize_trial');
     }
 
     function kickPlayer(event, playerId) {
         event.stopPropagation();
         if (confirm("Bạn có chắc chắn muốn ĐUỔI người chơi này khỏi phòng không? (Hành động này không thể hoàn tác)")) {
-            socket.emit('kick_player', { playerId });
+            callAction('kick_player', { playerId });
         }
     }
 
@@ -1531,7 +1703,7 @@
     }
 
     function endWerewolfMatch() {
-      socket.emit('end_werewolf_game');
+      callAction('end_werewolf_game');
     }
 
     // --- LOGIC GARTIC PHONE CHUYÊN SÂU ---
@@ -1544,7 +1716,7 @@
     function startGarticGame() {
       const state = { status: 'PLAYING', mode: garticMode, currentRound: 1, totalRounds: roomUsers.length, books: {} };
       roomUsers.forEach(u => { state.books[u.id] = []; });
-      socket.emit('sync_gartic_state', state);
+      callAction('sync_gartic_state', { garticState: state });
     }
 
     function updateGarticUI(state) {
@@ -1600,19 +1772,20 @@
       const bookOwnerIndex = (myIndex - (localGarticState.currentRound - 1) + roomUsers.length) % roomUsers.length;
       const bookOwnerId = roomUsers[bookOwnerIndex].id;
 
-      socket.emit('submit_gartic_turn', { bookOwnerId: bookOwnerId, type: type, value: value });
+      callAction('submit_gartic_turn', { bookOwnerId: bookOwnerId, type: type, value: value });
       showToast("Nộp bài thành công! Đang chờ phòng...");
 
       // Tự động đẩy vòng nếu là Host và mọi người đã nộp đủ bài
       const amIHost = roomUsers.find(u => u.id === myId)?.isHost;
       if (amIHost) {
         setTimeout(() => {
-          if (localGarticState.currentRound < localGarticState.totalRounds) {
-            localGarticState.currentRound += 1;
-            socket.emit('sync_gartic_state', localGarticState);
+          const nextState = JSON.parse(JSON.stringify(localGarticState));
+          if (nextState.currentRound < nextState.totalRounds) {
+            nextState.currentRound += 1;
+            callAction('sync_gartic_state', { garticState: nextState });
           } else {
-            localGarticState.status = 'REVIEW';
-            socket.emit('sync_gartic_state', localGarticState);
+            nextState.status = 'REVIEW';
+            callAction('sync_gartic_state', { garticState: nextState });
           }
         }, 2000);
       }
@@ -1635,7 +1808,9 @@
     }
 
     function resetGarticToSetup() {
-      socket.emit('sync_gartic_state', { status: 'WAITING', mode: 'NORMAL', currentRound: 1, totalRounds: 0, books: {} });
+      callAction('sync_gartic_state', {
+        garticState: { status: 'WAITING', mode: 'NORMAL', currentRound: 1, totalRounds: 0, books: {} }
+      });
     }
 
     // --- LOGIC BẢNG VẼ CANVAS (WHITEBOARD CHUYÊN NGHIỆP) ---
@@ -1656,11 +1831,7 @@
     }
     function clearCanvas() { ctx.clearRect(0, 0, canvas.width, canvas.height); }
 
-    socket.on('game_over_fool_win', (foolName) => {
-        showToast(`🤡 Hahaha! Bọn ngu ngốc! Kẻ chán đời ${foolName} đã lừa được Làng và CHIẾN THẮNG!`);
-        alert(`🤡 KẾT THÚC GAME: Thằng Ngốc (${foolName}) đã lừa cả Làng và Thắng Cuộc!`);
-    });
-    // --- WEBRTC VOICE CHAT ---
+    // --- WEBRTC VOICE CHAT (SIGNALING QUA FIRESTORE) ---
     let isVoiceActive = false;
     let localAudioStream = null;
     const peerConnections = {};
@@ -1689,7 +1860,7 @@
             }
             document.getElementById('audio-elements-container').innerHTML = '';
             
-            socket.emit('leave_voice_channel');
+            callAction('leave_voice_channel');
             showToast("Đã tắt Voice Chat.");
         } else {
             try {
@@ -1702,9 +1873,10 @@
                 btn.classList.add('text-white');
                 lucide.createIcons();
                 
-                syncVoiceStateWithGame(); // Cập nhật trạng thái màu sắc theo game ngay khi bật
+                syncVoiceStateWithGame();
 
-                socket.emit('join_voice_channel');
+                await callAction('join_voice_channel');
+                syncVoicePeersWithHub();
                 showToast("Đã tham gia Voice Chat chung.");
             } catch (err) {
                 console.error("Lỗi truy cập Micro:", err);
@@ -1720,9 +1892,9 @@
         if (localWerewolfState && localWerewolfState.status === 'PLAYING') {
             const me = localWerewolfState.players.find(p => p.id === myId);
             if (me && me.status !== 'Alive') {
-                shouldMute = true; // Chết là cấm nói
+                shouldMute = true;
             } else if (localWerewolfState.phase === 'NIGHT') {
-                shouldMute = true; // Đêm là cấm nói
+                shouldMute = true;
             }
         }
         
@@ -1743,6 +1915,25 @@
         }
     }
 
+    function syncVoicePeersWithHub() {
+        if (!isVoiceActive) return;
+        const voicePeerIds = new Set(roomUsers.filter(u => u.inVoice && u.id !== myId).map(u => u.id));
+        // Người có id nhỏ hơn theo từ điển sẽ chủ động tạo offer để tránh glare
+        voicePeerIds.forEach(peerId => {
+            if (!peerConnections[peerId] && myId && myId < peerId) {
+                createPeerConnection(peerId, true);
+            }
+        });
+        Object.keys(peerConnections).forEach(peerId => {
+            if (!voicePeerIds.has(peerId)) {
+                peerConnections[peerId].close();
+                delete peerConnections[peerId];
+                const audioEl = document.getElementById(`audio-${peerId}`);
+                if (audioEl) audioEl.remove();
+            }
+        });
+    }
+
     function createPeerConnection(targetId, isInitiator) {
         if (peerConnections[targetId]) return peerConnections[targetId];
 
@@ -1757,9 +1948,9 @@
 
         pc.onicecandidate = (event) => {
             if (event.candidate) {
-                socket.emit('voice_signal', {
+                callAction('voice_signal', {
                     targetId: targetId,
-                    signal: { candidate: event.candidate }
+                    signal: { candidate: event.candidate.toJSON ? event.candidate.toJSON() : event.candidate }
                 });
             }
         };
@@ -1780,9 +1971,9 @@
             pc.createOffer().then(offer => {
                 return pc.setLocalDescription(offer);
             }).then(() => {
-                socket.emit('voice_signal', {
+                callAction('voice_signal', {
                     targetId: targetId,
-                    signal: { offer: pc.localDescription }
+                    signal: { offer: { type: pc.localDescription.type, sdp: pc.localDescription.sdp } }
                 });
             }).catch(console.error);
         }
@@ -1790,47 +1981,36 @@
         return pc;
     }
 
-    socket.on('user_joined_voice', (userId) => {
-        if (!isVoiceActive) return;
-        createPeerConnection(userId, true);
-    });
-
-    socket.on('voice_signal', async (data) => {
+    async function handleIncomingVoiceSignal(data) {
         if (!isVoiceActive) return;
 
         const senderId = data.senderId;
         const signal = data.signal;
-        
         let pc = peerConnections[senderId];
-        
-        if (signal.offer) {
-            if (!pc) pc = createPeerConnection(senderId, false);
-            await pc.setRemoteDescription(new RTCSessionDescription(signal.offer));
-            const answer = await pc.createAnswer();
-            await pc.setLocalDescription(answer);
-            socket.emit('voice_signal', {
-                targetId: senderId,
-                signal: { answer: pc.localDescription }
-            });
-        } else if (signal.answer) {
-            if (pc) {
-                await pc.setRemoteDescription(new RTCSessionDescription(signal.answer));
-            }
-        } else if (signal.candidate) {
-            if (pc) {
-                await pc.addIceCandidate(new RTCIceCandidate(signal.candidate));
-            }
-        }
-    });
 
-    socket.on('user_left_voice', (userId) => {
-        if (peerConnections[userId]) {
-            peerConnections[userId].close();
-            delete peerConnections[userId];
+        try {
+            if (signal.offer) {
+                if (!pc) pc = createPeerConnection(senderId, false);
+                await pc.setRemoteDescription(new RTCSessionDescription(signal.offer));
+                const answer = await pc.createAnswer();
+                await pc.setLocalDescription(answer);
+                callAction('voice_signal', {
+                    targetId: senderId,
+                    signal: { answer: { type: pc.localDescription.type, sdp: pc.localDescription.sdp } }
+                });
+            } else if (signal.answer) {
+                if (pc) {
+                    await pc.setRemoteDescription(new RTCSessionDescription(signal.answer));
+                }
+            } else if (signal.candidate) {
+                if (pc) {
+                    await pc.addIceCandidate(new RTCIceCandidate(signal.candidate));
+                }
+            }
+        } catch (err) {
+            console.error('Voice signal error:', err);
         }
-        const audioEl = document.getElementById(`audio-${userId}`);
-        if (audioEl) audioEl.remove();
-    });
+    }
 
     initEntrance();
     lucide.createIcons();

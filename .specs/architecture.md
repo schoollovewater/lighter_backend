@@ -3,20 +3,22 @@
 Tài liệu này mô tả bức tranh tổng thể về dự án **SCHOOL UNIVERSE**, làm cơ sở để tiếp tục phát triển các tính năng (Spec) tiếp theo một cách an toàn mà không phá vỡ logic cũ.
 
 ## 1. Cấu trúc Thư mục và File
-- `server.js`: Trái tim của ứng dụng Backend. Chứa logic Express.js cho static files (bao gồm trang con `/gm`), và Socket.IO cho toàn bộ real-time logic (Lobby, Chat, Werewolf Engine, Gartic Phone).
+- `api/action.js`: Endpoint Serverless duy nhất trên Vercel (`POST /api/action` & `GET /api/action`) xử lý toàn bộ hành động game, chống gian lận và ghi dữ liệu vào Firebase Firestore.
+- `lib/firebaseAdmin.js`: Khởi tạo Firebase Admin SDK (đọc từ biến môi trường `FIREBASE_SERVICE_ACCOUNT_JSON` trên Vercel hoặc file `*firebase-adminsdk*.json` khi chạy local).
+- `lib/gameEngine.js`: Động cơ Ma Sói 17 roles + Sảnh chờ + Gartic Phone + Voice Signaling, chạy bằng Firestore Transaction và xuất bản `werewolf_views/{secretToken}` đã che vai trò cho từng người chơi.
+- `server.js`: Express server dùng cho chạy local (`npm start`), mount cùng handler `api/action.js` như Vercel để đảm bảo môi trường dev và production đồng nhất 100%.
+- `firestore.rules`: Bộ Security Rules chặn client đọc `werewolf_server/state` và cấm liệt kê `werewolf_views`.
 - `public/`: Thư mục chứa tài nguyên tĩnh của Frontend.
-  - `public/index.html`: Giao diện chính (Online Hub, Đấu Trường Ma Sói Online, Gartic Phone), viết bằng HTML thuần, TailwindCSS (CDN) và tương tác với DOM qua JavaScript.
+  - `public/index.html`: Giao diện chính (Online Hub, Đấu Trường Ma Sói Online, Gartic Phone, Lịch Sử Đấu), lắng nghe real-time từ Firebase Firestore (`onSnapshot`) và gửi hành động tới `/api/action`.
   - `public/gm/`: Bản build tĩnh của ứng dụng **Trợ Lý Quản Trò Ma Sói Offline** (truy cập qua `/gm`).
 - `gm-assistant/`: Mã nguồn React + Vite của trang con Trợ Lý Quản Trò Offline (build ra `public/gm/` bằng `npm run build:gm`).
-- `GAME_FLOW.md`: Mô tả luật chơi, luồng game chi tiết.
-- `package.json`: Chứa metadata dự án và các dependencies (express, socket.io, cors).
-- `vercel.json`: Cấu hình deploy lên nền tảng Vercel.
-- `.specify/`: Thư mục cấu hình cho Spec Kit (chứa constitution và các config liên quan).
 
 ## 2. Kiến trúc Tổng quan (High-Level Architecture)
-- **Monolithic Real-time Server:** Dự án sử dụng mô hình Server-Client thông qua WebSocket (Socket.IO).
-- **In-memory State:** Dữ liệu (globalUsers, serverGameState, garticState) được giữ trực tiếp trên RAM của tiến trình Node.js thay vì dùng Database rời (MongoDB/Redis) để ưu tiên tốc độ cao.
-- **Vanilla Frontend:** Không sử dụng framework Frontend (React/Vue). UI được render/update hoàn toàn qua Vanilla JS event listeners.
+- **100% Serverless Real-time (Vercel + Firebase Firestore):**
+  - Vercel host tĩnh toàn bộ Frontend (`/`, `/gm/`) và chạy Serverless Function `/api/action`.
+  - Firebase Firestore lưu trữ vĩnh viễn (Chat, Lịch sử trận đấu, Trạng thái phòng) và đẩy cập nhật real-time (`onSnapshot`) về trình duyệt với độ trễ thấp, không bị ngủ như Render Free.
+- **Anti-Meta Gaming Tuyệt Đối:** State gốc nằm ở `werewolf_server/state` (Rules chặn 100% client). Mỗi người chơi giữ 1 `secretToken` bí mật riêng để chỉ đọc đúng `werewolf_views/{secretToken}` đã mask cho chính mình.
+- **Vanilla Frontend:** Không sử dụng framework Frontend ở bản Online (`public/index.html`). UI cập nhật trực tiếp qua Vanilla JS + TailwindCSS.
 
 ## 3. Tình trạng các Module (Modules Status)
 

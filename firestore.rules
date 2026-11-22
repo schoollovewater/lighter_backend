@@ -1,0 +1,31 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Khóa tuyệt đối state gốc chứa vai trò thật (chỉ server Vercel Admin SDK đọc/ghi)
+    match /werewolf_server/{doc} {
+      allow read, write: if false;
+    }
+    // Mỗi người chỉ đọc đúng view/tín hiệu của mình theo token bí mật, cấm liệt kê
+    match /werewolf_views/{token} {
+      allow get: if true;
+      allow list, write: if false;
+    }
+    match /voice_inbox/{token} {
+      allow get: if true;
+      allow list, write: if false;
+    }
+    // Dữ liệu công khai (sảnh, chat, lịch sử ván) chỉ đọc; mọi thao tác ghi qua API
+    match /hub/{doc} {
+      allow read: if true;
+      allow write: if false;
+    }
+    match /messages/{msgId} {
+      allow read: if true;
+      allow write: if false;
+    }
+    match /match_history/{matchId} {
+      allow read: if true;
+      allow write: if false;
+    }
+  }
+}

@@ -15,7 +15,7 @@
       "destination": "/public/gm/index.html"
     },
     {
-      "source": "/(.*)",
+      "source": "/((?!api/).*)",
       "destination": "/public/$1"
     }
   ]

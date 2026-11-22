@@ -3,10 +3,10 @@
 Đây là tài liệu quy chuẩn kỹ thuật dành cho dự án **SCHOOL UNIVERSE**, áp dụng cho mọi đoạn code được viết ra để đảm bảo tính đồng nhất, bảo mật và hiệu suất.
 
 ## 1. Công nghệ sử dụng (Tech Stack)
-- **Backend:** Node.js, Express, Socket.IO.
-- **Frontend:** Vanilla HTML/JS/CSS, sử dụng TailwindCSS (qua CDN) để styling và Lucide Icons.
-- **Lưu trữ & State Management:** In-memory Database (biến cục bộ trên RAM Node.js).
-- **Deployment (Dự kiến):** Vercel (theo `vercel.json`).
+- **Backend / API:** Node.js, Vercel Serverless Functions (`api/action.js`), Express (local dev `server.js`), Firebase Admin SDK (`firebase-admin`).
+- **Frontend:** Vanilla HTML/JS/CSS (`public/index.html`) sử dụng TailwindCSS (CDN), Lucide Icons và Firebase Firestore JS SDK (compat CDN) cho real-time `onSnapshot`; trang con `/gm/` dùng React + Vite (`gm-assistant/` → `public/gm/`).
+- **Lưu trữ & State Management:** Firebase Cloud Firestore (`werewolf_server/state` làm Source of Truth bị khóa rules, `werewolf_views/{secretToken}` cho từng người chơi, `hub/meta`, `messages`, `match_history`).
+- **Deployment:** 100% Vercel (`vercel.json`) + Firebase Firestore.
 
 ## 2. Phong cách viết code (Coding Style)
 - Giữ code **đơn giản (KISS)** và ưu tiên hiệu năng thực thi của vòng lặp Socket.IO.
