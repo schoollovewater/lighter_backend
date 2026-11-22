@@ -47,7 +47,7 @@
         <div class="w-12 h-12 rounded-2xl bg-[#FF4500]/20 border border-[#FF4500]/50 flex items-center justify-center text-2xl shrink-0">🚀</div>
         <div>
           <span id="update-modal-badge" class="text-[10px] font-black uppercase tracking-wider px-2 py-0.5 rounded-full bg-[#FF4500] text-white">Bản cập nhật mới</span>
-          <h3 id="update-modal-title" class="text-sm font-black text-white mt-1">v1.3.0 — Sảnh Chọn Phòng & Khóa Mật Khẩu Phòng</h3>
+          <h3 id="update-modal-title" class="text-sm font-black text-white mt-1">v1.3.1 — Sửa Link Mời Vào Thẳng Phòng (?join=MÃ)</h3>
         </div>
       </div>
       <p id="update-modal-message" class="text-xs text-orange-200 bg-[#FF4500]/10 border border-[#FF4500]/30 rounded-2xl p-3 leading-relaxed font-semibold">
@@ -126,6 +126,9 @@
       </div>
 
       <div id="auth-forms-container" class="space-y-4">
+        <div id="invite-detected-banner" class="hidden bg-emerald-500/15 border border-emerald-500/50 rounded-2xl p-3 text-xs text-emerald-300 font-semibold">
+          🎟️ Đang có vé mời vào phòng mã <b id="invite-detected-code" class="text-white tracking-wider"></b> — Đăng nhập hoặc Đăng ký bên dưới là vào thẳng phòng!
+        </div>
         <div class="grid grid-cols-2 gap-1.5 bg-black/40 p-1 rounded-xl border border-moss">
           <button type="button" id="tab-auth-login" onclick="switchAuthTab('login')" class="py-2 rounded-lg text-xs font-bold transition bg-[#FF4500] text-white">Đăng nhập</button>
           <button type="button" id="tab-auth-register" onclick="switchAuthTab('register')" class="py-2 rounded-lg text-xs font-bold transition text-slate-400 hover:text-white">Đăng ký mới</button>
@@ -172,7 +175,7 @@
             <i data-lucide="moon" class="w-3.5 h-3.5"></i> Mở Trợ Lý Quản Trò Offline (Chơi Bài Giấy)
           </a>
           <button type="button" onclick="openUpdateModal()" class="w-full py-2 bg-white/5 hover:bg-white/10 border border-moss text-slate-300 font-bold rounded-xl text-[11px] transition flex items-center justify-center gap-1.5">
-            <span id="entrance-version-label">🚀 Phiên bản v1.3.0 — Kiểm tra & Cập nhật</span>
+            <span id="entrance-version-label">🚀 Phiên bản v1.3.1 — Kiểm tra & Cập nhật</span>
           </button>
         </div>
       </div>
@@ -199,7 +202,7 @@
           <!-- Cụm nút nhanh cho Điện thoại (Update, Voice, Đăng xuất) -->
           <div class="flex md:hidden items-center gap-1.5 shrink-0">
             <button onclick="openUpdateModal()" class="relative px-2.5 py-1.5 rounded-xl text-[11px] font-bold bg-amber-500/15 border border-amber-500/40 text-amber-300 flex items-center gap-1" title="Cập nhật App">
-              <span>🚀</span><span id="mobile-version-tag">v1.3.0</span>
+              <span>🚀</span><span id="mobile-version-tag">v1.3.1</span>
               <span id="mobile-update-dot" class="hidden absolute -top-1 -right-1 w-2.5 h-2.5 rounded-full bg-[#FF4500] animate-ping"></span>
             </button>
             <button onclick="toggleVoiceChat()" id="btn-voice-chat-mobile" class="p-2 rounded-xl bg-slate-800 text-slate-300" title="Voice Chat">
@@ -230,7 +233,7 @@
           <div class="h-6 w-px bg-slate-700 mx-1"></div>
           
           <button onclick="openUpdateModal()" id="btn-app-update" class="relative px-3 py-2 rounded-xl text-xs font-bold transition flex items-center gap-1.5 bg-amber-500/15 hover:bg-amber-500/25 text-amber-300 border border-amber-500/40" title="Kiểm tra & Cập nhật App">
-            <span>🚀</span> <span id="desktop-version-tag">Cập nhật (v1.3.0)</span>
+            <span>🚀</span> <span id="desktop-version-tag">Cập nhật (v1.3.1)</span>
             <span id="desktop-update-dot" class="hidden absolute -top-1 -right-1 w-2.5 h-2.5 rounded-full bg-[#FF4500] animate-ping"></span>
           </button>
           <button onclick="toggleVoiceChat()" id="btn-voice-chat" class="px-3.5 py-2 rounded-xl text-xs font-bold transition flex items-center gap-1.5 bg-slate-800 text-slate-300 hover:bg-slate-700">
@@ -560,17 +563,45 @@
     let viewingProfileUid = null;
     let editProfileAvatar = '😎';
 
-    // Bắt link mời nhóm (?join=CODE) ngay khi mở trang
-    (function captureInviteFromUrl() {
+    // Bắt link mời nhóm (?join=CODE) và giữ bền vững trong localStorage + giữ nguyên URL cho tới khi vào phòng thành công
+    function getPendingInviteCode() {
       try {
         const params = new URLSearchParams(window.location.search);
-        const code = (params.get('join') || '').trim().toUpperCase();
-        if (code) {
-          sessionStorage.setItem('school_universe_pending_join', code);
-          const cleanUrl = window.location.pathname;
+        const urlCode = (params.get('join') || '').trim().toUpperCase().replace(/[^A-Z0-9]/g, '');
+        if (urlCode) {
+          localStorage.setItem('school_universe_pending_join', urlCode);
+          return urlCode;
+        }
+        return (localStorage.getItem('school_universe_pending_join') || '').trim().toUpperCase();
+      } catch (_) {
+        return '';
+      }
+    }
+
+    function clearPendingInviteCode() {
+      try {
+        localStorage.removeItem('school_universe_pending_join');
+        sessionStorage.removeItem('school_universe_pending_join');
+        const params = new URLSearchParams(window.location.search);
+        if (params.has('join')) {
+          params.delete('join');
+          const qs = params.toString();
+          const cleanUrl = window.location.pathname + (qs ? `?${qs}` : '');
           window.history.replaceState({}, '', cleanUrl);
         }
       } catch (_) {}
+    }
+
+    (function captureInviteFromUrl() {
+      const code = getPendingInviteCode();
+      if (code) {
+        const banner = document.getElementById('invite-detected-banner');
+        const codeEl = document.getElementById('invite-detected-code');
+        if (banner && codeEl) {
+          codeEl.innerText = code;
+          banner.classList.remove('hidden');
+        }
+      }
     })();
 
     function escapeHtml(str) {
@@ -674,6 +705,26 @@
       if (res.inbox) myInbox = res.inbox;
       updateHeaderProfileUI();
 
+      // Nếu vẫn còn mã mời chưa được xử lý ở bước login/restore → xử lý dứt điểm trước khi mở UI
+      let targetRoomId = res.activeRoomId || myInbox.activeRoomId || myInbox.rooms?.[0]?.roomId || null;
+      let targetRoomMeta = res.room || null;
+      const pendingCode = getPendingInviteCode();
+
+      if (pendingCode) {
+        if (res.room && String(res.room.code || '').toUpperCase() === pendingCode) {
+          clearPendingInviteCode();
+          showToast(`🎉 Đã vào thẳng phòng "${res.room.name}"!`);
+        } else {
+          const joinRes = await callAction('join_room_by_code', { code: pendingCode });
+          if (joinRes && joinRes.ok && joinRes.roomId) {
+            targetRoomId = joinRes.roomId;
+            targetRoomMeta = joinRes.room;
+            clearPendingInviteCode();
+            showToast(`🎉 Đã vào thẳng phòng "${joinRes.room?.name || pendingCode}"!`);
+          }
+        }
+      }
+
       startAccountSubscriptions();
       document.getElementById('entrance-gate').classList.add('hidden');
       document.getElementById('main-hub-interface').classList.remove('hidden');
@@ -682,20 +733,7 @@
       startNightCountdownLoop();
       lucide.createIcons();
 
-      // Nếu người dùng mở qua link mời ?join=CODE → tự động vào nhóm đó luôn!
-      const pendingCode = sessionStorage.getItem('school_universe_pending_join');
-      if (pendingCode) {
-        sessionStorage.removeItem('school_universe_pending_join');
-        const joinRes = await callAction('join_room_by_code', { code: pendingCode });
-        if (joinRes && joinRes.ok && joinRes.roomId) {
-          activateRoomUI(joinRes.roomId, joinRes.room);
-          showToast(`🎉 Đã gia nhập nhóm "${joinRes.room?.name || pendingCode}"!`);
-          return;
-        }
-      }
-
-      const targetRoomId = res.activeRoomId || myInbox.activeRoomId || myInbox.rooms?.[0]?.roomId || null;
-      activateRoomUI(targetRoomId, null);
+      activateRoomUI(targetRoomId, targetRoomMeta);
     }
 
     async function submitLogin(e) {
@@ -705,7 +743,7 @@
       const btn = document.getElementById('btn-login-submit');
       if (btn) { btn.disabled = true; btn.innerText = 'Đang đăng nhập...'; }
 
-      const res = await callAction('login', { username, password }, '');
+      const res = await callAction('login', { username, password, joinCode: getPendingInviteCode() }, '');
       if (btn) { btn.disabled = false; btn.innerText = 'Đăng nhập vào sảnh'; }
       if (!res || !res.ok) return;
 
@@ -722,7 +760,7 @@
       const btn = document.getElementById('btn-register-submit');
       if (btn) { btn.disabled = true; btn.innerText = 'Đang tạo tài khoản...'; }
 
-      const res = await callAction('register', { username, displayName, password, avatar: selectedAvatar }, '');
+      const res = await callAction('register', { username, displayName, password, avatar: selectedAvatar, joinCode: getPendingInviteCode() }, '');
       if (btn) { btn.disabled = false; btn.innerText = 'Tạo tài khoản & Vào sảnh'; }
       if (!res || !res.ok) return;
 
@@ -737,7 +775,7 @@
       document.getElementById('auth-forms-container').classList.add('hidden');
       document.getElementById('auth-restoring-box').classList.remove('hidden');
 
-      const res = await callAction('restore_session', {}, savedToken);
+      const res = await callAction('restore_session', { joinCode: getPendingInviteCode() }, savedToken);
       if (res && res.ok && res.authenticated) {
         await enterHubAfterAuth(res);
       } else {
@@ -1516,8 +1554,8 @@
     }
 
     // --- HỆ THỐNG PHÁT HIỆN & CẬP NHẬT PHIÊN BẢN APP ---
-    const APP_VERSION = '1.3.0';
-    const APP_RELEASE_NAME = 'v1.3.0 — Sảnh Chọn Phòng & Khóa Mật Khẩu Phòng';
+    const APP_VERSION = '1.3.1';
+    const APP_RELEASE_NAME = 'v1.3.1 — Sửa Link Mời Vào Thẳng Phòng (?join=MÃ)';
     let latestVersionInfo = null;
     let hasPendingUpdate = false;
 
@@ -1640,7 +1678,9 @@
         }
       } catch (_) {}
       const cleanPath = window.location.pathname || '/';
-      window.location.replace(`${cleanPath}?v=${encodeURIComponent(targetVer)}&t=${Date.now()}`);
+      const pendingJoin = getPendingInviteCode();
+      const joinParam = pendingJoin ? `&join=${encodeURIComponent(pendingJoin)}` : '';
+      window.location.replace(`${cleanPath}?v=${encodeURIComponent(targetVer)}${joinParam}&t=${Date.now()}`);
     }
 
     // --- HỒ SƠ CÁ NHÂN & THỐNG KÊ MA SÓI ---

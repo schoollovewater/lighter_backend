@@ -34,6 +34,16 @@ async function joinRoomHubSafe(token, profile, roomId) {
     }
 }
 
+async function tryAutoJoinCodeOnAuth(token, joinCode) {
+    const cleanCode = String(joinCode || '').trim().toUpperCase();
+    if (!cleanCode || cleanCode.length < 3) return null;
+    try {
+        return await roomService.joinRoomByCode(token, { code: cleanCode });
+    } catch (_) {
+        return null;
+    }
+}
+
 module.exports = async function handler(req, res) {
     res.setHeader('Access-Control-Allow-Origin', '*');
     res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
@@ -67,22 +77,12 @@ module.exports = async function handler(req, res) {
         const payload = body.payload || {};
         const roomId = body.roomId || payload.roomId || null;
 
-        // --- LUỒNG TÀI KHOẢN & MESSENGER ---
+        // --- LUỒNG TÀI KHOẢN & MESSENGER (HỖ TRỢ TỰ VÀO PHÒNG KHI CÓ joinCode) ---
         if (action === 'register') {
             const acc = await accountService.registerAccount(payload);
-            return res.status(200).json({
-                ok: true,
-                sessionToken: acc.sessionToken,
-                myId: acc.uid,
-                profile: acc.profile,
-                inbox: acc.inbox,
-                activeRoomId: null
-            });
-        }
-
-        if (action === 'login') {
-            const acc = await accountService.loginAccount(payload);
-            const activeRoomId = acc.inbox?.activeRoomId || acc.inbox?.rooms?.[0]?.roomId || null;
+            const joined = await tryAutoJoinCodeOnAuth(acc.sessionToken, payload.joinCode);
+            const finalInbox = joined?.inbox || acc.inbox;
+            const activeRoomId = joined?.roomId || null;
             const hubRes = activeRoomId ? await joinRoomHubSafe(acc.sessionToken, acc.profile, activeRoomId) : {};
             return res.status(200).json({
                 ...hubRes,
@@ -90,7 +90,26 @@ module.exports = async function handler(req, res) {
                 sessionToken: acc.sessionToken,
                 myId: acc.uid,
                 profile: acc.profile,
-                inbox: acc.inbox,
+                inbox: finalInbox,
+                room: joined?.room || null,
+                activeRoomId
+            });
+        }
+
+        if (action === 'login') {
+            const acc = await accountService.loginAccount(payload);
+            const joined = await tryAutoJoinCodeOnAuth(acc.sessionToken, payload.joinCode);
+            const finalInbox = joined?.inbox || acc.inbox;
+            const activeRoomId = joined?.roomId || finalInbox?.activeRoomId || finalInbox?.rooms?.[0]?.roomId || null;
+            const hubRes = activeRoomId ? await joinRoomHubSafe(acc.sessionToken, acc.profile, activeRoomId) : {};
+            return res.status(200).json({
+                ...hubRes,
+                ok: true,
+                sessionToken: acc.sessionToken,
+                myId: acc.uid,
+                profile: acc.profile,
+                inbox: finalInbox,
+                room: joined?.room || null,
                 activeRoomId
             });
         }
@@ -100,7 +119,9 @@ module.exports = async function handler(req, res) {
             if (!acc) {
                 return res.status(200).json({ ok: false, authenticated: false, error: 'Phiên đăng nhập không hợp lệ.' });
             }
-            const activeRoomId = acc.inbox?.activeRoomId || acc.inbox?.rooms?.[0]?.roomId || null;
+            const joined = await tryAutoJoinCodeOnAuth(acc.sessionToken, payload.joinCode);
+            const finalInbox = joined?.inbox || acc.inbox;
+            const activeRoomId = joined?.roomId || finalInbox?.activeRoomId || finalInbox?.rooms?.[0]?.roomId || null;
             const hubRes = activeRoomId ? await joinRoomHubSafe(acc.sessionToken, acc.profile, activeRoomId) : {};
             return res.status(200).json({
                 ...hubRes,
@@ -109,7 +130,8 @@ module.exports = async function handler(req, res) {
                 sessionToken: acc.sessionToken,
                 myId: acc.uid,
                 profile: acc.profile,
-                inbox: acc.inbox,
+                inbox: finalInbox,
+                room: joined?.room || null,
                 activeRoomId
             });
         }

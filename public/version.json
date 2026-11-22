@@ -1,14 +1,24 @@
 {
-  "version": "1.3.0",
-  "releaseName": "v1.3.0 — Sảnh Chọn Phòng & Khóa Mật Khẩu Phòng",
+  "version": "1.3.1",
+  "releaseName": "v1.3.1 — Sửa Link Mời Vào Thẳng Phòng (?join=MÃ)",
   "releasedAt": "2026-11-22",
   "message": "Bạn ơi Trường vừa đẩy bản cập nhật lên, bạn cập nhật luôn cho nóng hổi nhé! 🔥",
   "highlights": [
-    "Chỉ Admin (@school) mới có quyền tạo thêm phòng mới (có thể tự đặt mật khẩu/mã phòng)",
-    "Hiển thị danh sách các phòng hiện có: bấm vào phòng nhập đúng Mã phòng để mở khóa",
-    "Vào bằng Link mời hoặc nhập thẳng Mã phòng thì tự động mở khóa không cần nhập lại"
+    "Giữ nguyên ?join=MÃ trên thanh địa chỉ khi chuyển từ trình duyệt Messenger sang Safari/Chrome",
+    "Tự động mở khóa và vào thẳng phòng ngay trong bước Đăng nhập / Đăng ký / Khôi phục phiên",
+    "Không làm mất mã mời khi người dùng bấm nút Cập nhật App"
   ],
   "history": [
+    {
+      "version": "1.3.1",
+      "name": "Sửa Link Mời Vào Thẳng Phòng (?join=MÃ)",
+      "date": "2026-11-22",
+      "notes": [
+        "Giữ nguyên ?join=MÃ trên thanh địa chỉ khi chuyển từ trình duyệt Messenger sang Safari/Chrome",
+        "Tự động mở khóa và vào thẳng phòng ngay trong bước Đăng nhập / Đăng ký / Khôi phục phiên",
+        "Không làm mất mã mời khi người dùng bấm nút Cập nhật App"
+      ]
+    },
     {
       "version": "1.3.0",
       "name": "Sảnh Chọn Phòng & Khóa Mật Khẩu Phòng",
