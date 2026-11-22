@@ -21,28 +21,74 @@
 </head>
 <body class="text-slate-200 min-h-screen flex flex-col relative overflow-x-hidden">
 
-  <div id="tau-toast" class="fixed top-6 right-6 z-50 transform translate-y-[-150%] transition-transform duration-300 bg-[#0d1412]/95 border-l-4 border-[#FF4500] p-4 rounded-xl shadow-2xl flex items-center space-x-3 max-w-sm glow-fire">
+  <div id="app-toast" class="fixed top-6 right-6 z-50 transform translate-y-[-150%] transition-transform duration-300 bg-[#0d1412]/95 border-l-4 border-[#FF4500] p-4 rounded-xl shadow-2xl flex items-center space-x-3 max-w-sm glow-fire">
     <div class="text-[#FF4500]"><i data-lucide="bell" class="w-5 h-5 animate-bounce"></i></div>
     <div class="text-xs font-semibold" id="toast-message">Thông báo hệ thống</div>
   </div>
 
-  <div id="entrance-gate" class="fixed inset-0 z-50 bg-[#1A2421] flex items-center justify-center p-4">
-    <div class="bg-moss-card border border-moss p-8 rounded-3xl max-w-md w-full shadow-2xl text-center space-y-6">
+  <!-- MODAL HỒ SƠ CÁ NHÂN & THỐNG KÊ -->
+  <div id="profile-modal" class="hidden fixed inset-0 z-[90] bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
+    <div class="bg-moss-card border border-moss rounded-3xl max-w-md w-full max-h-[90vh] overflow-y-auto p-6 shadow-2xl space-y-5 relative">
+      <button onclick="closeProfileModal()" class="absolute top-4 right-4 w-8 h-8 rounded-full bg-white/5 hover:bg-white/10 flex items-center justify-center text-slate-400 hover:text-white">✕</button>
+      <div id="profile-modal-body" class="space-y-4"></div>
+    </div>
+  </div>
+
+  <div id="entrance-gate" class="fixed inset-0 z-50 bg-[#1A2421] flex items-center justify-center p-4 overflow-y-auto">
+    <div class="bg-moss-card border border-moss p-7 rounded-3xl max-w-md w-full shadow-2xl text-center space-y-5 my-auto">
       <div>
         <span class="text-5xl animate-pulse inline-block">🔥</span>
         <h1 class="text-2xl font-black heading-font tracking-wider text-transparent bg-clip-text bg-gradient-to-r from-orange-400 to-[#FF4500] mt-2">SCHOOL UNIVERSE</h1>
-
+        <p class="text-[11px] text-slate-400 mt-1">Đăng nhập để đồng bộ tin nhắn, bạn bè & lịch sử Ma Sói mọi thiết bị</p>
       </div>
-      <div class="space-y-4">
-        <div>
-          <label class="text-[10px] text-slate-400 block text-left mb-1.5 uppercase font-bold tracking-wider">Chọn hình đại diện:</label>
-          <div id="entrance-avatar-grid" class="grid grid-cols-6 gap-2 bg-black/30 p-2.5 rounded-2xl border border-moss"></div>
+
+      <div id="auth-restoring-box" class="hidden py-6 space-y-3">
+        <div class="w-8 h-8 border-2 border-[#FF4500] border-t-transparent rounded-full animate-spin mx-auto"></div>
+        <p class="text-xs text-slate-300 font-semibold">Đang khôi phục phiên đăng nhập của bạn...</p>
+      </div>
+
+      <div id="auth-forms-container" class="space-y-4">
+        <div class="grid grid-cols-2 gap-1.5 bg-black/40 p-1 rounded-xl border border-moss">
+          <button type="button" id="tab-auth-login" onclick="switchAuthTab('login')" class="py-2 rounded-lg text-xs font-bold transition bg-[#FF4500] text-white">Đăng nhập</button>
+          <button type="button" id="tab-auth-register" onclick="switchAuthTab('register')" class="py-2 rounded-lg text-xs font-bold transition text-slate-400 hover:text-white">Đăng ký mới</button>
         </div>
-        <div>
-          <label class="text-[10px] text-slate-400 block text-left mb-1.5 uppercase font-bold tracking-wider">Biệt danh của mi:</label>
-          <input type="text" id="entrance-name-input" placeholder="Gõ tên vào đây bạn ơi..." class="w-full bg-black/40 border border-moss rounded-xl px-4 py-3 text-sm text-center text-slate-200 focus:outline-none focus:border-[#FF4500]" required>
-        </div>
-        <button id="btn-enter-hub" onclick="connectToSchoolHub()" class="w-full py-3.5 bg-[#FF4500] hover:bg-orange-500 text-white font-black rounded-xl text-sm transition uppercase tracking-wider glow-fire disabled:opacity-60">Vào sảnh chờ chơi game</button>
+
+        <!-- FORM ĐĂNG NHẬP -->
+        <form id="login-form" onsubmit="submitLogin(event)" class="space-y-3 text-left">
+          <div>
+            <label class="text-[10px] text-slate-400 block mb-1 uppercase font-bold tracking-wider">Tên đăng nhập (@username):</label>
+            <input type="text" id="login-username" autocomplete="username" placeholder="vd: truong03" class="w-full bg-black/40 border border-moss rounded-xl px-4 py-2.5 text-sm text-slate-200 focus:outline-none focus:border-[#FF4500]" required>
+          </div>
+          <div>
+            <label class="text-[10px] text-slate-400 block mb-1 uppercase font-bold tracking-wider">Mật khẩu:</label>
+            <input type="password" id="login-password" autocomplete="current-password" placeholder="Nhập mật khẩu..." class="w-full bg-black/40 border border-moss rounded-xl px-4 py-2.5 text-sm text-slate-200 focus:outline-none focus:border-[#FF4500]" required>
+          </div>
+          <button type="submit" id="btn-login-submit" class="w-full py-3 bg-[#FF4500] hover:bg-orange-500 text-white font-black rounded-xl text-sm transition uppercase tracking-wider glow-fire disabled:opacity-60">Đăng nhập vào sảnh</button>
+        </form>
+
+        <!-- FORM ĐĂNG KÝ -->
+        <form id="register-form" onsubmit="submitRegister(event)" class="hidden space-y-3 text-left">
+          <div>
+            <label class="text-[10px] text-slate-400 block mb-1.5 uppercase font-bold tracking-wider">Chọn hình đại diện:</label>
+            <div id="entrance-avatar-grid" class="grid grid-cols-6 gap-2 bg-black/30 p-2 rounded-2xl border border-moss"></div>
+          </div>
+          <div class="grid grid-cols-2 gap-2">
+            <div>
+              <label class="text-[10px] text-slate-400 block mb-1 uppercase font-bold tracking-wider">Username:</label>
+              <input type="text" id="reg-username" autocomplete="username" placeholder="truong03" class="w-full bg-black/40 border border-moss rounded-xl px-3 py-2 text-xs text-slate-200 focus:outline-none focus:border-[#FF4500]" required>
+            </div>
+            <div>
+              <label class="text-[10px] text-slate-400 block mb-1 uppercase font-bold tracking-wider">Tên hiển thị:</label>
+              <input type="text" id="reg-displayname" placeholder="Trường" class="w-full bg-black/40 border border-moss rounded-xl px-3 py-2 text-xs text-slate-200 focus:outline-none focus:border-[#FF4500]" required>
+            </div>
+          </div>
+          <div>
+            <label class="text-[10px] text-slate-400 block mb-1 uppercase font-bold tracking-wider">Mật khẩu (từ 4 ký tự):</label>
+            <input type="password" id="reg-password" autocomplete="new-password" placeholder="Tạo mật khẩu..." class="w-full bg-black/40 border border-moss rounded-xl px-3 py-2 text-xs text-slate-200 focus:outline-none focus:border-[#FF4500]" required>
+          </div>
+          <button type="submit" id="btn-register-submit" class="w-full py-3 bg-emerald-600 hover:bg-emerald-500 text-white font-black rounded-xl text-sm transition uppercase tracking-wider disabled:opacity-60">Tạo tài khoản & Vào sảnh</button>
+        </form>
+
         <div class="pt-2 border-t border-moss">
           <a href="/gm/" class="w-full py-2.5 bg-indigo-950/60 hover:bg-indigo-900/70 border border-indigo-500/40 text-indigo-300 font-bold rounded-xl text-xs transition uppercase tracking-wider flex items-center justify-center gap-2">
             <i data-lucide="moon" class="w-3.5 h-3.5"></i> Mở Trợ Lý Quản Trò Offline (Chơi Bài Giấy)
@@ -55,13 +101,18 @@
   <div id="main-hub-interface" class="hidden flex-1 flex flex-col">
     <header class="border-b border-moss bg-black/40 backdrop-blur-md px-6 py-4 sticky top-0 z-40">
       <div class="max-w-7xl mx-auto flex flex-col xl:flex-row xl:items-center xl:justify-between gap-4">
-        <div>
+        <div class="flex items-center justify-between xl:justify-start gap-4">
           <h1 class="text-xl font-black heading-font tracking-tight text-transparent bg-clip-text bg-gradient-to-r from-orange-400 via-[#FF4500] to-rose-400">SCHOOL UNIVERSE</h1>
-
+          <button id="header-profile-btn" onclick="openProfileModal(myId)" class="flex items-center gap-2 bg-white/5 hover:bg-white/10 border border-moss px-3 py-1.5 rounded-full transition">
+            <span class="relative text-base" id="header-avatar">😎</span>
+            <span class="w-2 h-2 rounded-full bg-emerald-400"></span>
+            <span class="text-xs font-bold text-slate-200 max-w-[110px] truncate" id="header-display-name">Tài khoản</span>
+          </button>
         </div>
         <div class="flex flex-wrap items-center gap-2">
-          <button onclick="switchTab('workspace')" id="btn-tab-workspace" class="px-4 py-2 rounded-xl text-xs font-bold transition flex items-center gap-1.5 bg-[#FF4500] text-white shadow-md">
-            <i data-lucide="message-square" class="w-3.5 h-3.5"></i> Văn Phòng Chat
+          <button onclick="switchTab('workspace')" id="btn-tab-workspace" class="relative px-4 py-2 rounded-xl text-xs font-bold transition flex items-center gap-1.5 bg-[#FF4500] text-white shadow-md">
+            <i data-lucide="message-square" class="w-3.5 h-3.5"></i> Messenger & Chat
+            <span id="workspace-unread-badge" class="hidden ml-1 px-1.5 py-0.5 text-[9px] font-black bg-rose-500 text-white rounded-full">0</span>
           </button>
           <button onclick="switchTab('arena')" id="btn-tab-arena" class="px-4 py-2 rounded-xl text-xs font-bold transition flex items-center gap-1.5 bg-white/5 text-slate-300">
             <i data-lucide="swords" class="w-3.5 h-3.5"></i> Đấu Trường Ma Sói
@@ -73,13 +124,13 @@
             <i data-lucide="moon" class="w-3.5 h-3.5"></i> Quản Trò Offline
           </a>
           
-          <div class="h-6 w-px bg-slate-700 mx-2"></div>
+          <div class="h-6 w-px bg-slate-700 mx-1"></div>
           
           <button onclick="toggleVoiceChat()" id="btn-voice-chat" class="px-4 py-2 rounded-xl text-xs font-bold transition flex items-center gap-1.5 bg-slate-800 text-slate-300 hover:bg-slate-700">
             <i data-lucide="mic-off" id="icon-voice-chat" class="w-3.5 h-3.5"></i> <span id="text-voice-chat">Voice Chat: Tắt</span>
           </button>
-          <button onclick="leaveSchoolHub()" class="px-3 py-2 rounded-xl text-xs font-bold transition flex items-center gap-1.5 bg-rose-950/70 hover:bg-rose-900 text-rose-300 border border-rose-500/30" title="Rời khỏi phòng">
-            <i data-lucide="log-out" class="w-3.5 h-3.5"></i> Rời phòng
+          <button onclick="logoutSchoolHub()" class="px-3 py-2 rounded-xl text-xs font-bold transition flex items-center gap-1.5 bg-rose-950/70 hover:bg-rose-900 text-rose-300 border border-rose-500/30" title="Đăng xuất tài khoản">
+            <i data-lucide="log-out" class="w-3.5 h-3.5"></i> Đăng xuất
           </button>
         </div>
       </div>
@@ -93,17 +144,52 @@
         <h3 class="text-xs font-bold text-slate-300 uppercase tracking-widest flex items-center gap-1.5 border-b border-moss pb-2.5">
           <i data-lucide="users" class="w-4 h-4 text-[#FF4500]"></i> Đang ở sảnh chờ
         </h3>
-        <div id="room-users-list" class="space-y-2 max-h-[300px] overflow-y-auto"></div>
+        <div id="room-users-list" class="space-y-2 max-h-[340px] overflow-y-auto"></div>
       </section>
 
       <section class="lg:col-span-9 flex flex-col">
         
-        <div id="pane-workspace" class="space-y-4 flex-1 flex flex-col">
-          <div class="bg-moss-card border border-moss rounded-3xl p-5 shadow-xl flex flex-col h-[400px]">
-            <div id="chat-messages-container" class="flex-1 overflow-y-auto space-y-3.5 pr-2"></div>
-            <form onsubmit="sendMessage(event)" class="mt-4 flex gap-2 pt-3 border-t border-moss">
-              <input type="text" id="chat-msg-input" placeholder="Gõ nội dung thảo luận..." class="flex-1 bg-black/40 border border-moss rounded-xl px-4 py-2.5 text-xs text-slate-200 focus:outline-none focus:border-[#FF4500]">
-              <button type="submit" class="bg-[#FF4500] text-white px-5 py-2.5 rounded-xl text-xs font-bold">Gửi</button>
+        <div id="pane-workspace" class="flex-1 grid grid-cols-1 md:grid-cols-12 gap-4">
+          <!-- Cột trái Messenger: Chat chung, Tìm bạn, Lời mời, Danh sách DM -->
+          <div class="md:col-span-4 bg-moss-card border border-moss rounded-3xl p-4 shadow-xl flex flex-col h-[520px] space-y-3">
+            <div class="relative">
+              <input type="text" id="messenger-search-input" oninput="renderMessengerSidebar()" placeholder="Tìm bạn theo tên hoặc @username..." class="w-full bg-black/40 border border-moss rounded-xl px-3.5 py-2 text-xs text-slate-200 focus:outline-none focus:border-[#FF4500]">
+            </div>
+
+            <button onclick="selectGlobalChat()" id="btn-select-global-chat" class="w-full p-2.5 rounded-2xl border transition flex items-center gap-2.5 text-left bg-[#FF4500]/15 border-[#FF4500]">
+              <div class="w-9 h-9 rounded-full bg-[#FF4500]/20 flex items-center justify-center text-base shrink-0">🔥</div>
+              <div class="min-w-0 flex-1">
+                <p class="text-xs font-bold text-white truncate"># Phòng Chat Chung</p>
+                <p class="text-[10px] text-slate-400 truncate">Trò chuyện cùng toàn sảnh</p>
+              </div>
+            </button>
+
+            <div id="friend-requests-section" class="hidden space-y-1.5 border-t border-moss pt-2">
+              <p class="text-[10px] font-bold uppercase tracking-wider text-amber-400">Lời mời kết bạn</p>
+              <div id="friend-requests-list" class="space-y-1.5 max-h-[110px] overflow-y-auto"></div>
+            </div>
+
+            <div class="border-t border-moss pt-2 flex-1 flex flex-col min-h-0">
+              <p class="text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-2" id="messenger-list-title">Tin nhắn riêng & Bạn bè</p>
+              <div id="messenger-threads-list" class="flex-1 overflow-y-auto space-y-1.5 pr-1"></div>
+            </div>
+          </div>
+
+          <!-- Cột phải Messenger: Khung chat -->
+          <div class="md:col-span-8 bg-moss-card border border-moss rounded-3xl p-4 shadow-xl flex flex-col h-[520px]">
+            <div id="active-chat-header" class="flex items-center justify-between border-b border-moss pb-3 mb-3">
+              <div class="flex items-center gap-2.5">
+                <div class="w-9 h-9 rounded-full bg-[#FF4500]/20 flex items-center justify-center text-base">🔥</div>
+                <div>
+                  <h4 class="text-xs font-black text-white"># Phòng Chat Chung</h4>
+                  <p class="text-[10px] text-slate-400">Tin nhắn đồng bộ mọi thiết bị</p>
+                </div>
+              </div>
+            </div>
+            <div id="chat-messages-container" class="flex-1 overflow-y-auto space-y-3 pr-2"></div>
+            <form onsubmit="sendMessage(event)" class="mt-3 flex gap-2 pt-3 border-t border-moss">
+              <input type="text" id="chat-msg-input" placeholder="Nhập tin nhắn..." class="flex-1 bg-black/40 border border-moss rounded-xl px-4 py-2.5 text-xs text-slate-200 focus:outline-none focus:border-[#FF4500]">
+              <button type="submit" class="bg-[#FF4500] hover:bg-orange-500 text-white px-5 py-2.5 rounded-xl text-xs font-bold transition">Gửi</button>
             </form>
           </div>
         </div>
@@ -281,30 +367,70 @@
     let seerLockedTurn = { key: '', targetId: '', html: '' };
     let detectiveLockedTurn = { key: '', t1: '', t2: '', html: '' };
 
-    function getSecretToken() {
-      let tok = localStorage.getItem('school_universe_secret_token');
-      if (!tok) {
-          tok = (window.crypto && crypto.randomUUID)
-            ? crypto.randomUUID()
-            : ('tok_' + Math.random().toString(36).slice(2) + '_' + Date.now() + '_' + Math.random().toString(36).slice(2));
-          localStorage.setItem('school_universe_secret_token', tok);
-      }
-      return tok;
+    // --- TRẠNG THÁI TÀI KHOẢN & MESSENGER ---
+    let myProfile = null;
+    let myInbox = { friends: [], friendRequestsIn: [], friendRequestsOut: [], dmConversations: {} };
+    let allProfiles = {};
+    let globalMessagesCache = [];
+    let matchHistoryCache = [];
+    let activeChatMode = 'global'; // 'global' | 'dm'
+    let activeDmPeerUid = null;
+    let activeDmSecretId = null;
+    let activeDmUnsub = null;
+    let activeDmMessages = [];
+    let viewingProfileUid = null;
+    let editProfileAvatar = '😎';
+
+    function escapeHtml(str) {
+      return String(str || '')
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;');
     }
 
-    async function callAction(action, payload = {}) {
+    function formatRelativeTime(ts) {
+      if (!ts) return 'Ngoại tuyến';
+      const diffSec = Math.max(0, Math.floor((Date.now() - ts) / 1000));
+      if (diffSec < 60) return 'Vừa xong';
+      const diffMin = Math.floor(diffSec / 60);
+      if (diffMin < 60) return `${diffMin} phút trước`;
+      const diffHr = Math.floor(diffMin / 60);
+      if (diffHr < 24) return `${diffHr} giờ trước`;
+      return `${Math.floor(diffHr / 24)} ngày trước`;
+    }
+
+    function getSecretToken() {
+      return localStorage.getItem('school_universe_session_token') || '';
+    }
+
+    function setSecretToken(tok) {
+      if (tok) localStorage.setItem('school_universe_session_token', tok);
+      else localStorage.removeItem('school_universe_session_token');
+    }
+
+    async function callAction(action, payload = {}, overrideToken = null) {
       try {
         const res = await fetch('/api/action', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ token: getSecretToken(), action, payload })
+          body: JSON.stringify({ token: overrideToken !== null ? overrideToken : getSecretToken(), action, payload })
         });
         const data = await res.json();
         if (!res.ok || !data.ok) {
-          if (data && data.error) showToast(`⚠️ ${data.error}`);
+          if (data && data.error && action !== 'restore_session') showToast(`⚠️ ${data.error}`);
         } else {
-          // Cập nhật giao diện ngay từ phản hồi API (không cần đợi thêm 1 vòng onSnapshot)
           if (data.myId) myId = data.myId;
+          if (data.profile) {
+            myProfile = data.profile;
+            allProfiles[data.profile.uid] = data.profile;
+            updateHeaderProfileUI();
+          }
+          if (data.inbox) {
+            myInbox = data.inbox;
+            renderMessengerSidebar();
+          }
           if (Array.isArray(data.users)) {
             roomUsers = data.users;
             renderUsersList();
@@ -317,50 +443,130 @@
         return data;
       } catch (err) {
         console.error('API error:', action, err);
-        showToast('⚠️ Lỗi kết nối tới máy chủ!');
+        if (action !== 'restore_session') showToast('⚠️ Lỗi kết nối tới máy chủ!');
         return { ok: false };
       }
     }
 
-    async function connectToSchoolHub() {
-      const name = document.getElementById('entrance-name-input').value.trim();
-      if (!name) { alert("Đặt tên giùm cái bạn ơi!"); return; }
-      
-      localStorage.setItem('school_universe_last_name', name);
-      localStorage.setItem('school_universe_last_avatar', selectedAvatar);
+    function switchAuthTab(mode) {
+      const loginForm = document.getElementById('login-form');
+      const regForm = document.getElementById('register-form');
+      const tabLogin = document.getElementById('tab-auth-login');
+      const tabReg = document.getElementById('tab-auth-register');
+      if (mode === 'register') {
+        loginForm.classList.add('hidden');
+        regForm.classList.remove('hidden');
+        tabReg.className = 'py-2 rounded-lg text-xs font-bold transition bg-emerald-600 text-white';
+        tabLogin.className = 'py-2 rounded-lg text-xs font-bold transition text-slate-400 hover:text-white';
+      } else {
+        regForm.classList.add('hidden');
+        loginForm.classList.remove('hidden');
+        tabLogin.className = 'py-2 rounded-lg text-xs font-bold transition bg-[#FF4500] text-white';
+        tabReg.className = 'py-2 rounded-lg text-xs font-bold transition text-slate-400 hover:text-white';
+      }
+    }
 
-      const enterBtn = document.getElementById('btn-enter-hub');
-      if (enterBtn) { enterBtn.disabled = true; enterBtn.innerText = 'Đang vào sảnh...'; }
-
-      // Mở kết nối Firestore song song luôn để đỡ tốn thời gian chờ
-      startRealtimeSubscriptions();
-      const res = await callAction('join_hub', { name: name, avatar: selectedAvatar });
-      if (enterBtn) { enterBtn.disabled = false; enterBtn.innerText = 'Vào sảnh chờ chơi game'; }
-      if (!res || !res.ok) return;
-
+    function enterHubAfterAuth(res) {
+      if (res.sessionToken) setSecretToken(res.sessionToken);
       myId = res.myId;
+      if (res.profile) {
+        myProfile = res.profile;
+        allProfiles[res.profile.uid] = res.profile;
+      }
+      if (res.inbox) myInbox = res.inbox;
+      updateHeaderProfileUI();
+
+      startRealtimeSubscriptions();
       document.getElementById('entrance-gate').classList.add('hidden');
       document.getElementById('main-hub-interface').classList.remove('hidden');
 
       initCanvasLogic();
       startNightCountdownLoop();
+      renderMessengerSidebar();
       lucide.createIcons();
     }
 
-    async function leaveSchoolHub() {
-      if (!confirm('Bạn có chắc muốn rời khỏi phòng SCHOOL UNIVERSE không?')) return;
+    async function submitLogin(e) {
+      e.preventDefault();
+      const username = document.getElementById('login-username').value.trim();
+      const password = document.getElementById('login-password').value;
+      const btn = document.getElementById('btn-login-submit');
+      if (btn) { btn.disabled = true; btn.innerText = 'Đang đăng nhập...'; }
+
+      const res = await callAction('login', { username, password }, '');
+      if (btn) { btn.disabled = false; btn.innerText = 'Đăng nhập vào sảnh'; }
+      if (!res || !res.ok) return;
+
+      document.getElementById('login-password').value = '';
+      enterHubAfterAuth(res);
+      showToast(`👋 Chào mừng trở lại, ${res.profile?.displayName || username}!`);
+    }
+
+    async function submitRegister(e) {
+      e.preventDefault();
+      const username = document.getElementById('reg-username').value.trim();
+      const displayName = document.getElementById('reg-displayname').value.trim();
+      const password = document.getElementById('reg-password').value;
+      const btn = document.getElementById('btn-register-submit');
+      if (btn) { btn.disabled = true; btn.innerText = 'Đang tạo tài khoản...'; }
+
+      const res = await callAction('register', { username, displayName, password, avatar: selectedAvatar }, '');
+      if (btn) { btn.disabled = false; btn.innerText = 'Tạo tài khoản & Vào sảnh'; }
+      if (!res || !res.ok) return;
+
+      document.getElementById('reg-password').value = '';
+      enterHubAfterAuth(res);
+      showToast(`🎉 Tạo tài khoản @${res.profile?.username} thành công!`);
+    }
+
+    async function tryAutoRestoreSession() {
+      const savedToken = getSecretToken();
+      if (!savedToken) return;
+      document.getElementById('auth-forms-container').classList.add('hidden');
+      document.getElementById('auth-restoring-box').classList.remove('hidden');
+
+      const res = await callAction('restore_session', {}, savedToken);
+      if (res && res.ok && res.authenticated) {
+        enterHubAfterAuth(res);
+      } else {
+        setSecretToken('');
+        document.getElementById('auth-restoring-box').classList.add('hidden');
+        document.getElementById('auth-forms-container').classList.remove('hidden');
+      }
+    }
+
+    async function logoutSchoolHub() {
+      if (!confirm('Bạn có chắc muốn đăng xuất khỏi SCHOOL UNIVERSE không?')) return;
       if (isVoiceActive) await toggleVoiceChat();
-      await callAction('leave_hub');
+      await callAction('logout');
+      setSecretToken('');
+      myProfile = null;
+      myId = null;
+      myInbox = { friends: [], friendRequestsIn: [], friendRequestsOut: [], dmConversations: {} };
+      if (activeDmUnsub) { try { activeDmUnsub(); } catch (_) {} activeDmUnsub = null; }
       realtimeUnsubs.forEach(u => { try { u(); } catch (_) {} });
       realtimeUnsubs = [];
       if (nightTickerInterval) { clearInterval(nightTickerInterval); nightTickerInterval = null; }
       document.getElementById('main-hub-interface').classList.add('hidden');
+      document.getElementById('auth-restoring-box').classList.add('hidden');
+      document.getElementById('auth-forms-container').classList.remove('hidden');
       document.getElementById('entrance-gate').classList.remove('hidden');
+      switchAuthTab('login');
+    }
+
+    function updateHeaderProfileUI() {
+      if (!myProfile) return;
+      const avEl = document.getElementById('header-avatar');
+      const nameEl = document.getElementById('header-display-name');
+      if (avEl) avEl.innerText = myProfile.avatar || '😎';
+      if (nameEl) nameEl.innerText = myProfile.displayName || myProfile.username;
     }
 
     function startRealtimeSubscriptions() {
       realtimeUnsubs.forEach(u => { try { u(); } catch (_) {} });
       realtimeUnsubs = [];
+      const token = getSecretToken();
+      if (!token) return;
 
       // 1. Sảnh chờ, danh sách online, trạng thái Voice và Gartic Phone
       realtimeUnsubs.push(
@@ -369,23 +575,55 @@
           const data = snap.data();
           roomUsers = Array.isArray(data.users) ? data.users : [];
           renderUsersList();
+          renderMessengerSidebar();
           if (data.garticState) updateGarticUI(data.garticState);
           if (localWerewolfState) updateWerewolfUI();
           syncVoicePeersWithHub();
         }, (err) => console.error('hub/meta listener error:', err))
       );
 
-      // 2. Tin nhắn Văn Phòng Chat lưu vĩnh viễn trên Firestore
+      // 2. Tin nhắn Phòng Chat Chung lưu vĩnh viễn trên Firestore
       realtimeUnsubs.push(
         db.collection('messages').orderBy('createdAt', 'desc').limit(100).onSnapshot((snap) => {
-          const msgs = snap.docs.map(d => d.data()).reverse();
-          renderWorkspaceMessages(msgs);
+          globalMessagesCache = snap.docs.map(d => d.data()).reverse();
+          renderDayChatMessages(globalMessagesCache);
+          if (activeChatMode === 'global') renderWorkspaceMessages(globalMessagesCache);
         }, (err) => console.error('messages listener error:', err))
       );
 
-      // 3. Trạng thái Ma Sói đã che (masked) riêng cho từng người chơi
+      // 3. Hồ sơ tất cả tài khoản (chấm xanh online, tên, avatar, thống kê)
       realtimeUnsubs.push(
-        db.collection('werewolf_views').doc(getSecretToken()).onSnapshot((snap) => {
+        db.collection('user_profiles').onSnapshot((snap) => {
+          const next = {};
+          snap.forEach(doc => { next[doc.id] = doc.data(); });
+          allProfiles = next;
+          if (myId && allProfiles[myId]) {
+            myProfile = allProfiles[myId];
+            updateHeaderProfileUI();
+          }
+          renderMessengerSidebar();
+          if (activeChatMode === 'dm') renderActiveChatHeader();
+          if (viewingProfileUid && !document.getElementById('profile-modal').classList.contains('hidden')) {
+            renderProfileModalContent(viewingProfileUid);
+          }
+        }, (err) => console.error('user_profiles listener error:', err))
+      );
+
+      // 4. Hộp thư cá nhân (bạn bè, lời mời kết bạn, danh sách DM & số tin chưa đọc)
+      realtimeUnsubs.push(
+        db.collection('user_inbox').doc(token).onSnapshot((snap) => {
+          if (!snap.exists) return;
+          myInbox = snap.data();
+          renderMessengerSidebar();
+          if (viewingProfileUid && !document.getElementById('profile-modal').classList.contains('hidden')) {
+            renderProfileModalContent(viewingProfileUid);
+          }
+        }, (err) => console.error('user_inbox listener error:', err))
+      );
+
+      // 5. Trạng thái Ma Sói đã che (masked) riêng cho từng người chơi
+      realtimeUnsubs.push(
+        db.collection('werewolf_views').doc(token).onSnapshot((snap) => {
           if (!snap.exists) return;
           const data = snap.data();
           if (data.myId) myId = data.myId;
@@ -410,9 +648,9 @@
         }, (err) => console.error('werewolf_views listener error:', err))
       );
 
-      // 4. Hộp thư tín hiệu WebRTC Voice Chat
+      // 6. Hộp thư tín hiệu WebRTC Voice Chat
       realtimeUnsubs.push(
-        db.collection('voice_inbox').doc(getSecretToken()).onSnapshot((snap) => {
+        db.collection('voice_inbox').doc(token).onSnapshot((snap) => {
           if (!snap.exists) return;
           const signals = snap.data().signals || [];
           signals.forEach(item => {
@@ -423,11 +661,14 @@
         }, (err) => console.error('voice_inbox listener error:', err))
       );
 
-      // 5. Lịch sử các trận Ma Sói đã hoàn thành
+      // 7. Lịch sử các trận Ma Sói đã hoàn thành
       realtimeUnsubs.push(
-        db.collection('match_history').orderBy('endedAt', 'desc').limit(8).onSnapshot((snap) => {
-          const items = snap.docs.map(d => d.data());
-          renderMatchHistory(items);
+        db.collection('match_history').orderBy('endedAt', 'desc').limit(20).onSnapshot((snap) => {
+          matchHistoryCache = snap.docs.map(d => d.data());
+          renderMatchHistory(matchHistoryCache.slice(0, 8));
+          if (viewingProfileUid && !document.getElementById('profile-modal').classList.contains('hidden')) {
+            renderProfileModalContent(viewingProfileUid);
+          }
         }, (err) => console.error('match_history listener error:', err))
       );
     }
@@ -532,21 +773,16 @@
       }, 1000);
     }
 
-    // RENDER AVATAR KHÔNG MẬT KHẨU Ở CỬA VÀO
+    // RENDER AVATAR CHO FORM ĐĂNG KÝ
     function initEntrance() {
-      const savedName = localStorage.getItem('school_universe_last_name');
-      const savedAvatar = localStorage.getItem('school_universe_last_avatar');
-      const nameInput = document.getElementById('entrance-name-input');
-      if (nameInput && !nameInput.value && savedName) nameInput.value = savedName;
-      if (savedAvatar && AVATAR_POOL.includes(savedAvatar) && !window._avatarUserPicked) {
-        selectedAvatar = savedAvatar;
-      }
-
-      const container = document.getElementById('entrance-avatar-grid'); container.innerHTML = '';
+      const container = document.getElementById('entrance-avatar-grid');
+      if (!container) return;
+      container.innerHTML = '';
       AVATAR_POOL.forEach(av => {
         const b = document.createElement('button');
+        b.type = 'button';
         b.className = `w-8 h-8 rounded-xl text-sm flex items-center justify-center transition border ${selectedAvatar === av ? 'bg-[#FF4500]/20 border-[#FF4500]' : 'bg-black/30 border-transparent hover:bg-black/50'}`;
-        b.innerText = av; b.onclick = () => { window._avatarUserPicked = true; selectedAvatar = av; initEntrance(); };
+        b.innerText = av; b.onclick = () => { selectedAvatar = av; initEntrance(); };
         container.appendChild(b);
       });
     }
@@ -621,82 +857,480 @@
       const container = document.getElementById('room-users-list'); container.innerHTML = '';
       roomUsers.forEach(u => {
         const isMe = u.id === myId;
-        container.innerHTML += `<div class="p-3 bg-black/20 border border-moss rounded-2xl flex items-center justify-between ${isMe ? 'border-[#FF4500] bg-[#FF4500]/5' : ''}">
-          <div class="flex items-center space-x-2.5">
-            <span class="text-lg">${u.avatar}</span>
-            <div>
-              <h4 class="text-xs font-bold text-slate-200 truncate max-w-[120px]">${u.name}</h4>
-              <p class="text-[8px] uppercase tracking-wider text-slate-500 font-bold">${u.isHost ? '👑 Chủ phòng (Host)' : 'Thành viên'}</p>
+        container.innerHTML += `<div onclick="openProfileModal('${u.id}')" class="cursor-pointer p-3 bg-black/20 hover:bg-white/5 border border-moss rounded-2xl flex items-center justify-between transition ${isMe ? 'border-[#FF4500] bg-[#FF4500]/5' : ''}">
+          <div class="flex items-center space-x-2.5 min-w-0">
+            <div class="relative shrink-0">
+              <span class="text-lg">${u.avatar}</span>
+              <span class="absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 rounded-full bg-emerald-400 border-2 border-[#0e1512]"></span>
+            </div>
+            <div class="min-w-0">
+              <h4 class="text-xs font-bold text-slate-200 truncate max-w-[115px]">${escapeHtml(u.name)}</h4>
+              <p class="text-[8px] uppercase tracking-wider text-slate-500 font-bold">${u.isHost ? '👑 Chủ phòng' : (u.username ? '@' + escapeHtml(u.username) : 'Thành viên')}</p>
             </div>
           </div>
-          ${isMe ? '<span class="text-[8px] bg-[#FF4500] text-white px-1.5 py-0.5 rounded font-black">TA</span>' : ''}
+          ${isMe ? '<span class="text-[8px] bg-[#FF4500] text-white px-1.5 py-0.5 rounded font-black">TA</span>' : '<span class="text-[10px] text-slate-400">💬</span>'}
         </div>`;
       });
-      // Bật tắt nút Gartic Start dựa vào quyền Host
       const amIHost = roomUsers.find(u => u.id === myId)?.isHost;
-      document.getElementById('gartic-start-btn').disabled = !amIHost;
+      const gBtn = document.getElementById('gartic-start-btn');
+      if (gBtn) gBtn.disabled = !amIHost;
     }
 
     function switchTab(tab) {
       currentTab = tab;
       ['workspace', 'arena', 'gartic'].forEach(t => {
         document.getElementById(`pane-${t}`).classList.add('hidden');
-        document.getElementById(`btn-tab-${t}`).className = "px-4 py-2 rounded-xl text-xs font-bold transition flex items-center gap-1.5 bg-white/5 text-slate-300";
+        document.getElementById(`btn-tab-${t}`).className = "relative px-4 py-2 rounded-xl text-xs font-bold transition flex items-center gap-1.5 bg-white/5 text-slate-300";
       });
       document.getElementById(`pane-${tab}`).classList.remove('hidden');
-      document.getElementById(`btn-tab-${tab}`).className = "px-4 py-2 rounded-xl text-xs font-bold transition flex items-center gap-1.5 bg-[#FF4500] text-white shadow-lg glow-fire";
+      document.getElementById(`btn-tab-${tab}`).className = "relative px-4 py-2 rounded-xl text-xs font-bold transition flex items-center gap-1.5 bg-[#FF4500] text-white shadow-lg glow-fire";
     }
 
     function showToast(text) {
-      const t = document.getElementById('tau-toast'); document.getElementById('toast-message').innerText = text;
+      const t = document.getElementById('app-toast'); document.getElementById('toast-message').innerText = text;
       t.classList.remove('translate-y-[-150%]'); setTimeout(() => t.classList.add('translate-y-[-150%]'), 3000);
     }
 
-    // --- LOGIC CHAT VĂN PHÒNG (OPTIMISTIC UI 0ms) ---
-    function sendMessage(e) { 
-        e.preventDefault(); 
-        const input = document.getElementById('chat-msg-input'); 
-        if(input && input.value.trim()) {
-            const text = input.value.trim();
-            input.value = '';
-            const me = roomUsers.find(u => u.id === myId);
-            if (me) appendChatMessage({ senderName: me.name, senderAvatar: me.avatar, text });
-            callAction('send_chat_message', { text });
-        }
+    // --- HỒ SƠ CÁ NHÂN & THỐNG KÊ MA SÓI ---
+    function openProfileModal(uid) {
+      if (!uid) return;
+      viewingProfileUid = uid;
+      const p = allProfiles[uid];
+      editProfileAvatar = (p && p.avatar) || (myProfile && myProfile.avatar) || '😎';
+      renderProfileModalContent(uid);
+      document.getElementById('profile-modal').classList.remove('hidden');
     }
-    
+
+    function closeProfileModal() {
+      viewingProfileUid = null;
+      document.getElementById('profile-modal').classList.add('hidden');
+    }
+
+    function renderProfileModalContent(uid) {
+      const body = document.getElementById('profile-modal-body');
+      if (!body) return;
+      const p = allProfiles[uid] || (uid === myId ? myProfile : null);
+      if (!p) {
+        body.innerHTML = '<p class="text-xs text-slate-400 text-center py-6">Chưa tìm thấy thông tin tài khoản này.</p>';
+        return;
+      }
+
+      const isMe = uid === myId;
+      const isOnline = Boolean(p.online || roomUsers.some(u => u.id === uid));
+      const stats = p.stats || { gamesPlayed: 0, wins: 0, losses: 0, winsAsWolf: 0, winsAsVillager: 0, winsAsThird: 0 };
+      const winRate = stats.gamesPlayed > 0 ? Math.round((stats.wins / stats.gamesPlayed) * 100) : 0;
+
+      const friends = myInbox.friends || [];
+      const reqIn = myInbox.friendRequestsIn || [];
+      const reqOut = myInbox.friendRequestsOut || [];
+      const isFriend = friends.includes(uid);
+      const isReqIn = reqIn.includes(uid);
+      const isReqOut = reqOut.includes(uid);
+
+      const personalMatches = matchHistoryCache.filter(m => (m.players || []).some(pl => pl.id === uid)).slice(0, 5);
+      const winnerLabel = { VILLAGERS: '🛡️ Dân Làng', WOLVES: '🐺 Ma Sói', CUPID: '💘 Cupid', FOOL: '🤡 Thằng Ngốc', DRAW: '⚖️ Hòa' };
+
+      let actionButtonsHtml = '';
+      if (!isMe) {
+        let friendBtn = `<button onclick="sendFriendRequest('${uid}')" class="flex-1 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold">+ Kết bạn</button>`;
+        if (isFriend) {
+          friendBtn = `<button onclick="removeFriend('${uid}')" class="flex-1 py-2 rounded-xl bg-slate-800 hover:bg-rose-900/60 text-slate-300 text-xs font-bold">✓ Bạn bè (Hủy)</button>`;
+        } else if (isReqIn) {
+          friendBtn = `<button onclick="acceptFriendRequest('${uid}')" class="flex-1 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold">Chấp nhận kết bạn</button>`;
+        } else if (isReqOut) {
+          friendBtn = `<button disabled class="flex-1 py-2 rounded-xl bg-slate-800 text-slate-400 text-xs font-bold opacity-70">Đã gửi lời mời</button>`;
+        }
+        actionButtonsHtml = `
+          <div class="flex gap-2">
+            <button onclick="openDmWith('${uid}'); closeProfileModal();" class="flex-1 py-2 rounded-xl bg-[#FF4500] hover:bg-orange-500 text-white text-xs font-bold">💬 Nhắn tin riêng</button>
+            ${friendBtn}
+          </div>
+        `;
+      }
+
+      let editSectionHtml = '';
+      if (isMe) {
+        const avatarPickerHtml = AVATAR_POOL.map(av => `
+          <button type="button" onclick="editProfileAvatar='${av}'; renderProfileModalContent('${uid}');" class="w-8 h-8 rounded-lg text-sm flex items-center justify-center border ${editProfileAvatar === av ? 'bg-[#FF4500]/25 border-[#FF4500]' : 'bg-black/30 border-transparent hover:bg-black/50'}">${av}</button>
+        `).join('');
+        editSectionHtml = `
+          <form onsubmit="saveMyProfile(event)" class="bg-black/30 border border-moss rounded-2xl p-3.5 space-y-3">
+            <p class="text-[10px] font-bold uppercase tracking-wider text-[#FF4500]">Chỉnh sửa hồ sơ</p>
+            <div class="grid grid-cols-6 gap-1.5">${avatarPickerHtml}</div>
+            <input type="text" id="edit-profile-name" value="${escapeHtml(p.displayName || '')}" placeholder="Tên hiển thị" class="w-full bg-black/40 border border-moss rounded-xl px-3 py-2 text-xs text-slate-200 focus:outline-none focus:border-[#FF4500]" required>
+            <input type="text" id="edit-profile-bio" value="${escapeHtml(p.bio || '')}" placeholder="Giới thiệu ngắn (bio)..." class="w-full bg-black/40 border border-moss rounded-xl px-3 py-2 text-xs text-slate-200 focus:outline-none focus:border-[#FF4500]">
+            <button type="submit" class="w-full py-2 bg-[#FF4500] hover:bg-orange-500 text-white font-bold rounded-xl text-xs">Lưu thay đổi</button>
+          </form>
+        `;
+      }
+
+      body.innerHTML = `
+        <div class="flex items-center gap-3.5">
+          <div class="relative w-14 h-14 rounded-2xl bg-black/40 border border-moss flex items-center justify-center text-3xl">
+            ${p.avatar || '😎'}
+            <span class="absolute -bottom-1 -right-1 w-3.5 h-3.5 rounded-full border-2 border-[#0e1512] ${isOnline ? 'bg-emerald-400' : 'bg-slate-500'}"></span>
+          </div>
+          <div class="min-w-0 flex-1">
+            <h3 class="text-base font-black text-white truncate">${escapeHtml(p.displayName || p.username)}</h3>
+            <p class="text-xs text-slate-400">@${escapeHtml(p.username || '')} · <span class="${isOnline ? 'text-emerald-400' : 'text-slate-500'}">${isOnline ? 'Đang hoạt động' : formatRelativeTime(p.lastSeen)}</span></p>
+            ${p.bio ? `<p class="text-[11px] text-slate-300 mt-1">${escapeHtml(p.bio)}</p>` : ''}
+          </div>
+        </div>
+
+        ${actionButtonsHtml}
+
+        <div class="bg-black/30 border border-moss rounded-2xl p-3.5 space-y-2.5">
+          <p class="text-[10px] font-bold uppercase tracking-wider text-slate-400">🏆 Thống kê Ma Sói</p>
+          <div class="grid grid-cols-3 gap-2 text-center">
+            <div class="bg-black/40 rounded-xl p-2"><p class="text-base font-black text-white">${stats.gamesPlayed}</p><p class="text-[9px] text-slate-400">Tổng trận</p></div>
+            <div class="bg-black/40 rounded-xl p-2"><p class="text-base font-black text-emerald-400">${stats.wins}</p><p class="text-[9px] text-slate-400">Chiến thắng</p></div>
+            <div class="bg-black/40 rounded-xl p-2"><p class="text-base font-black text-amber-400">${winRate}%</p><p class="text-[9px] text-slate-400">Tỷ lệ thắng</p></div>
+          </div>
+          <div class="flex justify-between text-[10px] text-slate-400 pt-1">
+            <span>🛡️ Thắng Dân: <b class="text-blue-400">${stats.winsAsVillager || 0}</b></span>
+            <span>🐺 Thắng Sói: <b class="text-rose-400">${stats.winsAsWolf || 0}</b></span>
+            <span>🃏 Phe 3: <b class="text-purple-400">${stats.winsAsThird || 0}</b></span>
+          </div>
+        </div>
+
+        <div class="bg-black/30 border border-moss rounded-2xl p-3.5 space-y-2">
+          <p class="text-[10px] font-bold uppercase tracking-wider text-slate-400">📜 Trận gần đây của ${isMe ? 'bạn' : escapeHtml(p.displayName)}</p>
+          ${personalMatches.length === 0
+            ? '<p class="text-[11px] text-slate-500">Chưa có trận Ma Sói nào được ghi nhận.</p>'
+            : personalMatches.map(m => {
+                const meP = (m.players || []).find(pl => pl.id === uid);
+                const roleName = ROLE_NAMES[meP?.finalRole || meP?.role] || meP?.role || '?';
+                return `<div class="flex items-center justify-between text-[11px] bg-black/40 px-2.5 py-1.5 rounded-lg">
+                  <span class="text-slate-200 font-semibold">${roleName}</span>
+                  <span class="text-slate-400">${winnerLabel[m.winner] || m.winner}</span>
+                </div>`;
+              }).join('')}
+        </div>
+
+        ${editSectionHtml}
+      `;
+    }
+
+    async function saveMyProfile(e) {
+      e.preventDefault();
+      const displayName = document.getElementById('edit-profile-name').value.trim();
+      const bio = document.getElementById('edit-profile-bio').value.trim();
+      const res = await callAction('update_profile', { displayName, avatar: editProfileAvatar, bio });
+      if (res && res.ok) {
+        showToast('✅ Đã cập nhật hồ sơ cá nhân!');
+        closeProfileModal();
+      }
+    }
+
+    // --- MESSENGER SIDEBAR, BẠN BÈ & CHAT RIÊNG 1-1 ---
+    function renderMessengerSidebar() {
+      const reqSection = document.getElementById('friend-requests-section');
+      const reqList = document.getElementById('friend-requests-list');
+      const threadsList = document.getElementById('messenger-threads-list');
+      const titleEl = document.getElementById('messenger-list-title');
+      const badgeEl = document.getElementById('workspace-unread-badge');
+      const globalBtn = document.getElementById('btn-select-global-chat');
+      if (!threadsList) return;
+
+      const reqIn = myInbox.friendRequestsIn || [];
+      const reqOut = myInbox.friendRequestsOut || [];
+      const friends = myInbox.friends || [];
+      const dmMap = myInbox.dmConversations || {};
+
+      // Tính tổng badge chưa đọc + lời mời kết bạn
+      let totalUnread = reqIn.length;
+      Object.values(dmMap).forEach(c => { totalUnread += (c.unreadCount || 0); });
+      if (badgeEl) {
+        if (totalUnread > 0) {
+          badgeEl.innerText = totalUnread > 99 ? '99+' : totalUnread;
+          badgeEl.classList.remove('hidden');
+        } else {
+          badgeEl.classList.add('hidden');
+        }
+      }
+
+      if (globalBtn) {
+        globalBtn.className = activeChatMode === 'global'
+          ? 'w-full p-2.5 rounded-2xl border transition flex items-center gap-2.5 text-left bg-[#FF4500]/15 border-[#FF4500]'
+          : 'w-full p-2.5 rounded-2xl border border-moss transition flex items-center gap-2.5 text-left bg-black/25 hover:bg-white/5';
+      }
+
+      // Render lời mời kết bạn đến
+      if (reqSection && reqList) {
+        if (reqIn.length > 0) {
+          reqSection.classList.remove('hidden');
+          reqList.innerHTML = reqIn.map(uid => {
+            const u = allProfiles[uid] || { displayName: uid, username: '', avatar: '👤' };
+            return `<div class="p-2 bg-amber-500/10 border border-amber-500/30 rounded-xl flex items-center justify-between gap-2">
+              <div class="flex items-center gap-2 min-w-0">
+                <span class="text-base">${u.avatar || '👤'}</span>
+                <div class="min-w-0">
+                  <p class="text-[11px] font-bold text-white truncate">${escapeHtml(u.displayName)}</p>
+                  <p class="text-[9px] text-slate-400 truncate">@${escapeHtml(u.username)}</p>
+                </div>
+              </div>
+              <div class="flex gap-1 shrink-0">
+                <button onclick="acceptFriendRequest('${uid}')" class="px-2 py-1 bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg text-[10px] font-bold">✓</button>
+                <button onclick="declineFriendRequest('${uid}')" class="px-2 py-1 bg-slate-700 hover:bg-slate-600 text-slate-300 rounded-lg text-[10px] font-bold">✕</button>
+              </div>
+            </div>`;
+          }).join('');
+        } else {
+          reqSection.classList.add('hidden');
+        }
+      }
+
+      const query = (document.getElementById('messenger-search-input')?.value || '').trim().toLowerCase();
+      if (query) {
+        if (titleEl) titleEl.innerText = 'Kết quả tìm kiếm tài khoản';
+        const matches = Object.values(allProfiles).filter(p =>
+          p.uid !== myId &&
+          ((p.displayName || '').toLowerCase().includes(query) || (p.username || '').toLowerCase().includes(query))
+        );
+        if (matches.length === 0) {
+          threadsList.innerHTML = '<p class="text-[11px] text-slate-500 text-center py-4">Không tìm thấy ai khớp từ khóa.</p>';
+          return;
+        }
+        threadsList.innerHTML = matches.map(u => {
+          const isOnline = Boolean(u.online || roomUsers.some(r => r.id === u.uid));
+          const isFriend = friends.includes(u.uid);
+          const isOut = reqOut.includes(u.uid);
+          const addBtn = isFriend
+            ? '<span class="text-[9px] text-emerald-400 font-bold">Bạn bè</span>'
+            : (isOut
+              ? '<span class="text-[9px] text-slate-400">Đã gửi</span>'
+              : `<button onclick="event.stopPropagation(); sendFriendRequest('${u.uid}')" class="px-2 py-1 bg-emerald-600/80 hover:bg-emerald-500 text-white rounded-lg text-[10px] font-bold">+ Bạn</button>`);
+          return `<div onclick="openDmWith('${u.uid}')" class="cursor-pointer p-2.5 rounded-2xl bg-black/25 hover:bg-white/5 border border-moss flex items-center justify-between gap-2">
+            <div class="flex items-center gap-2 min-w-0">
+              <div class="relative shrink-0">
+                <span class="text-lg">${u.avatar || '😎'}</span>
+                <span class="absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 rounded-full border-2 border-[#0e1512] ${isOnline ? 'bg-emerald-400' : 'bg-slate-500'}"></span>
+              </div>
+              <div class="min-w-0">
+                <p class="text-xs font-bold text-slate-200 truncate">${escapeHtml(u.displayName)}</p>
+                <p class="text-[10px] text-slate-400 truncate">@${escapeHtml(u.username)}</p>
+              </div>
+            </div>
+            ${addBtn}
+          </div>`;
+        }).join('');
+        return;
+      }
+
+      if (titleEl) titleEl.innerText = 'Tin nhắn riêng & Bạn bè';
+      const peerSet = new Set([...friends, ...Object.keys(dmMap)]);
+      peerSet.delete(myId);
+      const peers = Array.from(peerSet).map(uid => {
+        const u = allProfiles[uid] || { uid, displayName: 'Người dùng', username: '', avatar: '👤', online: false, lastSeen: 0 };
+        const conv = dmMap[uid] || null;
+        return { uid, u, conv, sortAt: conv?.lastAt || (u.online ? 1 : 0) };
+      }).sort((a, b) => b.sortAt - a.sortAt);
+
+      if (peers.length === 0) {
+        threadsList.innerHTML = '<p class="text-[11px] text-slate-500 text-center py-6 leading-relaxed">Chưa có bạn bè hoặc tin nhắn riêng.<br>Gõ tên ở ô tìm kiếm trên hoặc bấm vào người đang ở sảnh để nhắn tin!</p>';
+        return;
+      }
+
+      threadsList.innerHTML = peers.map(({ uid, u, conv }) => {
+        const isOnline = Boolean(u.online || roomUsers.some(r => r.id === uid));
+        const isActive = activeChatMode === 'dm' && activeDmPeerUid === uid;
+        const unread = conv?.unreadCount || 0;
+        const preview = conv?.lastMessage
+          ? `${conv.lastSenderId === myId ? 'Bạn: ' : ''}${escapeHtml(conv.lastMessage)}`
+          : (isOnline ? 'Đang hoạt động' : formatRelativeTime(u.lastSeen));
+        return `<div onclick="openDmWith('${uid}')" class="cursor-pointer p-2.5 rounded-2xl border transition flex items-center gap-2.5 ${isActive ? 'bg-[#FF4500]/15 border-[#FF4500]' : 'bg-black/25 hover:bg-white/5 border-moss'}">
+          <div class="relative shrink-0">
+            <span class="text-xl">${u.avatar || '😎'}</span>
+            <span class="absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 rounded-full border-2 border-[#0e1512] ${isOnline ? 'bg-emerald-400' : 'bg-slate-500'}"></span>
+          </div>
+          <div class="min-w-0 flex-1">
+            <div class="flex items-center justify-between gap-1">
+              <p class="text-xs font-bold text-slate-100 truncate">${escapeHtml(u.displayName)}</p>
+              ${unread > 0 ? `<span class="px-1.5 py-0.5 text-[9px] font-black bg-[#FF4500] text-white rounded-full">${unread}</span>` : ''}
+            </div>
+            <p class="text-[10px] ${unread > 0 ? 'text-white font-semibold' : 'text-slate-400'} truncate">${preview}</p>
+          </div>
+        </div>`;
+      }).join('');
+    }
+
+    function selectGlobalChat() {
+      activeChatMode = 'global';
+      activeDmPeerUid = null;
+      activeDmSecretId = null;
+      if (activeDmUnsub) { try { activeDmUnsub(); } catch (_) {} activeDmUnsub = null; }
+      renderActiveChatHeader();
+      renderMessengerSidebar();
+      renderWorkspaceMessages(globalMessagesCache);
+    }
+
+    async function openDmWith(peerUid) {
+      if (!peerUid || peerUid === myId) return;
+      switchTab('workspace');
+      activeChatMode = 'dm';
+      activeDmPeerUid = peerUid;
+      activeDmMessages = [];
+      renderActiveChatHeader();
+      renderMessengerSidebar();
+
+      const existingConv = myInbox.dmConversations?.[peerUid];
+      let dmSecretId = existingConv?.dmSecretId || null;
+
+      if (dmSecretId) {
+        subscribeDmThread(dmSecretId);
+        if (existingConv.unreadCount > 0) callAction('mark_dm_read', { peerUid });
+      } else {
+        const box = document.getElementById('chat-messages-container');
+        if (box) box.innerHTML = '<p class="text-xs text-slate-500 text-center py-8">Đang mở cuộc trò chuyện...</p>';
+        const res = await callAction('open_dm', { peerUid });
+        if (res && res.ok && res.dmSecretId) {
+          subscribeDmThread(res.dmSecretId);
+        }
+      }
+    }
+
+    function subscribeDmThread(dmSecretId) {
+      if (activeDmSecretId === dmSecretId && activeDmUnsub) return;
+      if (activeDmUnsub) { try { activeDmUnsub(); } catch (_) {} activeDmUnsub = null; }
+      activeDmSecretId = dmSecretId;
+
+      activeDmUnsub = db.collection('dm_threads').doc(dmSecretId).onSnapshot((snap) => {
+        if (activeChatMode !== 'dm' || activeDmSecretId !== dmSecretId) return;
+        activeDmMessages = snap.exists && Array.isArray(snap.data().messages) ? snap.data().messages : [];
+        renderWorkspaceMessages(activeDmMessages);
+        if (activeDmPeerUid && (myInbox.dmConversations?.[activeDmPeerUid]?.unreadCount || 0) > 0) {
+          callAction('mark_dm_read', { peerUid: activeDmPeerUid });
+        }
+      }, (err) => console.error('dm_threads listener error:', err));
+    }
+
+    function renderActiveChatHeader() {
+      const header = document.getElementById('active-chat-header');
+      if (!header) return;
+      if (activeChatMode === 'global') {
+        header.innerHTML = `
+          <div class="flex items-center gap-2.5">
+            <div class="w-9 h-9 rounded-full bg-[#FF4500]/20 flex items-center justify-center text-base">🔥</div>
+            <div>
+              <h4 class="text-xs font-black text-white"># Phòng Chat Chung</h4>
+              <p class="text-[10px] text-slate-400">Tin nhắn đồng bộ mọi thiết bị</p>
+            </div>
+          </div>`;
+        return;
+      }
+      const peer = allProfiles[activeDmPeerUid] || { displayName: 'Người dùng', username: '', avatar: '😎', online: false, lastSeen: 0 };
+      const isOnline = Boolean(peer.online || roomUsers.some(u => u.id === activeDmPeerUid));
+      header.innerHTML = `
+        <div class="flex items-center gap-2.5">
+          <div class="relative">
+            <span class="text-2xl">${peer.avatar || '😎'}</span>
+            <span class="absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 rounded-full border-2 border-[#0e1512] ${isOnline ? 'bg-emerald-400' : 'bg-slate-500'}"></span>
+          </div>
+          <div>
+            <h4 class="text-xs font-black text-white">${escapeHtml(peer.displayName)}</h4>
+            <p class="text-[10px] ${isOnline ? 'text-emerald-400' : 'text-slate-400'}">${isOnline ? 'Đang hoạt động' : formatRelativeTime(peer.lastSeen)}</p>
+          </div>
+        </div>
+        <button onclick="openProfileModal('${activeDmPeerUid}')" class="px-3 py-1.5 rounded-xl bg-white/5 hover:bg-white/10 text-[10px] font-bold text-slate-300 border border-moss">Xem hồ sơ</button>
+      `;
+    }
+
+    async function sendFriendRequest(peerUid) {
+      const res = await callAction('send_friend_request', { peerUid });
+      if (res && res.ok) showToast('💌 Đã gửi lời mời kết bạn!');
+    }
+    async function acceptFriendRequest(peerUid) {
+      const res = await callAction('accept_friend_request', { peerUid });
+      if (res && res.ok) showToast('🤝 Đã trở thành bạn bè!');
+    }
+    async function declineFriendRequest(peerUid) {
+      await callAction('decline_friend_request', { peerUid });
+    }
+    async function removeFriend(peerUid) {
+      if (!confirm('Hủy kết bạn với người này?')) return;
+      const res = await callAction('remove_friend', { peerUid });
+      if (res && res.ok) showToast('Đã hủy kết bạn.');
+    }
+
+    // --- LOGIC CHAT CHUNG & CHAT RIÊNG (OPTIMISTIC UI 0ms KIỂU MESSENGER) ---
+    function sendMessage(e) {
+      e.preventDefault();
+      const input = document.getElementById('chat-msg-input');
+      if (!input || !input.value.trim()) return;
+      const text = input.value.trim();
+      input.value = '';
+
+      const meName = myProfile?.displayName || roomUsers.find(u => u.id === myId)?.name || 'Bạn';
+      const meAvatar = myProfile?.avatar || roomUsers.find(u => u.id === myId)?.avatar || '😎';
+      appendWorkspaceBubble({ senderId: myId, senderName: meName, senderAvatar: meAvatar, text, createdAt: Date.now() });
+
+      if (activeChatMode === 'dm' && activeDmPeerUid) {
+        callAction('send_dm_message', { peerUid: activeDmPeerUid, text });
+      } else {
+        callAction('send_chat_message', { text });
+      }
+    }
+
     function sendDayChat(e) {
-        e.preventDefault();
-        const input = document.getElementById('day-chat-input');
-        if(input && input.value.trim()) {
-            const text = input.value.trim();
-            input.value = '';
-            const me = roomUsers.find(u => u.id === myId);
-            if (me) appendChatMessage({ senderName: me.name, senderAvatar: me.avatar, text });
-            callAction('send_chat_message', { text });
-        }
+      e.preventDefault();
+      const input = document.getElementById('day-chat-input');
+      if (input && input.value.trim()) {
+        const text = input.value.trim();
+        input.value = '';
+        const meName = myProfile?.displayName || roomUsers.find(u => u.id === myId)?.name || 'Bạn';
+        const meAvatar = myProfile?.avatar || roomUsers.find(u => u.id === myId)?.avatar || '😎';
+        appendDayChatBubble({ senderId: myId, senderName: meName, senderAvatar: meAvatar, text, createdAt: Date.now() });
+        callAction('send_chat_message', { text });
+      }
     }
 
-    function renderWorkspaceMessages(msgs) { 
-        const box = document.getElementById('chat-messages-container'); 
-        if(box) box.innerHTML = ''; 
-        const dayBox = document.getElementById('day-chat-messages');
-        if(dayBox) dayBox.innerHTML = '';
-        msgs.forEach(m => appendChatMessage(m)); 
+    function renderWorkspaceMessages(msgs) {
+      const box = document.getElementById('chat-messages-container');
+      if (!box) return;
+      box.innerHTML = '';
+      if (!msgs || msgs.length === 0) {
+        box.innerHTML = '<p class="text-xs text-slate-500 text-center py-10">Chưa có tin nhắn nào. Hãy gửi lời chào đầu tiên! 👋</p>';
+        return;
+      }
+      msgs.forEach(m => appendWorkspaceBubble(m));
     }
 
-    function appendChatMessage(m) { 
-        const msgHtml = `<div class="flex items-start gap-2.5"><div class="w-7 h-7 rounded-full bg-black/40 flex items-center justify-center text-sm">${m.senderAvatar}</div><div><p class="text-[9px] font-bold text-slate-500">${m.senderName}</p><p class="bg-white/5 px-3 py-2 rounded-xl text-xs text-slate-200 mt-0.5">${m.text}</p></div></div>`;
-        const box = document.getElementById('chat-messages-container'); 
-        if (box) {
-            box.innerHTML += msgHtml;
-            box.scrollTop = box.scrollHeight; 
-        }
-        const dayBox = document.getElementById('day-chat-messages');
-        if (dayBox) {
-            dayBox.innerHTML += msgHtml;
-            dayBox.scrollTop = dayBox.scrollHeight;
-        }
+    function renderDayChatMessages(msgs) {
+      const dayBox = document.getElementById('day-chat-messages');
+      if (!dayBox) return;
+      dayBox.innerHTML = '';
+      (msgs || []).forEach(m => appendDayChatBubble(m));
+    }
+
+    function appendWorkspaceBubble(m) {
+      const box = document.getElementById('chat-messages-container');
+      if (!box) return;
+      const isMe = m.senderId && m.senderId === myId;
+      const timeStr = m.createdAt ? new Date(m.createdAt).toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' }) : '';
+      const html = isMe
+        ? `<div class="flex items-end justify-end gap-2">
+            <div class="max-w-[75%] text-right">
+              <div class="bg-[#FF4500] text-white px-3.5 py-2 rounded-2xl rounded-br-sm text-xs leading-relaxed break-words inline-block text-left">${escapeHtml(m.text)}</div>
+              <p class="text-[9px] text-slate-500 mt-0.5">${timeStr}</p>
+            </div>
+          </div>`
+        : `<div class="flex items-start gap-2">
+            <button onclick="openProfileModal('${m.senderId || ''}')" class="w-7 h-7 rounded-full bg-black/40 flex items-center justify-center text-sm shrink-0 hover:ring-1 hover:ring-[#FF4500]">${m.senderAvatar || '😎'}</button>
+            <div class="max-w-[75%]">
+              <p class="text-[9px] font-bold text-slate-400">${escapeHtml(m.senderName)} <span class="font-normal text-slate-500 ml-1">${timeStr}</span></p>
+              <div class="bg-white/10 px-3.5 py-2 rounded-2xl rounded-tl-sm text-xs text-slate-100 mt-0.5 leading-relaxed break-words inline-block">${escapeHtml(m.text)}</div>
+            </div>
+          </div>`;
+      box.insertAdjacentHTML('beforeend', html);
+      box.scrollTop = box.scrollHeight;
+    }
+
+    function appendDayChatBubble(m) {
+      const dayBox = document.getElementById('day-chat-messages');
+      if (!dayBox) return;
+      const html = `<div class="flex items-start gap-2.5"><div class="w-7 h-7 rounded-full bg-black/40 flex items-center justify-center text-sm shrink-0">${m.senderAvatar || '😎'}</div><div><p class="text-[9px] font-bold text-slate-500">${escapeHtml(m.senderName)}</p><p class="bg-white/5 px-3 py-2 rounded-xl text-xs text-slate-200 mt-0.5 break-words">${escapeHtml(m.text)}</p></div></div>`;
+      dayBox.insertAdjacentHTML('beforeend', html);
+      dayBox.scrollTop = dayBox.scrollHeight;
     }
 
     // --- LOGIC MA SÓI ---
@@ -2042,8 +2676,10 @@
 
     initEntrance();
     lucide.createIcons();
-    // Làm nóng sẵn Vercel Function Singapore ngay khi mở trang để bấm Đăng nhập nhanh tức thì
-    fetch('/api/action').catch(() => {});
+    // Tự động khôi phục phiên đăng nhập giống Messenger nếu đã đăng nhập trước đó
+    tryAutoRestoreSession();
+    // Làm nóng sẵn Vercel Function Singapore nếu chưa có phiên
+    if (!getSecretToken()) fetch('/api/action').catch(() => {});
   </script>
 </body>
 </html>
