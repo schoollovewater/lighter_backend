@@ -534,7 +534,7 @@
 
     // RENDER AVATAR KHÔNG MẬT KHẨU Ở CỬA VÀO
     function initEntrance() {
-      const savedName = localStorage.getItem('school_universe_last_name') || localStorage.getItem('lighter_last_name');
+      const savedName = localStorage.getItem('school_universe_last_name');
       const savedAvatar = localStorage.getItem('school_universe_last_avatar');
       const nameInput = document.getElementById('entrance-name-input');
       if (nameInput && !nameInput.value && savedName) nameInput.value = savedName;
