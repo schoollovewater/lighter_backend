@@ -8,6 +8,10 @@ const app = express();
 app.use(cors()); 
 app.use(express.static(path.join(__dirname, 'public')));
 
+app.get(/^\/gm(\/.*)?$/, (req, res) => {
+    res.sendFile(path.join(__dirname, 'public', 'gm', 'index.html'));
+});
+
 app.get(/.*/, (req, res) => {
     res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
@@ -44,6 +48,10 @@ function getMaskedStateForUser(uId) {
     const me = maskedState.players.find(p => p.id === uId);
     const myEffFaction = me ? (me.cloneInheritedFaction || me.originFaction) : null;
     const amIWolf = myEffFaction === 'Ma_Sói';
+    const meEffRole = me ? (me.cloneInheritedRole || me.role) : null;
+    const canSeeSeerFlag = Boolean(
+        me && me.status === 'Alive' && !me.abilityRemoved && (meEffRole === 'SEER' || meEffRole === 'DETECTIVE')
+    );
 
     maskedState.players.forEach(p => {
         let effFaction = p.cloneInheritedFaction || p.originFaction;
@@ -51,7 +59,11 @@ function getMaskedStateForUser(uId) {
         let pEffRole = p.transformedRole || p.cloneInheritedRole || p.role;
         if (pEffRole === 'HIDDEN_WOLF') isWolf = false;
         if (maskedState.nightActions && maskedState.nightActions['SHAMAN_WOLF'] === p.id) isWolf = true;
-        p.isWolfForSeer = isWolf;
+        if (canSeeSeerFlag) {
+            p.isWolfForSeer = isWolf;
+        } else {
+            delete p.isWolfForSeer;
+        }
 
         if (p.id !== uId) {
             let showRole = false;
@@ -79,7 +91,7 @@ function getMaskedStateForUser(uId) {
         delete maskedState.wolfVotes;
     }
 
-    if (me && (me.role === 'BEAR_TAMER' || me.cloneInheritedRole === 'BEAR_TAMER')) {
+    if (me && (me.role === 'BEAR_TAMER' || me.cloneInheritedRole === 'BEAR_TAMER') && !me.abilityRemoved) {
         const alivePlayers = serverGameState.players.filter(p => p.status === 'Alive');
         const myIndex = alivePlayers.findIndex(p => p.id === uId);
         let hasWolfNeighbor = false;
@@ -89,7 +101,7 @@ function getMaskedStateForUser(uId) {
             
             [leftPlayer, rightPlayer].forEach(neighbor => {
                 let nEffRole = neighbor.transformedRole || neighbor.cloneInheritedRole || neighbor.role;
-                let nFaction = neighbor.originFaction;
+                let nFaction = neighbor.cloneInheritedFaction || neighbor.originFaction;
                 if (nEffRole === 'CURSED_ONE' && serverGameState.cursedOneBitten) nFaction = 'Ma_Sói';
                 
                 if (serverGameState.nightActions && serverGameState.nightActions['SHAMAN_WOLF'] === neighbor.id) {
@@ -105,11 +117,9 @@ function getMaskedStateForUser(uId) {
     }
 
     // TỐI MẬT: XÓA CÁC THÔNG TIN NHẠY CẢM ĐỂ CHỐNG META-GAMING (SOI DEVTOOLS)
-    const meEffRole = me ? (me.cloneInheritedRole || me.role) : null;
-    
     if (maskedState.nightActions) {
         const safeActions = {};
-        if (meEffRole === 'WITCH') {
+        if (meEffRole === 'WITCH' && !maskedState.witchState?.usedSave) {
             safeActions['WEREWOLF_TEAM'] = maskedState.nightActions['WEREWOLF_TEAM'];
         }
         if (amIWolf) {
@@ -127,17 +137,18 @@ function getMaskedStateForUser(uId) {
     if (meEffRole !== 'WITCH') maskedState.witchState = { usedSave: maskedState.witchState?.usedSave, usedPoison: maskedState.witchState?.usedPoison }; // Ẩn thông tin, chỉ để lại trạng thái đã dùng hay chưa
     
     const amICupidOrLinked = me && (me.role === 'CUPID' || me.isCupid || (maskedState.cupidLinks || []).includes(me.id));
-    if (!amICupidOrLinked && maskedState.phase !== 'DAY_TRIAL') {
-        // Nếu game kết thúc hoặc ở màn hình chờ thì có thể show, nếu đang chơi thì ẩn
-        if (maskedState.status === 'PLAYING') maskedState.cupidLinks = [];
+    if (!amICupidOrLinked && maskedState.status === 'PLAYING') {
+        maskedState.cupidLinks = [];
     }
 
     return maskedState;
 }
 
 function broadcastGameState() {
-    const users = Object.values(globalUsers);
-    users.forEach(u => {
+    const seen = new Set();
+    Object.values(globalUsers).forEach(u => {
+        if (seen.has(u.id)) return;
+        seen.add(u.id);
         io.to(u.id).emit('update_game_state', getMaskedStateForUser(u.id));
     });
 }
@@ -149,6 +160,9 @@ io.on('connection', (socket) => {
     socket.on('join_hub', (userData) => {
         const isFirst = Object.keys(globalUsers).length === 0;
         const sessionId = userData.sessionId || socket.id;
+
+        // Tham gia room theo sessionId để io.to(u.id) luôn gửi đúng kể cả sau reconnect
+        socket.join(sessionId);
 
         if (disconnectTimeouts[sessionId]) {
             clearTimeout(disconnectTimeouts[sessionId]);
@@ -164,9 +178,16 @@ io.on('connection', (socket) => {
         }
 
         if (oldSocketId && oldSocketId !== socket.id) {
-            globalUsers[socket.id] = globalUsers[oldSocketId];
+            globalUsers[socket.id] = {
+                ...globalUsers[oldSocketId],
+                name: userData.name || globalUsers[oldSocketId].name,
+                avatar: userData.avatar || globalUsers[oldSocketId].avatar
+            };
             delete globalUsers[oldSocketId];
-            console.log(`♻️ User Reconnected: ${userData.name}`);
+            console.log(`♻️ User Reconnected: ${globalUsers[socket.id].name}`);
+        } else if (oldSocketId === socket.id) {
+            globalUsers[socket.id].name = userData.name || globalUsers[socket.id].name;
+            globalUsers[socket.id].avatar = userData.avatar || globalUsers[socket.id].avatar;
         } else {
             globalUsers[socket.id] = {
                 id: sessionId,
@@ -229,6 +250,15 @@ io.on('connection', (socket) => {
 
     // --- ĐỒNG BỘ MA SÓI ---
     socket.on('sync_game_state', (newState) => {
+        if (!newState) return;
+        if (
+            serverGameState.status === 'PLAYING' &&
+            Array.isArray(newState.players) &&
+            newState.players.some(p => p.role === 'UNKNOWN')
+        ) {
+            console.warn('⚠️ Bỏ qua sync_game_state vì chứa state đã bị che (UNKNOWN) khi đang PLAYING.');
+            return;
+        }
         serverGameState = newState;
         broadcastGameState();
     });
@@ -256,8 +286,11 @@ io.on('connection', (socket) => {
         if (effRoles.includes('DETECTIVE')) steps.push('DETECTIVE');
         if (serverGameState.day === 1 && effRoles.includes('FOOL')) steps.push('FOOL');
         if (effRoles.includes('HUNTER')) steps.push('HUNTER');
-        if (effRoles.includes('ENRAGED_WOLF') && serverGameState.enragedWolfStacks > 0) steps.push('ENRAGED_WOLF');
         
+        serverGameState.nightActions = {};
+        serverGameState.wolfVotes = {};
+        serverGameState.wolfTempVotes = {};
+        serverGameState.cupidAwaitingConfirm = false;
         serverGameState.nightActiveSteps = steps;
         serverGameState.currentNightStepIndex = -1;
         serverGameState.phase = 'NIGHT';
@@ -276,20 +309,89 @@ io.on('connection', (socket) => {
     socket.on('end_werewolf_game', () => {
         if (!serverGameState) return;
         serverGameState.status = 'WAITING';
+        serverGameState.phase = 'PRE_GAME';
+        serverGameState.cupidAwaitingConfirm = false;
         broadcastGameState();
     });
 
     socket.on('submit_werewolf_vote', ({ voterId, targetId }) => {
+        if (serverGameState.status !== 'PLAYING' || serverGameState.phase !== 'DAY_VOTING') return;
+        const voter = serverGameState.players.find(p => p.id === voterId);
+        const target = serverGameState.players.find(p => p.id === targetId);
+        if (!voter || voter.status !== 'Alive' || !target || target.status !== 'Alive') return;
+
         if (!serverGameState.dayVotes) serverGameState.dayVotes = {};
         serverGameState.dayVotes[voterId] = targetId;
         checkAutoProgress();
         broadcastGameState();
     });
 
+    socket.on('host_lock_day_votes', () => {
+        if (serverGameState.status !== 'PLAYING' || serverGameState.phase !== 'DAY_VOTING') return;
+        const votes = serverGameState.dayVotes || {};
+        const counts = {};
+        Object.values(votes).forEach(t => { if (t) counts[t] = (counts[t] || 0) + 1; });
+
+        let maxVotes = 0;
+        let targetId = null;
+        let isTie = false;
+        Object.entries(counts).forEach(([id, c]) => {
+            if (c > maxVotes) {
+                maxVotes = c;
+                targetId = id;
+                isTie = false;
+            } else if (c === maxVotes) {
+                isTie = true;
+            }
+        });
+
+        if (isTie || !targetId) {
+            serverGameState.phase = 'DAY';
+            serverGameState.dayVotes = {};
+        } else {
+            serverGameState.phase = 'DAY_TRIAL';
+            serverGameState.trialTarget = targetId;
+            serverGameState.trialVotes = {};
+        }
+        broadcastGameState();
+    });
+
     socket.on('submit_werewolf_trial', ({ voterId, vote }) => {
+        if (serverGameState.status !== 'PLAYING' || serverGameState.phase !== 'DAY_TRIAL') return;
+        const voter = serverGameState.players.find(p => p.id === voterId);
+        if (!voter || voter.status !== 'Alive') return;
+        if (voterId === serverGameState.trialTarget) return;
+        if (vote !== 'THA' && vote !== 'TREO') return;
+
         if (!serverGameState.trialVotes) serverGameState.trialVotes = {};
         serverGameState.trialVotes[voterId] = vote;
         checkAutoProgress();
+        broadcastGameState();
+    });
+
+    socket.on('host_finalize_trial', () => {
+        if (serverGameState.status !== 'PLAYING' || serverGameState.phase !== 'DAY_TRIAL') return;
+        const votes = serverGameState.trialVotes || {};
+        let tha = 0, treo = 0;
+        Object.values(votes).forEach(v => v === 'THA' ? tha++ : treo++);
+
+        if (treo > tha && serverGameState.trialTarget) {
+            const targetPlayer = serverGameState.players.find(p => p.id === serverGameState.trialTarget);
+            const effRole = targetPlayer ? (targetPlayer.cloneInheritedRole || targetPlayer.role) : null;
+            if (effRole === 'FOOL') {
+                serverGameState.winner = 'FOOL';
+                serverGameState.status = 'GAME_OVER';
+                io.emit('game_over_fool_win', targetPlayer.name);
+            } else {
+                processCascadingDeaths([serverGameState.trialTarget]);
+            }
+        }
+        if (serverGameState.status !== 'GAME_OVER') {
+            serverGameState.phase = 'DAY';
+            serverGameState.trialTarget = null;
+            serverGameState.trialVotes = {};
+            checkGameOver();
+        }
         broadcastGameState();
     });
 
@@ -343,12 +445,18 @@ io.on('connection', (socket) => {
             } else {
                 p.status = 'Alive';
             }
+            if (serverGameState.status === 'PLAYING') {
+                if (!checkGameOver()) {
+                    checkAutoProgress();
+                }
+            }
             broadcastGameState();
         }
     });
 
     socket.on('force_skip_night_step', () => {
         if (serverGameState.phase === 'NIGHT') {
+            serverGameState.cupidAwaitingConfirm = false;
             advanceNightStep();
             broadcastGameState();
         }
@@ -361,56 +469,74 @@ io.on('connection', (socket) => {
         }
     });
 
-    socket.on('submit_night_action', ({ role, actionData, playerId }) => {
+    socket.on('submit_night_action', ({ role, actionData = {}, playerId }) => {
+        if (serverGameState.status !== 'PLAYING' || serverGameState.phase !== 'NIGHT') return;
         if (!serverGameState.nightActions) serverGameState.nightActions = {};
-        
-        if (role === 'WITCH') {
-            if (actionData.save && !serverGameState.witchState.usedSave) {
-                serverGameState.witchState.usedSave = true;
-                serverGameState.nightActions.witchSave = actionData.save;
-            }
-            if (actionData.poison && !serverGameState.witchState.usedPoison) {
-                serverGameState.witchState.usedPoison = true;
-                serverGameState.nightActions.witchPoisonTarget = actionData.poison;
-            }
-        } else if (role === 'CUPID') {
-            serverGameState.cupidLinks = actionData.links;
-            
-            // Tìm tất cả các thành viên phe Cupid để gửi sự kiện lật bài
-            let members = serverGameState.players.filter(p => actionData.links && actionData.links.includes(p.id));
-            if (serverGameState.cupidMode === 1) {
-                const cupidPlayer = serverGameState.players.find(p => p.role === 'CUPID');
-                if (cupidPlayer && !members.find(m => m.id === cupidPlayer.id)) members.push(cupidPlayer);
+
+        const actingPlayer = serverGameState.players.find(p => p.id === playerId);
+        const abilitySealed = Boolean(actingPlayer && actingPlayer.abilityRemoved);
+
+        if (!abilitySealed) {
+            if (role === 'WITCH') {
+                if (actionData.save && !serverGameState.witchState.usedSave) {
+                    serverGameState.witchState.usedSave = true;
+                    serverGameState.nightActions.witchSave = actionData.save;
+                }
+                if (actionData.poison && !serverGameState.witchState.usedPoison) {
+                    serverGameState.witchState.usedPoison = true;
+                    serverGameState.nightActions.witchPoisonTarget = actionData.poison;
+                }
+            } else if (role === 'CUPID') {
+                serverGameState.cupidLinks = actionData.links || [];
+                
+                if (actionData.links && actionData.links.length === 2) {
+                    // Tìm tất cả các thành viên phe Cupid để gửi sự kiện lật bài
+                    let members = serverGameState.players.filter(p => actionData.links.includes(p.id));
+                    if (serverGameState.cupidMode === 1) {
+                        const cupidPlayer = serverGameState.players.find(p => p.role === 'CUPID');
+                        if (cupidPlayer && !members.find(m => m.id === cupidPlayer.id)) members.push(cupidPlayer);
+                    } else {
+                        const cupidPlayer = serverGameState.players.find(p => p.isCupid);
+                        if (cupidPlayer && !members.find(m => m.id === cupidPlayer.id)) members.push(cupidPlayer);
+                    }
+
+                    serverGameState.cupidAwaitingConfirm = true;
+                    // Chờ Cupid bấm "XÁC NHẬN ĐÃ NHỚ" (finish_night_step) mới chuyển lượt
+                    broadcastGameState();
+                    members.forEach(m => {
+                        io.to(m.id).emit('show_cupid_identities', members);
+                    });
+                    return;
+                }
+            } else if (role === 'HUNTER') {
+                serverGameState.hunterTargets[playerId] = actionData.target || null;
+            } else if (role === 'CLONE') {
+                if (actionData.target) {
+                    serverGameState.cloneTarget = actionData.target;
+                }
+            } else if (role === 'MOON_LADY') {
+                serverGameState.nightActions[role] = actionData.target || null;
+                serverGameState.moonLadyLastTarget = actionData.target || null;
+                if (actionData.target) {
+                    const targetPlayer = serverGameState.players.find(p => p.id === actionData.target);
+                    if (targetPlayer) targetPlayer.isLocked = true;
+                }
+            } else if (role === 'WEREWOLF_TEAM') {
+                if (!serverGameState.wolfVotes) serverGameState.wolfVotes = {};
+                serverGameState.wolfVotes[playerId] = actionData.target;
+                serverGameState.nightActions[role] = actionData.target; // Fallback
+            } else if (role === 'ALPHA_WOLF') {
+                const livingWolvesCount = serverGameState.players.filter(
+                    x => x.status === 'Alive' && (x.cloneInheritedFaction || x.originFaction) === 'Ma_Sói'
+                ).length;
+                if (livingWolvesCount === 1) {
+                    serverGameState.nightActions[role] = actionData.target || null;
+                }
             } else {
-                const cupidPlayer = serverGameState.players.find(p => p.isCupid);
-                if (cupidPlayer && !members.find(m => m.id === cupidPlayer.id)) members.push(cupidPlayer);
-            }
-            
-            // Gửi dữ liệu lật bài cho các socket tương ứng
-            members.forEach(m => {
-                io.to(m.id).emit('show_cupid_identities', members);
-            });
-        } else if (role === 'HUNTER') {
-            serverGameState.hunterTargets[playerId] = actionData.target;
-        } else if (role === 'CLONE') {
-            if (actionData.target) {
-                serverGameState.cloneTarget = actionData.target;
-            }
-        } else if (role === 'MOON_LADY') {
-            serverGameState.nightActions[role] = actionData.target;
-            if (actionData.target) {
-                const targetPlayer = serverGameState.players.find(p => p.id === actionData.target);
-                if (targetPlayer) targetPlayer.isLocked = true;
-                serverGameState.moonLadyLastTarget = actionData.target;
-            }
-        } else if (role === 'WEREWOLF_TEAM') {
-            if (!serverGameState.wolfVotes) serverGameState.wolfVotes = {};
-            serverGameState.wolfVotes[playerId] = actionData.target;
-            serverGameState.nightActions[role] = actionData.target; // Fallback
-        } else {
-            serverGameState.nightActions[role] = actionData.target;
-            if (role === 'BODYGUARD') {
-                serverGameState.bodyguardLastTarget = actionData.target;
+                serverGameState.nightActions[role] = actionData.target;
+                if (role === 'BODYGUARD') {
+                    serverGameState.bodyguardLastTarget = actionData.target || null;
+                }
             }
         }
         
@@ -432,10 +558,6 @@ io.on('connection', (socket) => {
             if (step === 'CURSED_ONE' && baseRole === 'CURSED_ONE') return true;
             if (step === 'WEREWOLF_TEAM') return ['WEREWOLF', 'HIDDEN_WOLF', 'ENRAGED_WOLF', 'SHAMAN_WOLF', 'ALPHA_WOLF'].includes(effRole);
             if (step === 'CUPID') return effRole === 'CUPID' || p.isCupid;
-            if (step === 'ALPHA_WOLF' && effRole === 'ALPHA_WOLF') {
-                const livingWolvesCount = serverGameState.players.filter(x => x.status === 'Alive' && (x.cloneInheritedFaction || x.originFaction) === 'Ma_Sói').length;
-                return livingWolvesCount === 1;
-            }
             return effRole === step;
         });
     }
@@ -443,6 +565,13 @@ io.on('connection', (socket) => {
     function checkGameOver() {
         if (serverGameState.status !== 'PLAYING') return false;
         const alive = serverGameState.players.filter(p => p.status === 'Alive');
+
+        if (alive.length === 0) {
+            serverGameState.winner = 'DRAW';
+            serverGameState.status = 'GAME_OVER';
+            io.emit('game_over_draw');
+            return true;
+        }
         
         let wolves = 0;
         alive.forEach(p => {
@@ -458,17 +587,17 @@ io.on('connection', (socket) => {
             return true;
         }
 
-        if (wolves >= alive.length - wolves) {
-            serverGameState.winner = 'WOLVES';
-            serverGameState.status = 'GAME_OVER';
-            io.emit('game_over_wolves_win');
-            return true;
-        }
-
         if (wolves === 0) {
             serverGameState.winner = 'VILLAGERS';
             serverGameState.status = 'GAME_OVER';
             io.emit('game_over_villagers_win');
+            return true;
+        }
+
+        if (wolves >= alive.length - wolves) {
+            serverGameState.winner = 'WOLVES';
+            serverGameState.status = 'GAME_OVER';
+            io.emit('game_over_wolves_win');
             return true;
         }
         
@@ -530,6 +659,7 @@ io.on('connection', (socket) => {
                 if (serverGameState.status !== 'GAME_OVER') {
                     serverGameState.phase = 'DAY';
                     serverGameState.trialTarget = null;
+                    serverGameState.trialVotes = {};
                     checkGameOver();
                 }
                 changed = true;
@@ -573,10 +703,10 @@ io.on('connection', (socket) => {
 
                 if (currentStep === 'ENRAGED_WOLF') {
                     const action = serverGameState.nightActions['ENRAGED_WOLF'];
-                    if (action) {
+                    if (action && (serverGameState.enragedWolfStacks || 0) > 0) {
                         const target = serverGameState.players.find(p => p.id === action);
                         if (target) target.abilityRemoved = true;
-                        serverGameState.enragedWolfStacks = Math.max(0, (serverGameState.enragedWolfStacks || 1) - 1);
+                        serverGameState.enragedWolfStacks = Math.max(0, serverGameState.enragedWolfStacks - 1);
                     }
                 }
                 
@@ -600,8 +730,8 @@ io.on('connection', (socket) => {
             const dyingPlayer = serverGameState.players.find(p => p.id === dyingId);
             if (!dyingPlayer) continue;
             
-            // Hunter fires if dies
-            if ((dyingPlayer.cloneInheritedRole || dyingPlayer.role) === 'HUNTER') {
+            // Hunter fires if dies (unless ability was removed)
+            if ((dyingPlayer.cloneInheritedRole || dyingPlayer.role) === 'HUNTER' && !dyingPlayer.abilityRemoved) {
                 const huntTarget = serverGameState.hunterTargets[dyingId];
                 if (huntTarget && !processed.includes(huntTarget) && !queue.includes(huntTarget)) {
                     queue.push(huntTarget);
@@ -619,40 +749,50 @@ io.on('connection', (socket) => {
             }
         }
         
-        // Apply deaths
+        // Pass 1: Đánh dấu toàn bộ người chết trước
         deadList.forEach(id => {
             const p = serverGameState.players.find(x => x.id === id);
-            if (p) {
-                p.status = 'Dead';
-                
-                let effFaction = p.cloneInheritedFaction || p.originFaction;
-                if (effFaction === 'Ma_Sói' && p.role !== 'ENRAGED_WOLF' && p.cloneInheritedRole !== 'ENRAGED_WOLF') {
-                    const enragedWolf = serverGameState.players.find(x => 
-                        (x.role === 'ENRAGED_WOLF' || x.cloneInheritedRole === 'ENRAGED_WOLF') && x.status === 'Alive'
-                    );
-                    if (enragedWolf) {
-                        serverGameState.enragedWolfStacks = (serverGameState.enragedWolfStacks || 0) + 1;
-                    }
+            if (p) p.status = 'Dead';
+        });
+
+        // Pass 2: Xử lý hậu quả (điểm phẫn nộ Sói Cuồng Nộ & kế thừa Nhân Bản)
+        deadList.forEach(id => {
+            const p = serverGameState.players.find(x => x.id === id);
+            if (!p) return;
+
+            let effFaction = p.cloneInheritedFaction || p.originFaction;
+            if (effFaction === 'Ma_Sói' && p.role !== 'ENRAGED_WOLF' && p.cloneInheritedRole !== 'ENRAGED_WOLF') {
+                const enragedWolf = serverGameState.players.find(x => 
+                    (x.role === 'ENRAGED_WOLF' || x.cloneInheritedRole === 'ENRAGED_WOLF') && x.status === 'Alive'
+                );
+                if (enragedWolf) {
+                    serverGameState.enragedWolfStacks = (serverGameState.enragedWolfStacks || 0) + 1;
                 }
-                
-                // Clone inheritance check
-                if (serverGameState.cloneTarget === id) {
-                    const clonePlayer = serverGameState.players.find(x => x.role === 'CLONE' && x.status === 'Alive');
-                    if (clonePlayer && !clonePlayer.cloneInheritedRole) {
-                        clonePlayer.cloneInheritedRole = p.role;
-                        clonePlayer.cloneInheritedFaction = p.originFaction;
-                        
-                        // Notify clone secretly
-                        io.to(clonePlayer.id).emit('clone_inherited', { role: clonePlayer.cloneInheritedRole });
+            }
+            
+            // Clone inheritance check (chỉ kế thừa nếu Nhân Bản vẫn còn sống)
+            if (serverGameState.cloneTarget === id) {
+                const clonePlayer = serverGameState.players.find(x => x.role === 'CLONE' && x.status === 'Alive');
+                if (clonePlayer && !clonePlayer.cloneInheritedRole) {
+                    clonePlayer.cloneInheritedRole = p.role;
+                    clonePlayer.cloneInheritedFaction = p.cloneInheritedFaction || p.originFaction;
+                    if (p.transformedRole) {
+                        clonePlayer.transformedRole = p.transformedRole;
                     }
+                    
+                    // Notify clone secretly
+                    io.to(clonePlayer.id).emit('clone_inherited', { role: clonePlayer.transformedRole || clonePlayer.cloneInheritedRole });
                 }
             }
         });
+
+        return deadList;
     }
 
     function advanceNightStep() {
         serverGameState.currentNightStepIndex++;
         serverGameState.nightSubmissions = [];
+        serverGameState.cupidAwaitingConfirm = false;
         
         while (serverGameState.currentNightStepIndex < serverGameState.nightActiveSteps.length) {
             const step = serverGameState.nightActiveSteps[serverGameState.currentNightStepIndex];
@@ -689,9 +829,11 @@ io.on('connection', (socket) => {
                 if (Date.now() >= serverGameState.nightDeadline) {
                     if (step === 'WEREWOLF_TEAM' && activePlayers.length > 0) {
                         const aliveTargets = serverGameState.players.filter(p => p.status === 'Alive');
-                        const randomTarget = aliveTargets[Math.floor(Math.random() * aliveTargets.length)];
-                        serverGameState.nightActions['WEREWOLF_TEAM'] = randomTarget.id;
-                        activePlayers.forEach(p => io.to(p.id).emit('wolf_timeout_forced'));
+                        if (aliveTargets.length > 0) {
+                            const randomTarget = aliveTargets[Math.floor(Math.random() * aliveTargets.length)];
+                            serverGameState.nightActions['WEREWOLF_TEAM'] = randomTarget.id;
+                            activePlayers.forEach(p => io.to(p.id).emit('wolf_timeout_forced'));
+                        }
                     }
                     advanceNightStep();
                     broadcastGameState();
@@ -710,7 +852,6 @@ io.on('connection', (socket) => {
             
             // 1. Wolves attack
             const wolvesTargetId = serverGameState.nightActions['WEREWOLF_TEAM'];
-            let wolfKillSuccess = false;
             if (wolvesTargetId) {
                 const isProtected = serverGameState.nightActions['BODYGUARD'] === wolvesTargetId;
                 const isSaved = serverGameState.nightActions.witchSave;
@@ -726,7 +867,6 @@ io.on('connection', (socket) => {
                             io.to(targetPlayer.id).emit('cursed_transformed');
                         } else {
                             deadTonight.push(wolvesTargetId);
-                            wolfKillSuccess = true;
                         }
                     }
                 }
@@ -759,14 +899,13 @@ io.on('connection', (socket) => {
                 deadTonight.push(poisonTargetId);
             }
             
-            // 3. Process cascading deaths (Cupid, Hunter)
-            processCascadingDeaths(deadTonight);
+            // 3. Process cascading deaths (Cupid, Hunter) và lấy danh sách chết đầy đủ cho thông báo sáng
+            const allDeadTonight = processCascadingDeaths(deadTonight);
             
-            // Clear night actions except persistent ones
             // Xóa trạng thái khóa chức năng của Nguyệt Nữ
             serverGameState.players.forEach(p => p.isLocked = false);
 
-            serverGameState.morningDead = [...deadTonight];
+            serverGameState.morningDead = [...allDeadTonight];
             serverGameState.morningDay = serverGameState.day;
             
             serverGameState.nightActions = {};
@@ -775,15 +914,15 @@ io.on('connection', (socket) => {
             serverGameState.dayVotes = {}; 
             serverGameState.trialVotes = {};
             serverGameState.wolfVotes = {};
-            
-            // Xóa trạng thái khóa chức năng của Nguyệt Nữ
-            serverGameState.players.forEach(p => p.isLocked = false);
+            serverGameState.cupidAwaitingConfirm = false;
             
             checkGameOver();
         }
     }
 
     socket.on('finish_night_step', () => {
+        if (serverGameState.phase !== 'NIGHT') return;
+        serverGameState.cupidAwaitingConfirm = false;
         advanceNightStep();
         broadcastGameState();
     });
@@ -803,17 +942,22 @@ io.on('connection', (socket) => {
         if (serverGameState.status !== 'WAITING' && serverGameState.status !== 'GAME_OVER') {
             serverGameState.phase = 'DAY';
             serverGameState.trialTarget = null;
+            serverGameState.trialVotes = {};
             checkGameOver();
         }
         broadcastGameState();
     });
 
     socket.on('kick_player', ({ playerId }) => {
-        const userLeaving = globalUsers[playerId];
+        const targetSocketId = Object.keys(globalUsers).find(
+            sid => sid === playerId || globalUsers[sid].id === playerId
+        );
+        const userLeaving = targetSocketId ? globalUsers[targetSocketId] : null;
         if (userLeaving) {
+            const targetSessionId = userLeaving.id;
             console.log(`👢 Bị kick: ${userLeaving.name}`);
             const wasHost = userLeaving.isHost;
-            delete globalUsers[playerId];
+            delete globalUsers[targetSocketId];
 
             const remainingUsers = Object.values(globalUsers);
             if (wasHost && remainingUsers.length > 0) {
@@ -822,9 +966,9 @@ io.on('connection', (socket) => {
             }
 
             if (serverGameState.status === 'PLAYING') {
-                const p = serverGameState.players.find(x => x.id === playerId);
+                const p = serverGameState.players.find(x => x.id === targetSessionId);
                 if (p && p.status === 'Alive') p.status = 'Dead';
-                if (serverGameState.phase === 'DAY_TRIAL' && serverGameState.trialTarget === playerId) {
+                if (serverGameState.phase === 'DAY_TRIAL' && serverGameState.trialTarget === targetSessionId) {
                     serverGameState.phase = 'DAY';
                     serverGameState.trialTarget = null;
                     serverGameState.trialVotes = {};
@@ -833,12 +977,12 @@ io.on('connection', (socket) => {
                     checkAutoProgress();
                 }
             } else {
-                serverGameState.players = serverGameState.players.filter(p => p.id !== playerId);
+                serverGameState.players = serverGameState.players.filter(p => p.id !== targetSessionId);
             }
             
             io.emit('update_users_list', remainingUsers);
             broadcastGameState();
-            io.sockets.sockets.get(playerId)?.disconnect();
+            io.sockets.sockets.get(targetSocketId)?.disconnect();
         }
     });
 

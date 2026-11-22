@@ -1,5 +1,7 @@
 node_modules/
+gm-assistant/node_modules/
 package-lock.json
+gm-assistant/package-lock.json
 .env
 .DS_Store
 *.log

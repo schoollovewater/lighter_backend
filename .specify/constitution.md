@@ -1,6 +1,6 @@
 # 🏛️ Hiến pháp Dự án (Constitution)
 
-Đây là tài liệu quy chuẩn kỹ thuật dành cho dự án **SCHOOL Universe (Lighter Backend)**, áp dụng cho mọi đoạn code được viết ra để đảm bảo tính đồng nhất, bảo mật và hiệu suất.
+Đây là tài liệu quy chuẩn kỹ thuật dành cho dự án **SCHOOL UNIVERSE**, áp dụng cho mọi đoạn code được viết ra để đảm bảo tính đồng nhất, bảo mật và hiệu suất.
 
 ## 1. Công nghệ sử dụng (Tech Stack)
 - **Backend:** Node.js, Express, Socket.IO.

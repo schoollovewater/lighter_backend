@@ -3,6 +3,18 @@
   "cleanUrls": true,
   "rewrites": [
     {
+      "source": "/gm/assets/(.*)",
+      "destination": "/public/gm/assets/$1"
+    },
+    {
+      "source": "/gm/(.*)",
+      "destination": "/public/gm/$1"
+    },
+    {
+      "source": "/gm",
+      "destination": "/public/gm/index.html"
+    },
+    {
       "source": "/(.*)",
       "destination": "/public/$1"
     }

@@ -41,7 +41,12 @@
           <label class="text-[10px] text-slate-400 block text-left mb-1.5 uppercase font-bold tracking-wider">Biệt danh của mi:</label>
           <input type="text" id="entrance-name-input" placeholder="Gõ tên vào đây bạn ơi..." class="w-full bg-black/40 border border-moss rounded-xl px-4 py-3 text-sm text-center text-slate-200 focus:outline-none focus:border-[#FF4500]" required>
         </div>
-        <button onclick="connectToLighterHub()" class="w-full py-3.5 bg-[#FF4500] hover:bg-orange-500 text-white font-black rounded-xl text-sm transition uppercase tracking-wider glow-fire">Vào sảnh chờ chơi game</button>
+        <button onclick="connectToSchoolHub()" class="w-full py-3.5 bg-[#FF4500] hover:bg-orange-500 text-white font-black rounded-xl text-sm transition uppercase tracking-wider glow-fire">Vào sảnh chờ chơi game</button>
+        <div class="pt-2 border-t border-moss">
+          <a href="/gm/" class="w-full py-2.5 bg-indigo-950/60 hover:bg-indigo-900/70 border border-indigo-500/40 text-indigo-300 font-bold rounded-xl text-xs transition uppercase tracking-wider flex items-center justify-center gap-2">
+            <i data-lucide="moon" class="w-3.5 h-3.5"></i> Mở Trợ Lý Quản Trò Offline (Chơi Bài Giấy)
+          </a>
+        </div>
       </div>
     </div>
   </div>
@@ -63,6 +68,9 @@
           <button onclick="switchTab('gartic')" id="btn-tab-gartic" class="px-4 py-2 rounded-xl text-xs font-bold transition flex items-center gap-1.5 bg-white/5 text-slate-300">
             <i data-lucide="palette" class="w-3.5 h-3.5"></i> Gartic Phone SCHOOL
           </button>
+          <a href="/gm/" class="px-4 py-2 rounded-xl text-xs font-bold transition flex items-center gap-1.5 bg-indigo-950/70 hover:bg-indigo-900 text-indigo-300 border border-indigo-500/40">
+            <i data-lucide="moon" class="w-3.5 h-3.5"></i> Quản Trò Offline
+          </a>
           
           <div class="h-6 w-px bg-slate-700 mx-2"></div>
           
@@ -184,7 +192,7 @@
           </div>
 
           <div id="gartic-review-zone" class="hidden space-y-4">
-            <div class="text-center"><h3 class="text-sm font-bold text-emerald-400 uppercase tracking-widest">Triển lãm thành quả Lighter</h3></div>
+            <div class="text-center"><h3 class="text-sm font-bold text-emerald-400 uppercase tracking-widest">Triển lãm thành quả SCHOOL UNIVERSE</h3></div>
             <div id="gartic-album-scroller" class="space-y-4 bg-black/30 p-4 rounded-2xl border border-moss max-h-[350px] overflow-y-auto"></div>
             <button onclick="resetGarticToSetup()" class="w-full py-3 bg-white/5 text-slate-300 rounded-xl text-xs font-bold uppercase border border-moss">Trở về phòng chờ cấu hình</button>
           </div>
@@ -237,23 +245,23 @@
 
 
     // KẾT NỐI SOCKET
-    let backendUrl = localStorage.getItem('lighter_backend_url') || (window.location.hostname === 'localhost' ? 'http://localhost:3000' : '');
+    let backendUrl = localStorage.getItem('school_universe_backend_url') || localStorage.getItem('lighter_backend_url') || (window.location.hostname === 'localhost' ? 'http://localhost:3000' : '');
     const socket = backendUrl ? io(backendUrl) : io();
 
     function getSessionId() {
-      let sid = localStorage.getItem('lighter_session_id');
+      let sid = localStorage.getItem('school_universe_session_id') || localStorage.getItem('lighter_session_id');
       if (!sid) {
           sid = 'sid_' + Math.random().toString(36).substr(2, 9) + '_' + Date.now();
-          localStorage.setItem('lighter_session_id', sid);
       }
+      localStorage.setItem('school_universe_session_id', sid);
       return sid;
     }
 
-    function connectToLighterHub() {
+    function connectToSchoolHub() {
       const name = document.getElementById('entrance-name-input').value.trim();
       if (!name) { alert("Đặt tên giùm cái bạn ơi!"); return; }
       
-      localStorage.setItem('lighter_last_name', name);
+      localStorage.setItem('school_universe_last_name', name);
       
       document.getElementById('entrance-gate').classList.add('hidden');
       document.getElementById('main-hub-interface').classList.remove('hidden');
@@ -264,7 +272,7 @@
 
     socket.on('connect', () => {
         if (document.getElementById('entrance-gate').classList.contains('hidden')) {
-            const name = document.getElementById('entrance-name-input').value.trim() || localStorage.getItem('lighter_last_name');
+            const name = document.getElementById('entrance-name-input').value.trim() || localStorage.getItem('school_universe_last_name') || localStorage.getItem('lighter_last_name');
             if (name) {
                 socket.emit('join_hub', { name: name, avatar: selectedAvatar, sessionId: getSessionId() });
                 console.log("Auto-reconnecting...");
@@ -281,16 +289,6 @@
         b.innerText = av; b.onclick = () => { selectedAvatar = av; initEntrance(); };
         container.appendChild(b);
       });
-    }
-
-    function connectToLighterHub() {
-      const name = document.getElementById('entrance-name-input').value.trim();
-      if (!name) { alert("Đặt tên giùm cái bạn ơi!"); return; }
-      document.getElementById('entrance-gate').classList.add('hidden');
-      document.getElementById('main-hub-interface').classList.remove('hidden');
-      
-      socket.emit('join_hub', { name: name, avatar: selectedAvatar });
-      initCanvasLogic();
     }
 
     // ĐỒNG BỘ TRẠNG THÁI TỪ SERVER
@@ -310,7 +308,7 @@
     socket.on('update_game_state', (state) => { 
         localWerewolfState = state; 
         const modal = document.getElementById('cupid-reveal-modal');
-        if (modal) modal.remove();
+        if (modal && !localWerewolfState.cupidAwaitingConfirm) modal.remove();
         
         if (localWerewolfState.status === 'PLAYING' && localWerewolfState.phase === 'DAY' && localWerewolfState.morningDay && localWerewolfState.morningDay !== lastSeenMorningDay) {
             lastSeenMorningDay = localWerewolfState.morningDay;
@@ -378,15 +376,18 @@
     });
 
     socket.on('clone_inherited', ({ role }) => {
-        const roleInfo = ROLE_NAMES[role];
+        const roleDetail = ROLE_DETAILS[role] || {};
+        const roleName = ROLE_NAMES[role] || role;
+        const existing = document.getElementById('clone-reveal-modal');
+        if (existing) existing.remove();
         const modalHtml = `
             <div id="clone-reveal-modal" class="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm animate-in fade-in">
                 <div class="bg-green-900/30 border border-green-500 p-8 rounded-3xl max-w-sm w-full mx-4 text-center space-y-4 shadow-[0_0_50px_rgba(34,197,94,0.3)]">
                     <h2 class="text-3xl font-black text-green-400 heading-font uppercase">BẢN GỐC ĐÃ CHẾT!</h2>
                     <p class="text-sm text-slate-300">Bạn đã chính thức kế thừa chức năng:</p>
-                    <div class="text-6xl my-4 drop-shadow-[0_0_15px_rgba(255,255,255,0.5)]">${roleInfo?.icon || '❓'}</div>
-                    <h3 class="text-2xl font-bold text-white">${role}</h3>
-                    <p class="text-xs text-slate-400 mt-2">${roleInfo?.desc || ''}</p>
+                    <div class="text-6xl my-4 drop-shadow-[0_0_15px_rgba(255,255,255,0.5)]">${roleDetail.icon || '❓'}</div>
+                    <h3 class="text-2xl font-bold text-white">${roleName}</h3>
+                    <p class="text-xs text-slate-400 mt-2">${roleDetail.desc || ''}</p>
                     <button onclick="document.getElementById('clone-reveal-modal').remove()" class="w-full py-3 mt-6 bg-green-600 hover:bg-green-500 text-white font-bold rounded-xl uppercase tracking-widest transition">Đã hiểu</button>
                 </div>
             </div>
@@ -396,8 +397,6 @@
 
     socket.on('wolf_vote_tie', () => {
         showToast("Hòa phiếu! Lũ Sói chưa thống nhất được mục tiêu. Hãy bàn bạc lại và XÁC NHẬN lại!", 5000);
-        // Khôi phục lại UI Đêm để Sói bấm lại
-        const btn = document.getElementById('gartic-confirm-turn-btn'); // Nút này không liên quan, nhầm id
         updateWerewolfUI();
     });
 
@@ -417,6 +416,8 @@
                 </div>
             </div>
         `;
+        const existingCursedModal = document.getElementById('cursed-transform-modal');
+        if (existingCursedModal) existingCursedModal.remove();
         document.body.insertAdjacentHTML('beforeend', modalHtml);
     });
 
@@ -499,26 +500,6 @@
     // --- LOGIC MA SÓI ---
     function updateWerewolfUI() {
       if (!localWerewolfState) return;
-      
-      if (localWerewolfState.status === 'PLAYING') {
-          const alivePlayers = localWerewolfState.players.filter(p => p.status === 'Alive');
-          let cupidFactionCount = 0;
-          alivePlayers.forEach(p => {
-              if (localWerewolfState.cupidLinks && localWerewolfState.cupidLinks.includes(p.id)) cupidFactionCount++;
-              else if (localWerewolfState.cupidMode === 1 && p.role === 'CUPID') cupidFactionCount++;
-              else if (localWerewolfState.cupidMode === 2 && p.isCupid) cupidFactionCount++;
-          });
-          
-          if (cupidFactionCount > 0 && cupidFactionCount >= alivePlayers.length / 2) {
-              if (!localWerewolfState.winner) {
-                  localWerewolfState.winner = 'CUPID';
-                  localWerewolfState.status = 'GAME_OVER';
-                  socket.emit('sync_game_state', localWerewolfState);
-                  showToast("🎉 PHE THỨ 3 (CUPID) ĐÃ KIỂM SOÁT TÒA ÁN VÀ CHIẾN THẮNG!");
-                  return;
-              }
-          }
-      }
 
       if (localWerewolfState.status === 'WAITING') {
         document.getElementById('werewolf-setup-zone').classList.remove('hidden');
@@ -607,14 +588,6 @@
       }
       container.innerHTML = html;
       updateWerewolfBalanceBar();
-
-      // Sync Day Chat with Workspace Chat
-      const dayBox = document.getElementById('day-chat-messages');
-      const workspaceBox = document.getElementById('chat-messages-container');
-      if (dayBox && workspaceBox) {
-          dayBox.innerHTML = workspaceBox.innerHTML;
-          dayBox.scrollTop = dayBox.scrollHeight;
-      }
     }
     
     function updateWerewolfBalanceBar() {
@@ -739,6 +712,12 @@
         p.isHunted = false;
         p.isShamanRuined = false;
         p.isCupid = false;
+        delete p.cloneInheritedRole;
+        delete p.cloneInheritedFaction;
+        delete p.transformedRole;
+        delete p.abilityRemoved;
+        delete p.foolRevealed;
+        delete p.isWolfForSeer;
       });
       
       if (localWerewolfState.cupidMode === 2 && localWerewolfState.selectedRoles['CUPID'] > 0) {
@@ -758,10 +737,14 @@
       localWerewolfState.nightActions = {};
       localWerewolfState.witchState = { usedSave: false, usedPoison: false };
       localWerewolfState.cupidLinks = [];
+      localWerewolfState.cupidAwaitingConfirm = false;
       localWerewolfState.hunterTargets = {};
       localWerewolfState.cloneTarget = null;
       localWerewolfState.cursedOneBitten = false;
       localWerewolfState.moonLadyLastTarget = null;
+      localWerewolfState.bodyguardLastTarget = null;
+      localWerewolfState.morningDead = [];
+      localWerewolfState.morningDay = 0;
       localWerewolfState.wolfChatHistory = [];
       localWerewolfState.wolfTempVotes = {};
       localWerewolfState.enragedWolfStacks = 0;
@@ -1058,6 +1041,14 @@
       }
       
       container.innerHTML = html;
+
+      // Đồng bộ tin nhắn chat chung vào Kênh Thảo Luận Làng khi sang pha DAY
+      const dayBox = document.getElementById('day-chat-messages');
+      const workspaceBox = document.getElementById('chat-messages-container');
+      if (dayBox && workspaceBox) {
+          dayBox.innerHTML = workspaceBox.innerHTML;
+          dayBox.scrollTop = dayBox.scrollHeight;
+      }
     }
     
     function startNight() {
@@ -1069,17 +1060,17 @@
     }
     
     function getNightActionHTML(currentStep, mePlayer) {
-        if (mePlayer.abilityRemoved) {
-            return `
-                <div class="bg-black/50 border border-red-900 p-4 rounded-xl text-center space-y-2 mb-3">
-                    <p class="text-lg font-bold text-red-500 uppercase">Bị tước đoạt năng lực</p>
-                    <p class="text-xs text-slate-300">Năng lực của bạn đã bị phong ấn vĩnh viễn bởi Sói Cuồng Nộ. Từ giờ bạn chỉ là một Dân Làng bình thường.</p>
-                </div>
-            `;
-        }
-        
         let actionForm = '';
         let playerOptions = '<option value="">-- Bỏ qua / Không chọn --</option>';
+
+        if (mePlayer.abilityRemoved) {
+            actionForm = `
+                <div class="bg-black/50 border border-red-900 p-4 rounded-xl text-center space-y-2 mb-3">
+                    <p class="text-lg font-bold text-red-500 uppercase">Bị tước đoạt năng lực</p>
+                    <p class="text-xs text-slate-300">Năng lực của bạn đã bị phong ấn vĩnh viễn bởi Sói Cuồng Nộ. Hãy bấm CHỐT LƯỢT để không làm kẹt thời gian ban đêm.</p>
+                </div>
+            `;
+        } else {
         
         localWerewolfState.players.forEach(p => {
             if (p.status === 'Alive') {
@@ -1197,7 +1188,7 @@
                 `;
             }
         } else if (currentStep === 'ALPHA_WOLF') {
-            const aliveWolvesCount = localWerewolfState.players.filter(p => p.status === 'Alive' && ['WEREWOLF', 'HIDDEN_WOLF', 'ENRAGED_WOLF', 'SHAMAN_WOLF', 'ALPHA_WOLF'].includes(p.cloneInheritedRole || p.role)).length;
+            const aliveWolvesCount = localWerewolfState.players.filter(p => p.status === 'Alive' && (p.cloneInheritedFaction || p.originFaction) === 'Ma_Sói').length;
             if (aliveWolvesCount === 1) {
                 actionForm = `
                     <div class="bg-purple-900/30 border border-purple-500 p-4 rounded-xl mb-3 text-center">
@@ -1239,11 +1230,13 @@
                 `;
             } else {
                 if (mePlayer.cloneInheritedRole) {
-                    const roleInfo = ROLE_NAMES[mePlayer.cloneInheritedRole];
+                    const inheritedKey = mePlayer.transformedRole || mePlayer.cloneInheritedRole;
+                    const roleDetail = ROLE_DETAILS[inheritedKey] || {};
+                    const roleName = ROLE_NAMES[inheritedKey] || inheritedKey;
                     actionForm = `
                         <div class="bg-green-900/30 border border-green-500 p-4 rounded-xl text-center space-y-2 mb-3">
                             <p class="text-lg font-bold text-green-400">Bản gốc đã chết!</p>
-                            <p class="text-sm text-white">Bạn đã kế thừa chức năng: <span class="font-black">${roleInfo?.icon || ''} ${mePlayer.cloneInheritedRole}</span></p>
+                            <p class="text-sm text-white">Bạn đã kế thừa chức năng: <span class="font-black">${roleDetail.icon || ''} ${roleName}</span></p>
                             <p class="text-xs text-slate-300">Tí nữa bạn sẽ được gọi dậy theo chức năng mới này.</p>
                         </div>
                     `;
@@ -1271,6 +1264,7 @@
             }
         } else {
             actionForm = `<p class="text-xs text-slate-400 mb-3">(Mục tiêu thụ động hoặc Quản trò nhận diện khuôn mặt. Hãy bấm CHỐT để qua lượt)</p>`;
+        }
         }
 
         const isPaused = localWerewolfState.isNightPaused;
@@ -1361,6 +1355,8 @@
                 </div>
             </div>
         `;
+        const existingCupidModal = document.getElementById('cupid-reveal-modal');
+        if (existingCupidModal) existingCupidModal.remove();
         document.body.insertAdjacentHTML('beforeend', modalHtml);
     });
 
@@ -1429,35 +1425,9 @@
               return;
           }
       }
-      
-      // Đếm phiếu
-      const counts = {};
-      Object.values(votes).forEach(t => counts[t] = (counts[t] || 0) + 1);
-      
-      let maxVotes = 0;
-      let targetId = null;
-      let isTie = false;
-      
-      Object.entries(counts).forEach(([id, c]) => {
-          if (c > maxVotes) {
-              maxVotes = c;
-              targetId = id;
-              isTie = false;
-          } else if (c === maxVotes) {
-              isTie = true;
-          }
-      });
-      
-      if (isTie || !targetId) {
-          alert("Kết quả Hòa! Sẽ chuyển thẳng sang Đêm tiếp theo.");
-          localWerewolfState.phase = 'DAY';
-      } else {
-          localWerewolfState.phase = 'DAY_TRIAL';
-          localWerewolfState.trialTarget = targetId;
-          localWerewolfState.trialVotes = {};
-      }
-      socket.emit('sync_game_state', localWerewolfState);
-      updateWerewolfUI();
+
+      // Gửi yêu cầu lên server tự chốt (không ghi đè state đã bị mask!)
+      socket.emit('host_lock_day_votes');
     }
     
     function submitTrial(vote) {
@@ -1482,24 +1452,13 @@
       const votes = localWerewolfState.trialVotes || {};
       
       if (Object.keys(votes).length < aliveCount - 1) { // Trừ người trên bục
-          alert(`CẢNH BÁO: Mới có ${Object.keys(votes).length}/${aliveCount - 1} người bỏ phiếu phán quyết! Vui lòng chờ người khác Vote hoặc kick kẻ treo máy.`);
-          return;
+          if (!confirm(`CẢNH BÁO: Mới có ${Object.keys(votes).length}/${aliveCount - 1} người bỏ phiếu phán quyết!\nBạn có chắc chắn muốn ÉP KẾT THÚC phán quyết ngay không?`)) {
+              return;
+          }
       }
-      
-      let tha = 0, treo = 0;
-      Object.values(votes).forEach(v => v === 'THA' ? tha++ : treo++);
-      
-      if (treo > tha) {
-          // Xử tử - Bắn sự kiện lên server để server lấy mạng và tính toán chết chùm
-          alert(`ÁN TỬ HÌNH THỰC THI: Treo cổ!`);
-          socket.emit('submit_trial_execution', { targetId: localWerewolfState.trialTarget });
-      } else {
-          alert("KẾT QUẢ: Tha bổng!");
-          localWerewolfState.phase = 'DAY';
-          localWerewolfState.trialTarget = null;
-          socket.emit('sync_game_state', localWerewolfState);
-          updateWerewolfUI();
-      }
+
+      // Gửi yêu cầu lên server tự xử lý phán quyết (chống ghi đè state đã mask)
+      socket.emit('host_finalize_trial');
     }
 
     function kickPlayer(event, playerId) {
@@ -1526,6 +1485,12 @@
       } else if (localWerewolfState.winner === 'CUPID') {
           winnerText = 'PHE THỨ 3 CHIẾN THẮNG';
           winnerColor = 'text-pink-400';
+      } else if (localWerewolfState.winner === 'FOOL') {
+          winnerText = 'THẰNG NGỐC CHIẾN THẮNG 🤡';
+          winnerColor = 'text-yellow-400';
+      } else if (localWerewolfState.winner === 'DRAW') {
+          winnerText = 'HÒA — KHÔNG CÒN AI SỐNG SÓT';
+          winnerColor = 'text-slate-300';
       }
       
       let html = `
@@ -1868,6 +1833,7 @@
     });
 
     initEntrance();
+    lucide.createIcons();
   </script>
 </body>
 </html>

@@ -1,11 +1,13 @@
 # 🏛️ Kiến trúc Dự án (Architecture)
 
-Tài liệu này mô tả bức tranh tổng thể về dự án **SCHOOL Universe (Lighter Backend)**, làm cơ sở để tiếp tục phát triển các tính năng (Spec) tiếp theo một cách an toàn mà không phá vỡ logic cũ.
+Tài liệu này mô tả bức tranh tổng thể về dự án **SCHOOL UNIVERSE**, làm cơ sở để tiếp tục phát triển các tính năng (Spec) tiếp theo một cách an toàn mà không phá vỡ logic cũ.
 
 ## 1. Cấu trúc Thư mục và File
-- `server.js`: **[HOÀN THÀNH 70%]** Trái tim của ứng dụng Backend. Chứa logic Express.js cho static files, và Socket.IO cho toàn bộ real-time logic (Lobby, Chat, Werewolf Engine, Gartic Phone).
+- `server.js`: Trái tim của ứng dụng Backend. Chứa logic Express.js cho static files (bao gồm trang con `/gm`), và Socket.IO cho toàn bộ real-time logic (Lobby, Chat, Werewolf Engine, Gartic Phone).
 - `public/`: Thư mục chứa tài nguyên tĩnh của Frontend.
-  - `public/index.html`: **[HOÀN THÀNH 70%]** Toàn bộ giao diện người dùng (UI) Single Page Application, viết bằng HTML thuần, TailwindCSS (CDN) và tương tác với DOM qua JavaScript.
+  - `public/index.html`: Giao diện chính (Online Hub, Đấu Trường Ma Sói Online, Gartic Phone), viết bằng HTML thuần, TailwindCSS (CDN) và tương tác với DOM qua JavaScript.
+  - `public/gm/`: Bản build tĩnh của ứng dụng **Trợ Lý Quản Trò Ma Sói Offline** (truy cập qua `/gm`).
+- `gm-assistant/`: Mã nguồn React + Vite của trang con Trợ Lý Quản Trò Offline (build ra `public/gm/` bằng `npm run build:gm`).
 - `GAME_FLOW.md`: Mô tả luật chơi, luồng game chi tiết.
 - `package.json`: Chứa metadata dự án và các dependencies (express, socket.io, cors).
 - `vercel.json`: Cấu hình deploy lên nền tảng Vercel.
