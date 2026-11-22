@@ -47,7 +47,7 @@
         <div class="w-12 h-12 rounded-2xl bg-[#FF4500]/20 border border-[#FF4500]/50 flex items-center justify-center text-2xl shrink-0">🚀</div>
         <div>
           <span id="update-modal-badge" class="text-[10px] font-black uppercase tracking-wider px-2 py-0.5 rounded-full bg-[#FF4500] text-white">Bản cập nhật mới</span>
-          <h3 id="update-modal-title" class="text-sm font-black text-white mt-1">v1.2.0 — Đa Nhóm Độc Lập (Multi-Group)</h3>
+          <h3 id="update-modal-title" class="text-sm font-black text-white mt-1">v1.3.0 — Sảnh Chọn Phòng & Khóa Mật Khẩu Phòng</h3>
         </div>
       </div>
       <p id="update-modal-message" class="text-xs text-orange-200 bg-[#FF4500]/10 border border-[#FF4500]/30 rounded-2xl p-3 leading-relaxed font-semibold">
@@ -65,37 +65,39 @@
     </div>
   </div>
 
-  <!-- MODAL QUẢN LÝ & CHUYỂN ĐỔI NHÓM (MULTI-GROUP) -->
+  <!-- MODAL QUẢN LÝ & CHỌN PHÒNG (MULTI-GROUP) -->
   <div id="groups-modal" class="hidden fixed inset-0 z-[95] bg-black/85 backdrop-blur-sm flex items-center justify-center p-4">
     <div class="bg-moss-card border border-moss rounded-3xl max-w-md w-full max-h-[90dvh] overflow-y-auto p-6 shadow-2xl space-y-5 relative">
       <button onclick="closeGroupsModal()" class="absolute top-4 right-4 w-8 h-8 rounded-full bg-white/5 hover:bg-white/10 flex items-center justify-center text-slate-400 hover:text-white">✕</button>
       <div>
-        <h3 class="text-base font-black text-white heading-font">🏠 Nhóm Ma Sói của bạn</h3>
-        <p class="text-[11px] text-slate-400 mt-0.5">Mỗi nhóm có sảnh chờ, chat chung, Ma Sói & danh sách thành viên tách biệt hoàn toàn.</p>
+        <h3 class="text-base font-black text-white heading-font">🏠 Danh Sách Phòng Ma Sói</h3>
+        <p class="text-[11px] text-slate-400 mt-0.5">Chọn phòng để vào chơi. Phòng chưa mở khóa cần nhập mật khẩu (chính là Mã phòng).</p>
       </div>
 
       <div id="groups-modal-current-box" class="hidden bg-[#FF4500]/10 border border-[#FF4500]/40 rounded-2xl p-3.5 space-y-2.5"></div>
 
       <div class="space-y-2">
-        <p class="text-[10px] font-bold uppercase tracking-wider text-slate-400">Danh sách nhóm đã tham gia</p>
-        <div id="groups-modal-list" class="space-y-2 max-h-[180px] overflow-y-auto pr-1"></div>
+        <p class="text-[10px] font-bold uppercase tracking-wider text-slate-400">Các phòng hiện có trên hệ thống</p>
+        <div id="groups-modal-list" class="space-y-2 max-h-[240px] overflow-y-auto pr-1"></div>
       </div>
 
       <div class="border-t border-moss pt-4 space-y-3">
         <form onsubmit="submitJoinGroupByCode(event)" class="space-y-2">
-          <p class="text-[10px] font-bold uppercase tracking-wider text-emerald-400">🔑 Tham gia nhóm bằng mã mời</p>
+          <p class="text-[10px] font-bold uppercase tracking-wider text-emerald-400">🔑 Nhập nhanh Mã phòng để vào thẳng</p>
           <div class="flex gap-2">
-            <input type="text" id="join-group-code-input" placeholder="Nhập mã 6 ký tự (VD: WLF82A)" class="flex-1 bg-black/40 border border-moss rounded-xl px-3 py-2 text-xs uppercase text-slate-200 focus:outline-none focus:border-emerald-500" required>
-            <button type="submit" class="px-4 py-2 bg-emerald-600 hover:bg-emerald-500 text-white font-bold rounded-xl text-xs shrink-0">Vào nhóm</button>
+            <input type="text" id="join-group-code-input" placeholder="Nhập mã / mật khẩu phòng..." class="flex-1 bg-black/40 border border-moss rounded-xl px-3 py-2 text-xs uppercase text-slate-200 focus:outline-none focus:border-emerald-500" required>
+            <button type="submit" class="px-4 py-2 bg-emerald-600 hover:bg-emerald-500 text-white font-bold rounded-xl text-xs shrink-0">Vào ngay</button>
           </div>
         </form>
 
-        <form onsubmit="submitCreateGroup(event)" class="bg-black/30 border border-moss rounded-2xl p-3.5 space-y-2.5">
-          <p class="text-[10px] font-bold uppercase tracking-wider text-[#FF4500]">➕ Tạo nhóm mới tách biệt</p>
+        <!-- CHỈ TÀI KHOẢN @school MỚI THẤY KHUNG TẠO PHÒNG NÀY -->
+        <form id="admin-create-room-form" onsubmit="submitCreateGroup(event)" class="hidden bg-black/30 border border-[#FF4500]/50 rounded-2xl p-3.5 space-y-2.5">
+          <p class="text-[10px] font-bold uppercase tracking-wider text-[#FF4500]">👑 Tạo phòng mới (Quyền Admin @school)</p>
           <div id="create-group-icon-grid" class="flex flex-wrap gap-1.5"></div>
+          <input type="text" id="create-group-name-input" placeholder="Tên phòng (VD: Phòng Lighter, Hội Đại Học...)" class="w-full bg-black/40 border border-moss rounded-xl px-3 py-2 text-xs text-slate-200 focus:outline-none focus:border-[#FF4500]" required>
           <div class="flex gap-2">
-            <input type="text" id="create-group-name-input" placeholder="VD: Nhóm Đại Học, Hội Cấp 3..." class="flex-1 bg-black/40 border border-moss rounded-xl px-3 py-2 text-xs text-slate-200 focus:outline-none focus:border-[#FF4500]" required>
-            <button type="submit" class="px-4 py-2 bg-[#FF4500] hover:bg-orange-500 text-white font-bold rounded-xl text-xs shrink-0">Tạo</button>
+            <input type="text" id="create-group-code-input" placeholder="Mật khẩu/Mã phòng (để trống = tự sinh)" class="flex-1 bg-black/40 border border-moss rounded-xl px-3 py-2 text-xs uppercase text-slate-200 focus:outline-none focus:border-[#FF4500]">
+            <button type="submit" class="px-4 py-2 bg-[#FF4500] hover:bg-orange-500 text-white font-bold rounded-xl text-xs shrink-0">Tạo phòng</button>
           </div>
         </form>
       </div>
@@ -170,7 +172,7 @@
             <i data-lucide="moon" class="w-3.5 h-3.5"></i> Mở Trợ Lý Quản Trò Offline (Chơi Bài Giấy)
           </a>
           <button type="button" onclick="openUpdateModal()" class="w-full py-2 bg-white/5 hover:bg-white/10 border border-moss text-slate-300 font-bold rounded-xl text-[11px] transition flex items-center justify-center gap-1.5">
-            <span id="entrance-version-label">🚀 Phiên bản v1.2.0 — Kiểm tra & Cập nhật</span>
+            <span id="entrance-version-label">🚀 Phiên bản v1.3.0 — Kiểm tra & Cập nhật</span>
           </button>
         </div>
       </div>
@@ -197,7 +199,7 @@
           <!-- Cụm nút nhanh cho Điện thoại (Update, Voice, Đăng xuất) -->
           <div class="flex md:hidden items-center gap-1.5 shrink-0">
             <button onclick="openUpdateModal()" class="relative px-2.5 py-1.5 rounded-xl text-[11px] font-bold bg-amber-500/15 border border-amber-500/40 text-amber-300 flex items-center gap-1" title="Cập nhật App">
-              <span>🚀</span><span id="mobile-version-tag">v1.2.0</span>
+              <span>🚀</span><span id="mobile-version-tag">v1.3.0</span>
               <span id="mobile-update-dot" class="hidden absolute -top-1 -right-1 w-2.5 h-2.5 rounded-full bg-[#FF4500] animate-ping"></span>
             </button>
             <button onclick="toggleVoiceChat()" id="btn-voice-chat-mobile" class="p-2 rounded-xl bg-slate-800 text-slate-300" title="Voice Chat">
@@ -228,7 +230,7 @@
           <div class="h-6 w-px bg-slate-700 mx-1"></div>
           
           <button onclick="openUpdateModal()" id="btn-app-update" class="relative px-3 py-2 rounded-xl text-xs font-bold transition flex items-center gap-1.5 bg-amber-500/15 hover:bg-amber-500/25 text-amber-300 border border-amber-500/40" title="Kiểm tra & Cập nhật App">
-            <span>🚀</span> <span id="desktop-version-tag">Cập nhật (v1.2.0)</span>
+            <span>🚀</span> <span id="desktop-version-tag">Cập nhật (v1.3.0)</span>
             <span id="desktop-update-dot" class="hidden absolute -top-1 -right-1 w-2.5 h-2.5 rounded-full bg-[#FF4500] animate-ping"></span>
           </button>
           <button onclick="toggleVoiceChat()" id="btn-voice-chat" class="px-3.5 py-2 rounded-xl text-xs font-bold transition flex items-center gap-1.5 bg-slate-800 text-slate-300 hover:bg-slate-700">
@@ -244,26 +246,34 @@
     <!-- Container ẩn chứa các thẻ audio của những người khác -->
     <div id="audio-elements-container" class="hidden"></div>
 
-    <!-- MÀN HÌNH CHƯA CÓ NHÓM (HIỆN KHI TÀI KHOẢN MỚI CHƯA THAM GIA NHÓM NÀO) -->
+    <!-- MÀN HÌNH CHỌN PHÒNG KHI CHƯA VÀO PHÒNG NÀO -->
     <div id="no-group-gate" class="hidden flex-1 flex items-center justify-center p-4">
       <div class="bg-moss-card border border-moss rounded-3xl max-w-md w-full p-6 shadow-2xl space-y-5 text-center">
         <div>
           <span class="text-5xl inline-block">🐺</span>
-          <h2 class="text-lg font-black text-white heading-font mt-2">Bạn chưa tham gia nhóm nào!</h2>
-          <p class="text-xs text-slate-400 mt-1">Tạo nhóm riêng cho hội bạn của mình hoặc nhập mã mời 6 ký tự từ bạn bè để vào chơi tách biệt hoàn toàn.</p>
+          <h2 class="text-lg font-black text-white heading-font mt-2">Chọn Phòng Chơi Ma Sói</h2>
+          <p class="text-xs text-slate-400 mt-1">Bấm vào phòng của nhóm bạn và nhập mật khẩu (Mã phòng) để vào. Nếu vào bằng Link mời thì hệ thống tự mở khóa sẵn!</p>
         </div>
-        <form onsubmit="submitJoinGroupOnboarding(event)" class="space-y-2 text-left">
-          <label class="text-[10px] font-bold uppercase tracking-wider text-emerald-400">🔑 Có mã mời từ bạn bè?</label>
+
+        <div class="space-y-2 text-left">
+          <p class="text-[10px] font-bold uppercase tracking-wider text-slate-400">🏠 Các phòng hiện có</p>
+          <div id="onboarding-rooms-list" class="space-y-2 max-h-[240px] overflow-y-auto pr-1"></div>
+        </div>
+
+        <form onsubmit="submitJoinGroupOnboarding(event)" class="space-y-2 text-left border-t border-moss pt-3">
+          <label class="text-[10px] font-bold uppercase tracking-wider text-emerald-400">🔑 Hoặc nhập thẳng Mã phòng tại đây:</label>
           <div class="flex gap-2">
-            <input type="text" id="onboarding-join-code" placeholder="Nhập mã nhóm (VD: WLF82A)" class="flex-1 bg-black/40 border border-moss rounded-xl px-3.5 py-2.5 text-xs uppercase text-slate-200 focus:outline-none focus:border-emerald-500" required>
-            <button type="submit" class="px-4 py-2.5 bg-emerald-600 hover:bg-emerald-500 text-white font-bold rounded-xl text-xs shrink-0">Tham gia</button>
+            <input type="text" id="onboarding-join-code" placeholder="Nhập mã / mật khẩu phòng..." class="flex-1 bg-black/40 border border-moss rounded-xl px-3.5 py-2.5 text-xs uppercase text-slate-200 focus:outline-none focus:border-emerald-500" required>
+            <button type="submit" class="px-4 py-2.5 bg-emerald-600 hover:bg-emerald-500 text-white font-bold rounded-xl text-xs shrink-0">Vào ngay</button>
           </div>
         </form>
-        <div class="flex items-center gap-3 text-[10px] text-slate-500 uppercase font-bold"><div class="flex-1 h-px bg-moss"></div><span>Hoặc</span><div class="flex-1 h-px bg-moss"></div></div>
-        <form onsubmit="submitCreateGroupOnboarding(event)" class="space-y-2.5 text-left">
-          <label class="text-[10px] font-bold uppercase tracking-wider text-[#FF4500]">➕ Tạo nhóm Ma Sói mới</label>
-          <input type="text" id="onboarding-create-name" placeholder="VD: Hội Ma Sói Đại Học..." class="w-full bg-black/40 border border-moss rounded-xl px-3.5 py-2.5 text-xs text-slate-200 focus:outline-none focus:border-[#FF4500]" required>
-          <button type="submit" class="w-full py-3 bg-[#FF4500] hover:bg-orange-500 text-white font-black rounded-xl text-xs uppercase tracking-wider glow-fire">Tạo nhóm & Lấy mã mời</button>
+
+        <!-- CHỈ TÀI KHOẢN @school MỚI THẤY KHUNG TẠO PHÒNG NÀY -->
+        <form id="onboarding-admin-create-form" onsubmit="submitCreateGroupOnboarding(event)" class="hidden space-y-2.5 text-left border-t border-moss pt-3">
+          <label class="text-[10px] font-bold uppercase tracking-wider text-[#FF4500]">👑 Tạo phòng mới (Quyền Admin @school)</label>
+          <input type="text" id="onboarding-create-name" placeholder="Tên phòng (VD: Phòng Lighter...)" class="w-full bg-black/40 border border-moss rounded-xl px-3.5 py-2.5 text-xs text-slate-200 focus:outline-none focus:border-[#FF4500]" required>
+          <input type="text" id="onboarding-create-code" placeholder="Mật khẩu / Mã phòng (để trống = tự sinh)" class="w-full bg-black/40 border border-moss rounded-xl px-3.5 py-2.5 text-xs uppercase text-slate-200 focus:outline-none focus:border-[#FF4500]">
+          <button type="submit" class="w-full py-3 bg-[#FF4500] hover:bg-orange-500 text-white font-black rounded-xl text-xs uppercase tracking-wider glow-fire">Tạo phòng & Lấy link mời</button>
         </form>
       </div>
     </div>
@@ -763,12 +773,23 @@
       switchAuthTab('login');
     }
 
+    function isAdminSchool() {
+      return Boolean(myProfile && String(myProfile.username || '').toLowerCase() === 'school');
+    }
+
+    let directoryRooms = [];
+    let unlockingRoomId = null;
+
     function updateHeaderProfileUI() {
       if (!myProfile) return;
       const avEl = document.getElementById('header-avatar');
       const nameEl = document.getElementById('header-display-name');
       if (avEl) avEl.innerText = myProfile.avatar || '😎';
       if (nameEl) nameEl.innerText = myProfile.displayName || myProfile.username;
+      const adminModalForm = document.getElementById('admin-create-room-form');
+      const adminOnboardForm = document.getElementById('onboarding-admin-create-form');
+      if (adminModalForm) adminModalForm.classList.toggle('hidden', !isAdminSchool());
+      if (adminOnboardForm) adminOnboardForm.classList.toggle('hidden', !isAdminSchool());
     }
 
     function updateHeaderGroupUI() {
@@ -777,7 +798,7 @@
       const rooms = myInbox.rooms || [];
       const activeSummary = rooms.find(r => r.roomId === currentRoomId) || currentRoomMeta;
       if (iconEl) iconEl.innerText = activeSummary?.icon || '🏠';
-      if (nameEl) nameEl.innerText = activeSummary?.name || 'Chọn nhóm';
+      if (nameEl) nameEl.innerText = activeSummary?.name || 'Chọn phòng';
     }
 
     function syncProfileSubscriptions() {
@@ -852,6 +873,15 @@
         }, (err) => console.error('voice_inbox listener error:', err))
       );
 
+      // 3. Danh mục các phòng hiện có trên hệ thống (không chứa mật khẩu)
+      realtimeUnsubs.push(
+        db.collection('room_directory').doc('index').onSnapshot((snap) => {
+          directoryRooms = snap.exists && Array.isArray(snap.data().rooms) ? snap.data().rooms : [];
+          renderGroupsModal();
+          renderOnboardingRooms();
+        }, (err) => console.warn('room_directory listener:', err.code))
+      );
+
       syncProfileSubscriptions();
     }
 
@@ -878,6 +908,7 @@
         if (noGroupGate) noGroupGate.classList.remove('hidden');
         if (mainGrid) mainGrid.classList.add('hidden');
         if (mobileOnline) mobileOnline.classList.add('hidden');
+        renderOnboardingRooms();
         return;
       }
 
@@ -973,17 +1004,132 @@
       );
     }
 
-    // --- UI QUẢN LÝ & CHUYỂN ĐỔI NHÓM ---
+    // --- UI QUẢN LÝ & CHỌN PHÒNG ---
     function openGroupsModal() {
+      unlockingRoomId = null;
       renderGroupsModal();
       document.getElementById('groups-modal').classList.remove('hidden');
     }
 
     function closeGroupsModal() {
+      unlockingRoomId = null;
       document.getElementById('groups-modal').classList.add('hidden');
     }
 
+    function getMergedRoomDirectory() {
+      const joinedMap = new Map((myInbox.rooms || []).map(r => [r.roomId, r]));
+      const merged = [];
+      const seen = new Set();
+      directoryRooms.forEach(d => {
+        if (!d || !d.roomId) return;
+        seen.add(d.roomId);
+        const joined = joinedMap.get(d.roomId) || null;
+        merged.push({
+          roomId: d.roomId,
+          name: d.name,
+          icon: d.icon || joined?.icon || '🐺',
+          memberCount: d.memberCount || 1,
+          unlocked: Boolean(joined),
+          code: joined?.code || null
+        });
+      });
+      // Bổ sung các phòng đã tham gia nếu chưa kịp có trong directory
+      joinedMap.forEach((j, rId) => {
+        if (!seen.has(rId)) {
+          merged.push({
+            roomId: rId,
+            name: j.name,
+            icon: j.icon || '🐺',
+            memberCount: 1,
+            unlocked: true,
+            code: j.code || null
+          });
+        }
+      });
+      return merged;
+    }
+
+    function buildRoomListHtml(contextPrefix) {
+      const list = getMergedRoomDirectory();
+      if (list.length === 0) {
+        return `<p class="text-xs text-slate-500 text-center py-4">${isAdminSchool() ? 'Chưa có phòng nào. Bạn (@school) hãy tạo phòng đầu tiên bên dưới nhé!' : 'Hiện chưa có phòng nào được Admin (@school) tạo.'}</p>`;
+      }
+      return list.map(r => {
+        const isAct = r.roomId === currentRoomId;
+        const isUnlocking = unlockingRoomId === `${contextPrefix}_${r.roomId}`;
+        const badgeHtml = isAct
+          ? '<span class="text-[9px] bg-[#FF4500] text-white px-2 py-0.5 rounded-full font-black shrink-0">Đang ở đây</span>'
+          : (r.unlocked
+            ? '<span class="text-[10px] text-emerald-400 font-bold shrink-0">✓ Đã mở · Vào ›</span>'
+            : '<span class="text-[10px] text-amber-400 font-bold shrink-0">🔒 Nhập mã ›</span>');
+
+        const unlockFormHtml = (!r.unlocked && isUnlocking)
+          ? `<form onsubmit="submitUnlockRoomPassword(event, '${r.roomId}', '${contextPrefix}')" onclick="event.stopPropagation()" class="mt-2 pt-2 border-t border-moss flex gap-2">
+              <input type="text" id="unlock-input-${contextPrefix}-${r.roomId}" placeholder="Nhập mật khẩu (Mã phòng)..." class="flex-1 bg-black/50 border border-amber-500/60 rounded-xl px-3 py-1.5 text-xs uppercase text-white focus:outline-none focus:border-[#FF4500]" required>
+              <button type="submit" class="px-3 py-1.5 bg-[#FF4500] hover:bg-orange-500 text-white font-bold rounded-xl text-xs shrink-0">Mở khóa</button>
+            </form>`
+          : '';
+
+        return `<div onclick="handleClickRoomCard('${r.roomId}', ${r.unlocked}, '${contextPrefix}')" class="cursor-pointer p-3 rounded-2xl border transition ${isAct ? 'bg-[#FF4500]/15 border-[#FF4500]' : 'bg-black/25 hover:bg-white/5 border-moss'}">
+          <div class="flex items-center justify-between gap-2">
+            <div class="flex items-center gap-2.5 min-w-0">
+              <span class="text-xl">${r.icon || '🐺'}</span>
+              <div class="min-w-0 text-left">
+                <p class="text-xs font-bold text-white truncate">${escapeHtml(r.name)}</p>
+                <p class="text-[10px] text-slate-400">${r.memberCount} thành viên${r.unlocked && r.code ? ` · Mã: <b class="text-slate-300">${escapeHtml(r.code)}</b>` : ''}</p>
+              </div>
+            </div>
+            ${badgeHtml}
+          </div>
+          ${unlockFormHtml}
+        </div>`;
+      }).join('');
+    }
+
+    function handleClickRoomCard(roomId, unlocked, contextPrefix) {
+      if (unlocked) {
+        switchActiveGroup(roomId);
+        return;
+      }
+      const key = `${contextPrefix}_${roomId}`;
+      unlockingRoomId = (unlockingRoomId === key) ? null : key;
+      renderGroupsModal();
+      renderOnboardingRooms();
+      if (unlockingRoomId) {
+        setTimeout(() => {
+          const inp = document.getElementById(`unlock-input-${contextPrefix}-${roomId}`);
+          if (inp) inp.focus();
+        }, 40);
+      }
+    }
+
+    async function submitUnlockRoomPassword(e, roomId, contextPrefix) {
+      e.preventDefault();
+      e.stopPropagation();
+      const inp = document.getElementById(`unlock-input-${contextPrefix}-${roomId}`);
+      const code = (inp?.value || '').trim();
+      if (!code) return;
+      const res = await callAction('join_room_by_code', { roomId, code });
+      if (res && res.ok && res.roomId) {
+        unlockingRoomId = null;
+        activateRoomUI(res.roomId, res.room);
+        closeGroupsModal();
+        showToast(`🔓 Đã mở khóa & vào phòng "${res.room.name}"!`);
+      }
+    }
+
+    function renderOnboardingRooms() {
+      const box = document.getElementById('onboarding-rooms-list');
+      if (!box) return;
+      box.innerHTML = buildRoomListHtml('onboard');
+      const adminOnboardForm = document.getElementById('onboarding-admin-create-form');
+      if (adminOnboardForm) adminOnboardForm.classList.toggle('hidden', !isAdminSchool());
+    }
+
     function renderGroupsModal() {
+      const adminModalForm = document.getElementById('admin-create-room-form');
+      if (adminModalForm) adminModalForm.classList.toggle('hidden', !isAdminSchool());
+
       const iconGrid = document.getElementById('create-group-icon-grid');
       if (iconGrid) {
         iconGrid.innerHTML = GROUP_ICONS.map(ic => `
@@ -998,7 +1144,6 @@
       if (curBox) {
         const cur = currentRoomMeta || rooms.find(r => r.roomId === currentRoomId);
         if (cur && currentRoomId) {
-          const inviteUrl = `${window.location.origin}/?join=${cur.code}`;
           const memberCount = Array.isArray(currentRoomMeta?.members) ? currentRoomMeta.members.length : null;
           curBox.classList.remove('hidden');
           curBox.innerHTML = `
@@ -1007,10 +1152,10 @@
                 <span class="text-2xl">${cur.icon || '🐺'}</span>
                 <div class="min-w-0">
                   <p class="text-xs font-black text-white truncate">${escapeHtml(cur.name)}</p>
-                  <p class="text-[10px] text-orange-200">Mã mời: <b class="tracking-widest text-white">${escapeHtml(cur.code)}</b>${memberCount ? ` · ${memberCount} thành viên` : ''}</p>
+                  <p class="text-[10px] text-orange-200">Mã / Mật khẩu phòng: <b class="tracking-widest text-white">${escapeHtml(cur.code)}</b>${memberCount ? ` · ${memberCount} thành viên` : ''}</p>
                 </div>
               </div>
-              <button onclick="leaveCurrentGroup('${cur.roomId}')" class="px-2.5 py-1 rounded-lg bg-rose-950/80 hover:bg-rose-900 text-rose-300 text-[10px] font-bold border border-rose-500/30 shrink-0">Rời nhóm</button>
+              <button onclick="leaveCurrentGroup('${cur.roomId}')" class="px-2.5 py-1 rounded-lg bg-rose-950/80 hover:bg-rose-900 text-rose-300 text-[10px] font-bold border border-rose-500/30 shrink-0">Rời phòng</button>
             </div>
             <div class="flex gap-2">
               <button onclick="copyInviteLink('${cur.code}')" class="flex-1 py-2 bg-[#FF4500] hover:bg-orange-500 text-white font-bold rounded-xl text-[11px]">🔗 Copy Link Mời</button>
@@ -1023,23 +1168,7 @@
       }
 
       if (listEl) {
-        if (rooms.length === 0) {
-          listEl.innerHTML = '<p class="text-xs text-slate-500 text-center py-3">Bạn chưa tham gia nhóm nào.</p>';
-        } else {
-          listEl.innerHTML = rooms.map(r => {
-            const isAct = r.roomId === currentRoomId;
-            return `<div onclick="switchActiveGroup('${r.roomId}')" class="cursor-pointer p-2.5 rounded-2xl border transition flex items-center justify-between gap-2 ${isAct ? 'bg-[#FF4500]/15 border-[#FF4500]' : 'bg-black/25 hover:bg-white/5 border-moss'}">
-              <div class="flex items-center gap-2.5 min-w-0">
-                <span class="text-xl">${r.icon || '🐺'}</span>
-                <div class="min-w-0">
-                  <p class="text-xs font-bold text-white truncate">${escapeHtml(r.name)}</p>
-                  <p class="text-[10px] text-slate-400">Mã: ${escapeHtml(r.code)}</p>
-                </div>
-              </div>
-              ${isAct ? '<span class="text-[9px] bg-[#FF4500] text-white px-2 py-0.5 rounded-full font-black shrink-0">Đang ở đây</span>' : '<span class="text-[10px] text-slate-400 shrink-0">Chuyển ›</span>'}
-            </div>`;
-          }).join('');
-        }
+        listEl.innerHTML = buildRoomListHtml('modal');
       }
     }
 
@@ -1047,45 +1176,51 @@
       const link = `${window.location.origin}/?join=${code}`;
       try {
         await navigator.clipboard.writeText(link);
-        showToast(`🔗 Đã copy link mời! Gửi cho bạn bè bấm là vào thẳng nhóm.`);
+        showToast(`🔗 Đã copy link mời! Gửi cho bạn bè bấm là vào thẳng phòng không cần nhập mã.`);
       } catch (_) {
-        prompt('Copy link mời nhóm này gửi cho bạn bè:', link);
+        prompt('Copy link mời phòng này gửi cho bạn bè:', link);
       }
     }
 
     async function copyInviteCode(code) {
       try {
         await navigator.clipboard.writeText(code);
-        showToast(`📋 Đã copy mã mời: ${code}`);
+        showToast(`📋 Đã copy mã / mật khẩu phòng: ${code}`);
       } catch (_) {
-        prompt('Mã mời nhóm của bạn:', code);
+        prompt('Mã / mật khẩu phòng:', code);
       }
     }
 
     async function submitCreateGroup(e) {
       e.preventDefault();
       const input = document.getElementById('create-group-name-input');
+      const codeInput = document.getElementById('create-group-code-input');
       const name = input.value.trim();
+      const customCode = codeInput ? codeInput.value.trim() : '';
       if (!name) return;
-      const res = await callAction('create_room', { name, icon: selectedGroupIcon });
+      const res = await callAction('create_room', { name, icon: selectedGroupIcon, customCode });
       if (res && res.ok && res.roomId) {
         input.value = '';
+        if (codeInput) codeInput.value = '';
         activateRoomUI(res.roomId, res.room);
         renderGroupsModal();
-        showToast(`🎉 Đã tạo nhóm "${res.room.name}" (Mã: ${res.room.code})!`);
+        showToast(`🎉 Đã tạo phòng "${res.room.name}" (Mã: ${res.room.code})!`);
       }
     }
 
     async function submitCreateGroupOnboarding(e) {
       e.preventDefault();
       const input = document.getElementById('onboarding-create-name');
+      const codeInput = document.getElementById('onboarding-create-code');
       const name = input.value.trim();
+      const customCode = codeInput ? codeInput.value.trim() : '';
       if (!name) return;
-      const res = await callAction('create_room', { name, icon: '🐺' });
+      const res = await callAction('create_room', { name, icon: '🐺', customCode });
       if (res && res.ok && res.roomId) {
         input.value = '';
+        if (codeInput) codeInput.value = '';
         activateRoomUI(res.roomId, res.room);
-        showToast(`🎉 Đã tạo nhóm "${res.room.name}"! Bấm vào tên nhóm trên thanh trên để lấy link mời bạn bè.`);
+        showToast(`🎉 Đã tạo phòng "${res.room.name}" (Mã: ${res.room.code})!`);
       }
     }
 
@@ -1381,8 +1516,8 @@
     }
 
     // --- HỆ THỐNG PHÁT HIỆN & CẬP NHẬT PHIÊN BẢN APP ---
-    const APP_VERSION = '1.2.0';
-    const APP_RELEASE_NAME = 'v1.2.0 — Đa Nhóm Độc Lập (Multi-Group)';
+    const APP_VERSION = '1.3.0';
+    const APP_RELEASE_NAME = 'v1.3.0 — Sảnh Chọn Phòng & Khóa Mật Khẩu Phòng';
     let latestVersionInfo = null;
     let hasPendingUpdate = false;
 

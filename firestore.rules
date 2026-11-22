@@ -24,6 +24,12 @@ service cloud.firestore {
       allow read, write: if false;
     }
 
+    // Danh mục tên các phòng hiện có (KHÔNG chứa mã/mật khẩu phòng) để hiển thị ở sảnh chọn phòng
+    match /room_directory/{doc} {
+      allow read: if true;
+      allow write: if false;
+    }
+
     // Dữ liệu tách biệt theo nhóm & theo token/key bí mật: chỉ cho get đúng doc, CẤM list & write
     match /rooms/{roomId} {
       allow get: if true;

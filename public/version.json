@@ -1,14 +1,24 @@
 {
-  "version": "1.2.0",
-  "releaseName": "v1.2.0 — Đa Nhóm Độc Lập (Multi-Group)",
+  "version": "1.3.0",
+  "releaseName": "v1.3.0 — Sảnh Chọn Phòng & Khóa Mật Khẩu Phòng",
   "releasedAt": "2026-11-22",
   "message": "Bạn ơi Trường vừa đẩy bản cập nhật lên, bạn cập nhật luôn cho nóng hổi nhé! 🔥",
   "highlights": [
-    "Tạo nhiều nhóm Ma Sói tách biệt hoàn toàn (sảnh, chat, ván đấu, lịch sử riêng)",
-    "Mời bạn bè bằng mã 6 ký tự hoặc link mời 1 chạm (?join=CODE)",
-    "Chuyển đổi qua lại giữa các nhóm chỉ bằng 1 bấm, bảo mật tách riêng danh sách thành viên"
+    "Chỉ Admin (@school) mới có quyền tạo thêm phòng mới (có thể tự đặt mật khẩu/mã phòng)",
+    "Hiển thị danh sách các phòng hiện có: bấm vào phòng nhập đúng Mã phòng để mở khóa",
+    "Vào bằng Link mời hoặc nhập thẳng Mã phòng thì tự động mở khóa không cần nhập lại"
   ],
   "history": [
+    {
+      "version": "1.3.0",
+      "name": "Sảnh Chọn Phòng & Khóa Mật Khẩu Phòng",
+      "date": "2026-11-22",
+      "notes": [
+        "Chỉ Admin (@school) mới có quyền tạo thêm phòng mới (có thể tự đặt mật khẩu/mã phòng)",
+        "Hiển thị danh sách các phòng hiện có: bấm vào phòng nhập đúng Mã phòng để mở khóa",
+        "Vào bằng Link mời hoặc nhập thẳng Mã phòng thì tự động mở khóa không cần nhập lại"
+      ]
+    },
     {
       "version": "1.2.0",
       "name": "Đa Nhóm Độc Lập (Multi-Group)",
