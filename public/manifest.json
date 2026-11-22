@@ -1,0 +1,18 @@
+{
+  "name": "SCHOOL UNIVERSE — Ma Sói & Messenger",
+  "short_name": "SCHOOL UNIVERSE",
+  "description": "Đấu Trường Ma Sói, Messenger Đa Nhóm, Gartic Phone & Trợ Lý Quản Trò",
+  "start_url": "/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#1A2421",
+  "theme_color": "#1A2421",
+  "icons": [
+    {
+      "src": "/gm/favicon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}
