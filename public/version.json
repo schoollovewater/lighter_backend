@@ -1,16 +1,22 @@
 {
-  "version": "1.1.0",
-  "releaseName": "v1.1.0 — Messenger, Tài Khoản & Giao Diện Mobile",
+  "version": "1.1.1",
+  "releaseName": "v1.1.1 — Tự động hóa bản cập nhật",
   "releasedAt": "2026-11-22",
   "message": "Bạn ơi Trường vừa đẩy bản cập nhật lên, bạn cập nhật luôn cho nóng hổi nhé! 🔥",
   "highlights": [
-    "Đăng nhập tài khoản + mật khẩu, tự giữ phiên xuyên thiết bị như Messenger",
-    "Hồ sơ cá nhân, chấm xanh Online/Offline & thống kê thắng thua Ma Sói",
-    "Messenger Chat riêng 1-1, tìm bạn theo @username & lời mời kết bạn",
-    "Tối ưu trải nghiệm mượt mà trên cả Máy tính & Điện thoại (Bottom Nav, trượt khung chat, không zoom iOS)",
-    "Cơ chế thông báo bản cập nhật mới & nút Cập nhật App tức thì"
+    "Thêm công cụ npm run release đồng bộ phiên bản tự động",
+    "Tự động báo cập nhật nóng hổi mỗi khi Trường đẩy bản mới"
   ],
   "history": [
+    {
+      "version": "1.1.1",
+      "name": "Tự động hóa bản cập nhật",
+      "date": "2026-11-22",
+      "notes": [
+        "Thêm công cụ npm run release đồng bộ phiên bản tự động",
+        "Tự động báo cập nhật nóng hổi mỗi khi Trường đẩy bản mới"
+      ]
+    },
     {
       "version": "1.1.0",
       "name": "Messenger, Tài Khoản & Giao Diện Mobile",

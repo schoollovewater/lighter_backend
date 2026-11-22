@@ -1,11 +1,12 @@
 {
   "name": "school-universe",
-  "version": "1.1.0",
+  "version": "1.1.1",
   "description": "SCHOOL UNIVERSE — Online Werewolf Arena, Offline GM Assistant & Gartic Phone",
   "main": "server.js",
   "scripts": {
     "start": "node server.js",
     "build:gm": "npm --prefix gm-assistant run build",
+    "release": "node scripts/bump-release.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "keywords": [],

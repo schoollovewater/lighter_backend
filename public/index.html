@@ -44,7 +44,7 @@
         <div class="w-12 h-12 rounded-2xl bg-[#FF4500]/20 border border-[#FF4500]/50 flex items-center justify-center text-2xl shrink-0">🚀</div>
         <div>
           <span id="update-modal-badge" class="text-[10px] font-black uppercase tracking-wider px-2 py-0.5 rounded-full bg-[#FF4500] text-white">Bản cập nhật mới</span>
-          <h3 id="update-modal-title" class="text-sm font-black text-white mt-1">v1.1.0 — Messenger, Tài Khoản & Giao Diện Mobile</h3>
+          <h3 id="update-modal-title" class="text-sm font-black text-white mt-1">v1.1.1 — Tự động hóa bản cập nhật</h3>
         </div>
       </div>
       <p id="update-modal-message" class="text-xs text-orange-200 bg-[#FF4500]/10 border border-[#FF4500]/30 rounded-2xl p-3 leading-relaxed font-semibold">
@@ -130,7 +130,7 @@
             <i data-lucide="moon" class="w-3.5 h-3.5"></i> Mở Trợ Lý Quản Trò Offline (Chơi Bài Giấy)
           </a>
           <button type="button" onclick="openUpdateModal()" class="w-full py-2 bg-white/5 hover:bg-white/10 border border-moss text-slate-300 font-bold rounded-xl text-[11px] transition flex items-center justify-center gap-1.5">
-            <span id="entrance-version-label">🚀 Phiên bản v1.1.0 — Kiểm tra & Cập nhật</span>
+            <span id="entrance-version-label">🚀 Phiên bản v1.1.1 — Kiểm tra & Cập nhật</span>
           </button>
         </div>
       </div>
@@ -152,7 +152,7 @@
           <!-- Cụm nút nhanh cho Điện thoại (Update, Voice, Đăng xuất) -->
           <div class="flex md:hidden items-center gap-1.5 shrink-0">
             <button onclick="openUpdateModal()" class="relative px-2.5 py-1.5 rounded-xl text-[11px] font-bold bg-amber-500/15 border border-amber-500/40 text-amber-300 flex items-center gap-1" title="Cập nhật App">
-              <span>🚀</span><span id="mobile-version-tag">v1.1.0</span>
+              <span>🚀</span><span id="mobile-version-tag">v1.1.1</span>
               <span id="mobile-update-dot" class="hidden absolute -top-1 -right-1 w-2.5 h-2.5 rounded-full bg-[#FF4500] animate-ping"></span>
             </button>
             <button onclick="toggleVoiceChat()" id="btn-voice-chat-mobile" class="p-2 rounded-xl bg-slate-800 text-slate-300" title="Voice Chat">
@@ -183,7 +183,7 @@
           <div class="h-6 w-px bg-slate-700 mx-1"></div>
           
           <button onclick="openUpdateModal()" id="btn-app-update" class="relative px-3 py-2 rounded-xl text-xs font-bold transition flex items-center gap-1.5 bg-amber-500/15 hover:bg-amber-500/25 text-amber-300 border border-amber-500/40" title="Kiểm tra & Cập nhật App">
-            <span>🚀</span> <span id="desktop-version-tag">Cập nhật (v1.1.0)</span>
+            <span>🚀</span> <span id="desktop-version-tag">Cập nhật (v1.1.1)</span>
             <span id="desktop-update-dot" class="hidden absolute -top-1 -right-1 w-2.5 h-2.5 rounded-full bg-[#FF4500] animate-ping"></span>
           </button>
           <button onclick="toggleVoiceChat()" id="btn-voice-chat" class="px-3.5 py-2 rounded-xl text-xs font-bold transition flex items-center gap-1.5 bg-slate-800 text-slate-300 hover:bg-slate-700">
@@ -1006,8 +1006,8 @@
     }
 
     // --- HỆ THỐNG PHÁT HIỆN & CẬP NHẬT PHIÊN BẢN APP ---
-    const APP_VERSION = '1.1.0';
-    const APP_RELEASE_NAME = 'v1.1.0 — Messenger, Tài Khoản & Giao Diện Mobile';
+    const APP_VERSION = '1.1.1';
+    const APP_RELEASE_NAME = 'v1.1.1 — Tự động hóa bản cập nhật';
     let latestVersionInfo = null;
     let hasPendingUpdate = false;
 

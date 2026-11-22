@@ -29,3 +29,8 @@
 - Hiện tại dự án chưa cài đặt framework test (VD: Jest, Mocha).
 - **Quy tắc khi bổ sung (Tương lai):** Mọi hàm logic độc lập (ví dụ `checkAutoProgress()`, `processCascadingDeaths()`, `getMaskedStateForUser()`) phải được tách rời khỏi Object Socket.IO để có thể test độc lập với các Test Runner.
 - Khi viết Test, tập trung mock Object State và xem kết quả sau State có chính xác hay không thay vì mock Event.
+
+## 6. Quy chuẩn Phát hành & Thông báo Cập nhật (Release Versioning)
+- Mọi lần đẩy tính năng mới hoặc bản sửa lỗi lớn lên production **BẮT BUỘC** phải tăng phiên bản bằng lệnh:
+  `npm run release -- <x.y.z> "<Tên bản cập nhật>" "<Ghi chú 1>" "<Ghi chú 2>"`
+- Lệnh này tự động đồng bộ `package.json`, `public/version.json` (có lịch sử changelog) và `APP_VERSION` / `APP_RELEASE_NAME` trong `public/index.html` để người dùng trên cả máy tính và điện thoại nhận ngay thông báo cập nhật nóng hổi.
